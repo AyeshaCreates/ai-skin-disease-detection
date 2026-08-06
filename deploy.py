@@ -13,7 +13,7 @@ def main():
     # 1. Start FastAPI backend server on port 8000
     print("\n[1/5] Starting FastAPI Backend API Server on port 8000...")
     backend_proc = subprocess.Popen(
-        ["python", "-m", "uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+        [sys.executable, "-m", "uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
     )
     # Wait a moment for uvicorn to load models and bind
     print("Waiting for FastAPI backend to load models and start listening on port 8000...")
@@ -108,7 +108,7 @@ def main():
     # 5. Serve compiled assets on port 5173
     print("\n[5/5] Launching production static asset server on port 5173...")
     frontend_server_proc = subprocess.Popen(
-        ["python", "-m", "http.server", "5173", "--directory", "frontend/dist"]
+        [sys.executable, "-m", "http.server", "5173", "--directory", "frontend/dist"]
     )
     # Wait a moment for frontend server to start listening
     print("Waiting for frontend server to start listening on port 5173...")
