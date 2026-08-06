@@ -7,18 +7,19 @@ def main():
     img = Image.new('RGB', (224, 224), color = (200, 100, 100))
     img.save('test_skin.jpg')
     
-    print("Testing /api/predict endpoint locally on port 8000...")
-    url = "http://127.0.0.1:8000/api/predict"
-    
-    files = {'image': ('test_skin.jpg', open('test_skin.jpg', 'rb'), 'image/jpeg')}
-    data = {
-        'symptoms': 'red dry flaky itchy patches on elbow creases',
-        'language': 'en',
-        'city': 'Bengaluru'
-    }
+    print("Testing /api/predict endpoint on the public URL...")
+    url = "https://ad13c962121c50a0-49-37-181-20.serveousercontent.com/api/predict"
     
     try:
-        r = requests.post(url, files=files, data=data, timeout=20)
+        with open('test_skin.jpg', 'rb') as f:
+            files = {'image': ('test_skin.jpg', f, 'image/jpeg')}
+            data = {
+                'symptoms': 'red dry flaky itchy patches on elbow creases',
+                'language': 'en',
+                'city': 'Bengaluru'
+            }
+            r = requests.post(url, files=files, data=data, verify=False, timeout=30)
+            
         print(f"Status Code: {r.status_code}")
         if r.status_code == 200:
             print("Success! Response JSON:")

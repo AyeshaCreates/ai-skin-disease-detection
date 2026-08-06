@@ -59,7 +59,7 @@ def get_coordinates_from_city(city_name: str):
     try:
         url = f"https://nominatim.openstreetmap.org/search?q={city_name}&format=json&limit=1"
         headers = {'User-Agent': 'AISkinDiseaseDetectionSystemProject/1.0'}
-        resp = requests.get(url, headers=headers, verify=False, timeout=8)
+        resp = requests.get(url, headers=headers, verify=False, timeout=1.5)
         if resp.status_code == 200:
             data = resp.json()
             if data:
@@ -91,7 +91,7 @@ def find_nearby_dermatologists(lat: float, lon: float, city_hint: str = None):
         overpass_url = "https://overpass-api.de/api/interpreter"
         # Search radius = 10km (10000m)
         overpass_query = f"""
-        [out:json][timeout:10];
+        [out:json][timeout:2];
         (
           node["amenity"="hospital"](around:10000, {lat}, {lon});
           way["amenity"="hospital"](around:10000, {lat}, {lon});
@@ -100,7 +100,7 @@ def find_nearby_dermatologists(lat: float, lon: float, city_hint: str = None):
         );
         out center;
         """
-        resp = requests.post(overpass_url, data={'data': overpass_query}, verify=False, timeout=10)
+        resp = requests.post(overpass_url, data={'data': overpass_query}, verify=False, timeout=1.5)
         
         if resp.status_code == 200:
             elements = resp.json().get("elements", [])
