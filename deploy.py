@@ -36,14 +36,14 @@ def main():
         backend_proc.terminate()
         sys.exit(1)
     
-    # 2. Expose backend port 8000 via localhost.run SSH tunnel
+    # 2. Expose backend port 8000 via serveo.net SSH tunnel
     print("\n[2/5] Exposing backend API to the public internet...")
     backend_tunnel_cmd = [
         "ssh", "-R", "80:127.0.0.1:8000", 
         "-T", 
         "-o", "StrictHostKeyChecking=no", 
         "-o", "UserKnownHostsFile=/dev/null", 
-        "nokey@localhost.run"
+        "serveo.net"
     ]
     
     backend_tunnel_proc = subprocess.Popen(
@@ -55,18 +55,17 @@ def main():
     )
     
     backend_url = None
-    print("Waiting for localhost.run to allocate backend HTTPS URL...")
+    print("Waiting for serveo.net to allocate backend HTTPS URL...")
     
     # Read output line by line to capture the public URL
-    # Look for a line containing "lhr.life" or "lhr.rocks" or "localhost.run"
     start_time = time.time()
     while True:
         line = backend_tunnel_proc.stdout.readline()
         if not line:
             break
         print(f"Backend Tunnel: {line.strip()}")
-        # Check if the line contains lhr.life URL pattern
-        match = re.search(r'https://[a-zA-Z0-9.-]+\.lhr\.(?:life|rocks)', line)
+        # Check if the line contains serveo URL pattern
+        match = re.search(r'https://[a-zA-Z0-9.-]+serveo[a-zA-Z0-9.-]+', line)
         if match:
             backend_url = match.group(0)
             print(f"\n[URL] Captured Backend Public HTTPS URL: {backend_url}")
@@ -132,14 +131,14 @@ def main():
         frontend_server_proc.terminate()
         sys.exit(1)
     
-    # Expose frontend port 5173 via localhost.run SSH tunnel
+    # Expose frontend port 5173 via serveo.net SSH tunnel
     print("Exposing frontend static server to the public internet...")
     frontend_tunnel_cmd = [
         "ssh", "-R", "80:127.0.0.1:5173", 
         "-T", 
         "-o", "StrictHostKeyChecking=no", 
         "-o", "UserKnownHostsFile=/dev/null", 
-        "nokey@localhost.run"
+        "serveo.net"
     ]
     
     frontend_tunnel_proc = subprocess.Popen(
@@ -151,7 +150,7 @@ def main():
     )
     
     frontend_url = None
-    print("Waiting for localhost.run to allocate frontend HTTPS URL...")
+    print("Waiting for serveo.net to allocate frontend HTTPS URL...")
     
     start_time = time.time()
     while True:
@@ -159,7 +158,7 @@ def main():
         if not line:
             break
         print(f"Frontend Tunnel: {line.strip()}")
-        match = re.search(r'https://[a-zA-Z0-9.-]+\.lhr\.(?:life|rocks)', line)
+        match = re.search(r'https://[a-zA-Z0-9.-]+serveo[a-zA-Z0-9.-]+', line)
         if match:
             frontend_url = match.group(0)
             print(f"\n[URL] Captured Frontend Public HTTPS URL: {frontend_url}")
