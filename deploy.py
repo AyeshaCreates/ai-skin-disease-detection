@@ -109,7 +109,7 @@ def main():
     # 5. Serve compiled assets on port 5173
     print("\n[5/5] Launching production static asset server on port 5173...")
     frontend_server_proc = subprocess.Popen(
-        [sys.executable, "-m", "http.server", "5173", "--directory", "frontend/dist"]
+        [sys.executable, "-m", "http.server", "5173", "--bind", "127.0.0.1", "--directory", "frontend/dist"]
     )
     # Wait a moment for frontend server to start listening
     print("Waiting for frontend server to start listening on port 5173...")
