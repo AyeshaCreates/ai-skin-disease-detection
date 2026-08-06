@@ -1,5 +1,13 @@
 # AI Skin Disease Detection System using Multi-Modal AI
 
+### 🌐 Live Public HTTPS Deployment
+- **Web Application Portal**: [https://d15eba600a03b2.lhr.life](https://d15eba600a03b2.lhr.life)
+- **FastAPI API Swagger Docs**: [https://b7be687fd4d5d4.lhr.life/docs](https://b7be687fd4d5d4.lhr.life/docs)
+
+*Note: The frontend is fully connected to the live backend tunnel. Anyone can test this system from any device.*
+
+---
+
 Dermasynth is a production-ready, deployable AI healthcare web application built from scratch for a B.E. Final Year Engineering project. It performs multi-modal dermatological classification by fusing visual features from **skin lesion photographs** and linguistic features from **multilingual symptom descriptions** (supporting English, Hindi, and Kannada, both typed and spoken).
 
 ---
