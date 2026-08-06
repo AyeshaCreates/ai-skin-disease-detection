@@ -1,0 +1,13 @@
+INFO:     Started server process [32072]
+INFO:     Waiting for application startup.
+'[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1081)' thrown while requesting HEAD https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2/resolve/main/config.json
+Retrying in 1s [Retry 1/5].
+'[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1081)' thrown while requesting HEAD https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2/resolve/main/config.json
+Retrying in 1s [Retry 1/5].
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+Initializing AI Skin Disease Detection models...
+Loading transformer model: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 (may take a moment on first boot)...
+Warning: Failed to load Hugging Face model (Can't load the configuration of 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2'. If you were trying to load it from 'https://huggingface.co/models', make sure you don't have a local directory with the same name. Otherwise, make sure 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2' is the correct path to a directory containing a config.json file). Using robust offline fallback encoder.
+All models loaded successfully and ready for inference.
+INFO:     127.0.0.1:63334 - "GET / HTTP/1.1" 200 OK

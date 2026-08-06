@@ -108,7 +108,7 @@ class PDFRequest(BaseModel):
     hospitals: List[dict]
 
 # API Endpoints
-@app.get("/")
+@app.get("/api/health")
 def read_root():
     return {"status": "healthy", "service": "AI Skin Disease Detection Multi-Modal System"}
 
@@ -397,3 +397,8 @@ def get_confidence_aware_recommendations(disease: str, confidence: float, severi
     else:
         # High confidence
         return ["CONFIRMED PREDICTION: The AI system is highly confident in this analysis."] + precautions
+
+# Mount static files of the React frontend compiled build if the directory exists
+frontend_dist_path = os.path.abspath("frontend/dist")
+if os.path.exists(frontend_dist_path):
+    app.mount("/", StaticFiles(directory=frontend_dist_path, html=True), name="static")
