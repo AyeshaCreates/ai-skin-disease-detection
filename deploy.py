@@ -76,7 +76,8 @@ def main():
     build_proc = subprocess.run(
         ["npm", "run", "build"],
         cwd="frontend",
-        shell=True
+        shell=True,
+        stdin=subprocess.DEVNULL
     )
     
     if build_proc.returncode != 0:
