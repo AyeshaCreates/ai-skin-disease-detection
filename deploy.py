@@ -21,7 +21,7 @@ def main():
     for i in range(45):
         try:
             # Disable verification for default check
-            resp = requests.get("http://127.0.0.1:8000/", timeout=1)
+            resp = requests.get("http://127.0.0.1:8000/", timeout=5)
             if resp.status_code == 200:
                 backend_ready = True
                 print("FastAPI backend is ready and listening!")
@@ -116,7 +116,7 @@ def main():
     frontend_ready = False
     for i in range(15):
         try:
-            resp = requests.get("http://127.0.0.1:5173/", timeout=1)
+            resp = requests.get("http://127.0.0.1:5173/", timeout=5)
             if resp.status_code == 200:
                 frontend_ready = True
                 print("Frontend static server is ready and listening!")
