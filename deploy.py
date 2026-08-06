@@ -3,6 +3,7 @@ import subprocess
 import sys
 import time
 import re
+import requests
 
 def main():
     print("==================================================================")
@@ -14,14 +15,30 @@ def main():
     backend_proc = subprocess.Popen(
         ["python", "-m", "uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
     )
-    # Wait a moment for uvicorn to bind
-    time.time()
-    time.sleep(3)
+    # Wait a moment for uvicorn to load models and bind
+    print("Waiting for FastAPI backend to load models and start listening on port 8000...")
+    backend_ready = False
+    for i in range(45):
+        try:
+            # Disable verification for default check
+            resp = requests.get("http://127.0.0.1:8000/", timeout=1)
+            if resp.status_code == 200:
+                backend_ready = True
+                print("FastAPI backend is ready and listening!")
+                break
+        except Exception:
+            pass
+        time.sleep(1)
+        
+    if not backend_ready:
+        print("Error: FastAPI backend failed to start listening within 45 seconds.")
+        backend_proc.terminate()
+        sys.exit(1)
     
     # 2. Expose backend port 8000 via localhost.run SSH tunnel
     print("\n[2/5] Exposing backend API to the public internet...")
     backend_tunnel_cmd = [
-        "ssh", "-R", "80:localhost:8000", 
+        "ssh", "-R", "80:127.0.0.1:8000", 
         "-T", 
         "-o", "StrictHostKeyChecking=no", 
         "-o", "UserKnownHostsFile=/dev/null", 
@@ -93,12 +110,31 @@ def main():
     frontend_server_proc = subprocess.Popen(
         ["python", "-m", "http.server", "5173", "--directory", "frontend/dist"]
     )
-    time.sleep(2)
+    # Wait a moment for frontend server to start listening
+    print("Waiting for frontend server to start listening on port 5173...")
+    frontend_ready = False
+    for i in range(15):
+        try:
+            resp = requests.get("http://127.0.0.1:5173/", timeout=1)
+            if resp.status_code == 200:
+                frontend_ready = True
+                print("Frontend static server is ready and listening!")
+                break
+        except Exception:
+            pass
+        time.sleep(1)
+        
+    if not frontend_ready:
+        print("Error: Frontend static server failed to start listening.")
+        backend_proc.terminate()
+        backend_tunnel_proc.terminate()
+        frontend_server_proc.terminate()
+        sys.exit(1)
     
     # Expose frontend port 5173 via localhost.run SSH tunnel
     print("Exposing frontend static server to the public internet...")
     frontend_tunnel_cmd = [
-        "ssh", "-R", "80:localhost:5173", 
+        "ssh", "-R", "80:127.0.0.1:5173", 
         "-T", 
         "-o", "StrictHostKeyChecking=no", 
         "-o", "UserKnownHostsFile=/dev/null", 

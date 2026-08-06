@@ -1,2 +1,2 @@
-Frontend: https://d15eba600a03b2.lhr.life
-Backend API: https://b7be687fd4d5d4.lhr.life
+Frontend: https://58902dddf1317c.lhr.life
+Backend API: https://9c526a34b1191e.lhr.life
