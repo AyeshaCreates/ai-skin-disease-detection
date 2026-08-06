@@ -26,7 +26,8 @@ def main():
                 backend_ready = True
                 print("FastAPI backend is ready and listening!")
                 break
-        except Exception:
+        except Exception as e:
+            # Silent during normal startup retries, print if verbose needed or just pass
             pass
         time.sleep(1)
         
@@ -120,8 +121,8 @@ def main():
                 frontend_ready = True
                 print("Frontend static server is ready and listening!")
                 break
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"Frontend check retry {i}: {e}")
         time.sleep(1)
         
     if not frontend_ready:
