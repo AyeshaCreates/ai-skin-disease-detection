@@ -1,2 +1,2 @@
-Frontend: https://3a858e55830f07.lhr.life
-Backend API: https://51f026bfcfb9a8.lhr.life
+Frontend/Backend: https://629fb8009559ee71-49-37-181-20.serveousercontent.com
+Backend API Swagger: https://629fb8009559ee71-49-37-181-20.serveousercontent.com/docs

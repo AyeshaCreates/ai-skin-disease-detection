@@ -1,10 +1,10 @@
 # AI Skin Disease Detection System using Multi-Modal AI
 
 ### 🌐 Live Public HTTPS Deployment
-- **Web Application Portal**: [https://d15eba600a03b2.lhr.life](https://d15eba600a03b2.lhr.life)
-- **FastAPI API Swagger Docs**: [https://b7be687fd4d5d4.lhr.life/docs](https://b7be687fd4d5d4.lhr.life/docs)
+- **Web Application Portal**: [https://629fb8009559ee71-49-37-181-20.serveousercontent.com](https://629fb8009559ee71-49-37-181-20.serveousercontent.com)
+- **FastAPI API Swagger Docs**: [https://629fb8009559ee71-49-37-181-20.serveousercontent.com/docs](https://629fb8009559ee71-49-37-181-20.serveousercontent.com/docs)
 
-*Note: The frontend is fully connected to the live backend tunnel. Anyone can test this system from any device.*
+*Note: The frontend is served directly from the same unified server. Anyone can access this portal from any device.*
 
 ---
 
