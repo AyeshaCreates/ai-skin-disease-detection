@@ -1,0 +1,116 @@
+import os
+import base64
+from io import BytesIO
+from PIL import Image
+
+# Dynamic deep-translator loader
+try:
+    from deep_translator import GoogleTranslator
+    HAS_TRANSLATOR = True
+except ImportError:
+    HAS_TRANSLATOR = False
+
+# Dictionary fallback for Hindi/Kannada common symptoms to English
+LOCAL_TRANSLATIONS = {
+    # Hindi
+    "काला अनियमित तिल जो आकार, रंग और रूप बदल रहा है। इसके किनारे असमान हैं।": 
+        "A dark irregular mole that is changing size, color, and shape. It has asymmetric borders.",
+    "मेरी बांह पर एक बढ़ता हुआ काला धब्बा है जिसके किनारे खुरदरे हैं और रंग असमान भूरा है।":
+        "There is a growing dark spot on my arm with jagged edges and uneven brown color.",
+    "मैंने अपनी पीठ पर एक तिल देखा जिसमें से खून बहने लगा है और इसके कई रंग हैं।":
+        "I noticed a mole on my back that started bleeding and has multiple shades of black.",
+    "मेरी टांग पर एक सममित भूरा तिल जो वर्षों से स्थिर है। इसकी सीमाएं चिकनी हैं।":
+        "A symmetrical brown mole on my leg that has been stable for years. Smooth borders.",
+    "मेरी त्वचा पर एक सामान्य सपाट भूरा धब्बा है, कोई खुजली या खून नहीं बह रहा है।":
+        "I have a common flat brown spot on my skin, no itching, no bleeding.",
+    "मेरे हाथ पर एक छोटा काला घेरा, पूरी तरह से दर्द रहित और सामान्य दिखने वाला।":
+        "A small dark circle on my hand, completely painless and normal-looking.",
+    "कोहनी के मोड़ों पर अत्यधिक खुजलीदार, लाल, सूजी हुई त्वचा का धब्बा। सूखा और पपड़ीदार।":
+        "An extremely itchy, red, inflamed skin patch in the elbow creases. Dry and scaling.",
+    "मेरी त्वचा बहुत लाल, सूखी, पपड़ीदार है और लगातार खुजली होती है। जलन महसूस हो रही है।":
+        "My skin is very red, dry, flaky, and itches constantly. It feels irritated.",
+    "गर्दन और चेहरे पर तीव्र खुजली और छिलने वाली त्वचा के साथ लाल धब्बे।":
+        "Red patches with intense pruritus and peeling skin on the neck and face.",
+    "छाती पर मोम जैसा, चिपका हुआ भूरा उभार जो छूने पर खुरदरा लगता है।":
+        "A waxy, stuck-on brown growth on the chest that feels rough to the touch.",
+    "मेरे सिर की त्वचा पर एक उभरा हुआ, पपड़ीदार भूरा धब्बा है, जो त्वचा पर चिपके मोम जैसा दिखता है।":
+        "I have a raised, scaly brown plaque on my scalp, looks like candle wax stuck to the skin.",
+    "मेरी पीठ पर हल्के भूरे रंग का मस्से जैसा उभार, कोई लक्षण नहीं हैं लेकिन खुरदरा लगता है।":
+        "Benign-looking light brown wart-like growth on my back, no symptoms but feels bumpy.",
+    "मेरे चेहरे और ठुड्डी पर लाल मुंहासे, मवाद वाले दाने और ब्लैकहेड्स निकल आए हैं।":
+        "Breakout of red pimples, pustules, and blackheads on my face and chin.",
+    "मेरे माथे और नाक पर दर्दनाक लाल उभार और बंद रोमछिद्र हैं।":
+        "I have painful red bumps and clogged pores on my forehead and nose.",
+    "गालों पर सूजन और छोटे व्हाइटहेड्स के साथ मुंहासे।":
+        "Acne breakouts with inflammation and small whiteheads on my cheeks.",
+
+    # Kannada
+    "ಗಾತ್ರ, ಬಣ್ಣ ಮತ್ತು ಆಕಾರ ಬದಲಾಗುತ್ತಿರುವ ಕಪ್ಪಾದ ಅಸಮಪಾರ್ಶ್ವದ ಮಚ್ಚೆ. ಇದು ಅಸಮವಾದ ಅಂಚುಗಳನ್ನು ಹೊಂದಿದೆ.":
+        "A dark irregular mole that is changing size, color, and shape. It has asymmetric borders.",
+    "ನನ್ನ ಕೈಯ ಮೇಲೆ ಬೆಳೆಯುತ್ತಿರುವ ಕಪ್ಪು ಮಚ್ಚೆ ಇದ್ದು, ಅದರ ಅಂಚುಗಳು ಒರಟಾಗಿವೆ ಮತ್ತು ಬಣ್ಣ ಅಸಮವಾಗಿದೆ.":
+        "There is a growing dark spot on my arm with jagged edges and uneven brown color.",
+    "ನನ್ನ ಬೆನ್ನಿನ ಮೇಲಿರುವ ಮಚ್ಚೆಯಿಂದ ರಕ್ತ ಸೋರುತ್ತಿದ್ದು, ಇದು ಕಪ್ಪು ಬಣ್ಣದ ವಿವಿಧ ಛಾಯೆಗಳನ್ನು ಹೊಂದಿದೆ.":
+        "I noticed a mole on my back that started bleeding and has multiple shades of black.",
+    "ನನ್ನ ಕಾಲಿನ ಮೇಲೆ ವರ್ಷಗಳಿಂದ ಯಾವುದೇ ಬದಲಾವಣೆಯಿಲ್ಲದ ಸಮಪಾರ್ಶ್ವದ ಕಂದು ಮಚ್ಚೆ. ಮೃದುವಾದ ಅಂಚುಗಳು.":
+        "A symmetrical brown mole on my leg that has been stable for years. Smooth borders.",
+    "ನನ್ನ ಚರ್ಮದ ಮೇಲೆ ಸಾಮಾನ್ಯವಾದ ಚಪ್ಪಟೆ ಕಂದು ಮಚ್ಚೆ ಇದೆ, ಯಾವುದೇ ತುರಿಕೆ ಇಲ್ಲ, ರಕ್ತಸ್ರಾವವಿಲ್ಲ.":
+        "I have a common flat brown spot on my skin, no itching, no bleeding.",
+    "ನನ್ನ ಕೈ ಮೇಲೆ ಸಣ್ಣ ಕಪ್ಪು ವರ್ತುಲವಿದೆ, ಇದು ಯಾವುದೇ ನೋವಿಲ್ಲದೆ ಸಾಮಾನ್ಯವಾಗಿದೆ.":
+        "A small dark circle on my hand, completely painless and normal-looking.",
+    "ಮೊಣಕೈ ಮಡಿಕೆಗಳಲ್ಲಿ ತೀವ್ರ ತುರಿಕೆ ಉಂಟಾಗುವ ಕೆಂಪು, ಊದಿಕೊಂಡ ಚರ್ಮದ ಭಾಗ. ಒಣ ಮತ್ತು ಉದುರುತ್ತಿರುವ ಚರ್ಮ.":
+        "An extremely itchy, red, inflamed skin patch in the elbow creases. Dry and scaling.",
+    "ನನ್ನ ಚರ್ಮವು ತುಂಬಾ ಕೆಂಪಾಗಿದೆ, ಒಣಗಿದೆ ಮತ್ತು ಸತತವಾಗಿ ತುರಿಕೆ ಇರುತ್ತದೆ. ಉರಿತದ ಸಂವೇದನೆ ಇದೆ.":
+        "My skin is very red, dry, flaky, and itches constantly. It feels irritated.",
+    "ಕುತ್ತಿಗೆ ಮತ್ತು ಮುಖದ ಮೇಲೆ ತೀವ್ರ ತುರಿಕೆ ಮತ್ತು ಚರ್ಮ ಸುಲಿಯುವಿಕೆಯೊಂದಿಗೆ ಕೆಂಪು ದದ್ದುಗಳು.":
+        "Red patches with intense pruritus and peeling skin on the neck and face.",
+    "ಎದೆಯ ಮೇಲೆ ಮೇಣದಂತೆ ಅಂಟಿಕೊಂಡಿರುವ ಕಂದು ಬಣ್ಣದ ಬೆಳೆತ, ಸ್ಪರ್ಶಿಸಿದರೆ ಒರಟಾಗಿ ಭಾಸವಾಗುತ್ತದೆ.":
+        "A waxy, stuck-on brown growth on the chest that feels rough to the touch.",
+    "ನನ್ನ ನೆತ್ತಿಯ ಮೇಲೆ ಬೆಳೆದ ಕಂದು ಬಣ್ಣದ ಪೊರೆಯಿದೆ, ಇದು ಮೇಣ ಅಂಟಿಕೊಂಡಿರುವಂತೆ ಕಾಣುತ್ತದೆ.":
+        "I have a raised, scaly brown plaque on my scalp, looks like candle wax stuck to the skin.",
+    "ನನ್ನ ಬೆನ್ನಿನ ಮೇಲೆ ಸಣ್ಣ ಕಂದು ಬೆಳೆತವಿದೆ, ಯಾವುದೇ ತೊಂದರೆ ಇಲ್ಲ ಆದರೆ ಒರಟಾಗಿದೆ.":
+        "Benign-looking light brown wart-like growth on my back, no symptoms but feels bumpy.",
+    "ನನ್ನ ಮುಖ ಮತ್ತು ಗಲ್ಲದ ಮೇಲೆ ಕೆಂಪು ಮೊಡವೆಗಳು ಹಾಗೂ ಕಪ್ಪು ತಲೆಗಳು ಕಾಣಿಸಿಕೊಂಡಿವೆ.":
+        "Breakout of red pimples, pustules, and blackheads on my face and chin.",
+    "ನನ್ನ ಹಣೆ ಮತ್ತು ಮೂಗಿನ ಮೇಲೆ ನೋವಿನ ಕೆಂಪು ಗುಳ್ಳೆಗಳು ಮತ್ತು ಮುಚ್ಚಿಹೋದ ರೋಮಕೂಪಗಳಿವೆ.":
+        "I have painful red bumps and clogged pores on my forehead and nose.",
+    "ಕೆನ್ನೆಗಳ ಮೇಲೆ ಊತ ಮತ್ತು ಸಣ್ಣ ಬಿಳಿ ಮೊಡವೆಗಳೊಂದಿಗೆ ಮೊಡವೆಗಳ ಉಲ್ಬಣ.":
+        "Acne breakouts with inflammation and small whiteheads on my cheeks."
+}
+
+def translate_symptoms(text: str, source_lang: str) -> str:
+    """
+    Translates symptoms from Hindi (hi) or Kannada (kn) to English (en).
+    Natively attempts GoogleTranslator and falls back to a dictionary or exact text.
+    """
+    if not text or source_lang == 'en':
+        return text
+
+    clean_text = text.strip()
+    
+    # 1. Try local dictionary first for speed & offline compatibility
+    if clean_text in LOCAL_TRANSLATIONS:
+        return LOCAL_TRANSLATIONS[clean_text]
+        
+    # Also check substring match
+    for local_phrase, translation in LOCAL_TRANSLATIONS.items():
+        if clean_text in local_phrase or local_phrase in clean_text:
+            return translation
+
+    # 2. Try GoogleTranslator if package is available
+    if HAS_TRANSLATOR:
+        try:
+            translation = GoogleTranslator(source=source_lang, target='en').translate(clean_text)
+            if translation:
+                return translation
+        except Exception as e:
+            print(f"Translation API error: {e}")
+            
+    # 3. Basic heuristic word translation fallback if offline/unknown
+    # Just returns the text - since the multilingual sentence model encodes it anyway!
+    return clean_text
+
+def pil_to_base64(img: Image.Image) -> str:
+    """Converts PIL image to base64 string for easy UI rendering."""
+    buffered = BytesIO()
+    img.save(buffered, format="JPEG")
+    return base64.b64encode(buffered.getvalue()).decode('utf-8')

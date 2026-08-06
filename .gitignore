@@ -1,0 +1,36 @@
+# Node dependencies
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Python environment
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints
+.pytest_cache/
+.venv/
+venv/
+ENV/
+
+# Project temp/output files
+temp_files/
+data/skin_images/
+data/symptoms/
+tests/test_report.pdf
+tests/test_skin.jpg
+
+# Model checkpoints
+backend/app/models/checkpoints/*.pth
+# Keep metrics JSON so details are available
+!backend/app/models/checkpoints/metrics.json
+
+# IDE config
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
