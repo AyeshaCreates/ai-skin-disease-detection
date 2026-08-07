@@ -1,3 +1,3 @@
-export const API_BASE = window.location.origin.includes('vercel.app') || window.location.origin.includes('localhost:5173')
-  ? 'https://f07ffb8bcb039f66-49-37-181-49.serveousercontent.com'
-  : window.location.origin;
+// API base URL configured via Vite environment variables for static hosting (Vercel)
+// or falling back to window.location.origin for unified port serving
+export const API_BASE = import.meta.env.VITE_API_BASE || window.location.origin;
