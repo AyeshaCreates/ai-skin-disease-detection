@@ -14,7 +14,7 @@ def update_vercel(public_url):
         
         # 1. Remove old env variable (ignore error if it doesn't exist)
         subprocess.run(
-            ["npx", "vercel", "env", "rm", "VITE_API_BASE", "production", "--yes"],
+            "npx vercel env rm VITE_API_BASE production --yes",
             cwd="frontend",
             shell=True,
             env=env,
@@ -22,11 +22,9 @@ def update_vercel(public_url):
             stderr=subprocess.DEVNULL
         )
         
-        # 2. Add new env variable (passed via stdin)
+        # 2. Add new env variable (passed via shell pipe)
         subprocess.run(
-            ["npx", "vercel", "env", "add", "VITE_API_BASE", "production"],
-            input=public_url,
-            text=True,
+            f"echo {public_url} | npx vercel env add VITE_API_BASE production",
             cwd="frontend",
             shell=True,
             env=env,
@@ -37,7 +35,7 @@ def update_vercel(public_url):
         # 3. Redeploy frontend (rebuilds assets with new URL)
         print("[Vercel Sync] Re-deploying frontend to Vercel production...")
         subprocess.run(
-            ["npx", "vercel", "--yes", "--prod"],
+            "npx vercel --yes --prod",
             cwd="frontend",
             shell=True,
             env=env,
