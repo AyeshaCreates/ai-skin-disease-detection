@@ -1,10 +1,11 @@
 # AI Skin Disease Detection System using Multi-Modal AI
 
 ### 🌐 Live Public HTTPS Deployment
-- **Web Application Portal**: [https://4e7b136d242025d8-49-37-181-49.serveousercontent.com](https://4e7b136d242025d8-49-37-181-49.serveousercontent.com)
-- **FastAPI API Swagger Docs**: [https://4e7b136d242025d8-49-37-181-49.serveousercontent.com/docs](https://4e7b136d242025d8-49-37-181-49.serveousercontent.com/docs)
+- **Vercel Web Application Portal**: [https://frontend-nine-ecru-ivt7r5yxm8.vercel.app](https://frontend-nine-ecru-ivt7r5yxm8.vercel.app)
+- **FastAPI API Swagger Docs**: [https://d6813907c08fe221-49-37-178-96.serveousercontent.com/docs](https://d6813907c08fe221-49-37-178-96.serveousercontent.com/docs)
+- **Unified Single-Port Backup Portal**: [https://d6813907c08fe221-49-37-178-96.serveousercontent.com](https://d6813907c08fe221-49-37-178-96.serveousercontent.com)
 
-*Note: The frontend is served directly from the same unified server. Anyone can access this portal from any device.*
+*Note: The Vercel frontend is fully integrated with the active public backend tunnel. Anyone can access this portal from any device.*
 
 ---
 
