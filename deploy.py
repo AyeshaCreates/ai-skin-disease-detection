@@ -22,9 +22,11 @@ def update_vercel(public_url):
             stderr=subprocess.DEVNULL
         )
         
-        # 2. Add new env variable
+        # 2. Add new env variable (passed via stdin)
         subprocess.run(
-            ["npx", "vercel", "env", "add", "VITE_API_BASE", "production", public_url],
+            ["npx", "vercel", "env", "add", "VITE_API_BASE", "production"],
+            input=public_url,
+            text=True,
             cwd="frontend",
             shell=True,
             env=env,
