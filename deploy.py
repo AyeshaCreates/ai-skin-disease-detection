@@ -9,39 +9,17 @@ def update_vercel(public_url):
     print(f"\n[Vercel Sync] Updating Vercel deployment with new backend URL...")
     try:
         # Disable TLS rejection warning output for neatness
-        env = os.environ.copy()
-        env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0"
+        os.environ["NODE_TLS_REJECT_UNAUTHORIZED"] = "0"
         
         # 1. Remove old env variable (ignore error if it doesn't exist)
-        subprocess.run(
-            "npx vercel env rm VITE_API_BASE production --yes",
-            cwd="frontend",
-            shell=True,
-            env=env,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        )
+        os.system("cd frontend && npx vercel env rm VITE_API_BASE production --yes >nul 2>nul")
         
         # 2. Add new env variable (passed via shell pipe)
-        subprocess.run(
-            f"echo {public_url} | npx vercel env add VITE_API_BASE production",
-            cwd="frontend",
-            shell=True,
-            env=env,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        )
+        os.system(f"cd frontend && echo {public_url} | npx vercel env add VITE_API_BASE production >nul 2>nul")
         
         # 3. Redeploy frontend (rebuilds assets with new URL)
         print("[Vercel Sync] Re-deploying frontend to Vercel production...")
-        subprocess.run(
-            "npx vercel --yes --prod",
-            cwd="frontend",
-            shell=True,
-            env=env,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        )
+        os.system("cd frontend && npx vercel --yes --prod >nul 2>nul")
         print("[Vercel Sync] Vercel frontend is fully updated and online!")
     except Exception as e:
         print(f"Warning: Failed to update Vercel deployment: {e}")
