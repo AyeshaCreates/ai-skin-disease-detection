@@ -84,6 +84,19 @@ async def startup_event():
         cnn_model.eval()
         fusion_model.eval()
         print("All models loaded successfully and ready for inference.")
+        
+        # Warm up models to prevent cold-start timeouts
+        print("Warming up models with dummy inference...")
+        try:
+            dummy_img = torch.zeros(1, 3, 224, 224).to(device)
+            dummy_text = torch.zeros(1, 384).to(device)
+            with torch.no_grad():
+                dummy_feat = cnn_model.extract_features(dummy_img)
+                fusion_model(dummy_feat, dummy_text)
+            print("Model warm-up completed successfully!")
+        except Exception as wu_err:
+            print(f"Warning: Model warm-up failed: {wu_err}")
+            
     except Exception as e:
         print(f"Error loading saved weights: {e}. Re-training model...")
         train_multimodal_system(epochs=3)
@@ -91,6 +104,18 @@ async def startup_event():
         fusion_model.load_state_dict(torch.load(fusion_path, map_location=device))
         cnn_model.eval()
         fusion_model.eval()
+        
+        # Warm up models to prevent cold-start timeouts
+        print("Warming up models with dummy inference...")
+        try:
+            dummy_img = torch.zeros(1, 3, 224, 224).to(device)
+            dummy_text = torch.zeros(1, 384).to(device)
+            with torch.no_grad():
+                dummy_feat = cnn_model.extract_features(dummy_img)
+                fusion_model(dummy_feat, dummy_text)
+            print("Model warm-up completed successfully!")
+        except Exception as wu_err:
+            print(f"Warning: Model warm-up failed: {wu_err}")
 
 # Pydantic Schemas
 class HospitalRequest(BaseModel):
