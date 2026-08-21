@@ -8,7 +8,7 @@ def main():
     img.save('test_skin.jpg')
     
     print("Testing /api/predict endpoint on the public URL...")
-    url = "http://127.0.0.1:8000/api/predict"
+    url = "https://polite-snakes-juggle.loca.lt/api/predict"
     
     try:
         with open('test_skin.jpg', 'rb') as f:
@@ -18,7 +18,7 @@ def main():
                 'language': 'en',
                 'city': 'Bengaluru'
             }
-            r = requests.post(url, files=files, data=data, verify=False, timeout=30)
+            r = requests.post(url, files=files, data=data, headers={'Bypass-Tunnel-Reminder': 'true'}, verify=False, timeout=30)
             
         print(f"Status Code: {r.status_code}")
         if r.status_code == 200:

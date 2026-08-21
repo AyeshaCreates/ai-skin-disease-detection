@@ -1,2 +1,2 @@
-Frontend/Backend: https://ccdd74b5a951a42c-49-37-243-191.serveousercontent.com
-Backend API Swagger: https://ccdd74b5a951a42c-49-37-243-191.serveousercontent.com/docs
+Frontend/Backend: https://polite-snakes-juggle.loca.lt
+Backend API Swagger: https://polite-snakes-juggle.loca.lt/docs
