@@ -42,16 +42,15 @@ def update_vercel(public_url):
         print(f"Warning: Failed to update Vercel deployment: {e}")
 
 def start_tunnel():
-    tunnel_cmd = [
-        "ssh", "-R", "80:127.0.0.1:8000", 
-        "-T", 
-        "-o", "StrictHostKeyChecking=no", 
-        "-o", "UserKnownHostsFile=/dev/null", 
-        "serveo.net"
-    ]
+    # Disable TLS warnings for localtunnel proxy connections
+    env = os.environ.copy()
+    env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0"
     
+    # Run localtunnel via npx shell utility on Windows
     tunnel_proc = subprocess.Popen(
-        tunnel_cmd,
+        "npx --yes localtunnel --port 8000",
+        shell=True,
+        env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
@@ -65,12 +64,13 @@ def start_tunnel():
         if not line:
             break
         print(f"Tunnel: {line.strip()}")
-        match = re.search(r'https://[a-zA-Z0-9.-]+serveo[a-zA-Z0-9.-]+', line)
+        # Parse localtunnel output (e.g. your url is: https://*.loca.lt)
+        match = re.search(r'https://[a-zA-Z0-9.-]+loca\.lt', line)
         if match:
             public_url = match.group(0)
             break
-        if time.time() - start_time > 35:
-            print("Error: Timeout waiting for tunnel URL.")
+        if time.time() - start_time > 45:
+            print("Error: Timeout waiting for localtunnel URL.")
             break
             
     return tunnel_proc, public_url

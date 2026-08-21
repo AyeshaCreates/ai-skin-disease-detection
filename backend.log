@@ -40,3 +40,4 @@ INFO:     49.37.243.191:0 - "GET /api/metrics HTTP/1.1" 200 OK
 INFO:     49.37.243.191:0 - "POST /api/predict HTTP/1.1" 200 OK
 INFO:     49.37.243.191:0 - "GET /api/health HTTP/1.1" 200 OK
 INFO:     127.0.0.1:58048 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56821 - "POST /api/predict HTTP/1.1" 200 OK

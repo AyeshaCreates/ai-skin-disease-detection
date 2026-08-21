@@ -65,7 +65,9 @@ export default function App() {
   const fetchMetrics = async () => {
     setMetricsLoading(true);
     try {
-      const resp = await axios.get(`${API_BASE}/api/metrics`);
+      const resp = await axios.get(`${API_BASE}/api/metrics`, {
+        headers: { 'Bypass-Tunnel-Reminder': 'true' }
+      });
       setMetrics(resp.data);
     } catch (err) {
       console.error("Could not fetch metrics:", err);
@@ -218,7 +220,10 @@ export default function App() {
 
     try {
       const resp = await axios.post(`${API_BASE}/api/predict`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 
+          'Content-Type': 'multipart/form-data',
+          'Bypass-Tunnel-Reminder': 'true'
+        }
       });
       
       clearInterval(stepInterval);
@@ -256,7 +261,10 @@ export default function App() {
           heatmap_image_b64: result.heatmap_image,
           hospitals: result.hospitals
         },
-        { responseType: 'blob' }
+        { 
+          responseType: 'blob',
+          headers: { 'Bypass-Tunnel-Reminder': 'true' }
+        }
       );
       
       const file = new Blob([resp.data], { type: 'application/pdf' });
