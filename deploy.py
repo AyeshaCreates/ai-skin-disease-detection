@@ -12,35 +12,41 @@ def update_vercel(public_url):
         env = os.environ.copy()
         env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0"
         
-        # 1. Remove old env variable (ignore error if it doesn't exist)
-        subprocess.run(
-            ["node", "node_modules/vercel/dist/index.js", "env", "rm", "VITE_API_BASE", "production", "--yes"],
-            cwd="frontend",
-            env=env,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        )
-        
-        # 2. Add new env variable (passed via stdin)
-        subprocess.run(
-            ["node", "node_modules/vercel/dist/index.js", "env", "add", "VITE_API_BASE", "production"],
-            input=public_url,
-            text=True,
-            cwd="frontend",
-            env=env,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        )
-        
-        # 3. Redeploy frontend (rebuilds assets with new URL)
-        print("[Vercel Sync] Re-deploying frontend to Vercel production...")
-        subprocess.run(
-            ["node", "node_modules/vercel/dist/index.js", "--yes", "--prod"],
-            cwd="frontend",
-            env=env,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        )
+        # Open vercel sync log file
+        with open("vercel_sync.log", "a", encoding="utf-8") as vs_log:
+            vs_log.write(f"\n--- Vercel Sync Session: {time.strftime('%Y-%m-%d %H:%M:%S')} ---\n")
+            vs_log.write(f"New Backend URL: {public_url}\n")
+            vs_log.flush()
+            
+            # 1. Remove old env variable (ignore error if it doesn't exist)
+            subprocess.run(
+                ["node", "node_modules/vercel/dist/index.js", "env", "rm", "VITE_API_BASE", "production", "--yes"],
+                cwd="frontend",
+                env=env,
+                stdout=vs_log,
+                stderr=subprocess.STDOUT
+            )
+            
+            # 2. Add new env variable (passed via stdin)
+            subprocess.run(
+                ["node", "node_modules/vercel/dist/index.js", "env", "add", "VITE_API_BASE", "production"],
+                input=public_url,
+                text=True,
+                cwd="frontend",
+                env=env,
+                stdout=vs_log,
+                stderr=subprocess.STDOUT
+            )
+            
+            # 3. Redeploy frontend (rebuilds assets with new URL)
+            print("[Vercel Sync] Re-deploying frontend to Vercel production...")
+            subprocess.run(
+                ["node", "node_modules/vercel/dist/index.js", "--yes", "--prod"],
+                cwd="frontend",
+                env=env,
+                stdout=vs_log,
+                stderr=subprocess.STDOUT
+            )
         print("[Vercel Sync] Vercel frontend is fully updated and online!")
     except Exception as e:
         print(f"Warning: Failed to update Vercel deployment: {e}")

@@ -1,2 +1,2 @@
-Frontend/Backend: https://a7e784f5fd1b33b0-49-37-243-191.serveousercontent.com
-Backend API Swagger: https://a7e784f5fd1b33b0-49-37-243-191.serveousercontent.com/docs
+Frontend/Backend: https://4fab4885794f5fbe-49-37-243-191.serveousercontent.com
+Backend API Swagger: https://4fab4885794f5fbe-49-37-243-191.serveousercontent.com/docs
