@@ -16,7 +16,8 @@ def update_vercel(public_url):
         subprocess.run(
             ["node", "node_modules/vercel/dist/index.js", "env", "rm", "VITE_API_BASE", "production", "--yes"],
             cwd="frontend",
-            env=env
+            env=env,
+            stdin=subprocess.DEVNULL
         )
         
         # 2. Add new env variable (passed via stdin)
@@ -33,7 +34,8 @@ def update_vercel(public_url):
         subprocess.run(
             ["node", "node_modules/vercel/dist/index.js", "--yes", "--prod"],
             cwd="frontend",
-            env=env
+            env=env,
+            stdin=subprocess.DEVNULL
         )
         print("[Vercel Sync] Vercel frontend is fully updated and online!")
     except Exception as e:
