@@ -8,7 +8,7 @@ def main():
     img.save('test_skin.jpg')
     
     print("Testing /api/predict endpoint on the public URL...")
-    url = "https://28e40409371e631b-49-37-243-191.serveousercontent.com/api/predict"
+    url = "https://0179bfa2e43b7d42-49-37-243-191.serveousercontent.com/api/predict"
     
     try:
         with open('test_skin.jpg', 'rb') as f:

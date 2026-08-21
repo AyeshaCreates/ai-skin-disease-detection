@@ -107,6 +107,6 @@ def test_pdf_generation():
 def test_api_health_endpoint():
     """Verify backend FastAPI server health check."""
     client = TestClient(app)
-    response = client.get("/")
+    response = client.get("/api/health")
     assert response.status_code == 200
     assert response.json()["status"] == "healthy"
