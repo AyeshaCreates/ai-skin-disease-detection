@@ -27,3 +27,8 @@ Traceback (most recent call last):
     self._sock.shutdown(socket.SHUT_RDWR)
     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
 ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host
+INFO:     127.0.0.1:59086 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     49.37.243.191:0 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     49.37.243.191:0 - "POST /api/predict HTTP/1.1" 200 OK
+INFO:     49.37.243.191:0 - "GET /api/metrics HTTP/1.1" 200 OK
+INFO:     49.37.243.191:0 - "GET /favicon.ico HTTP/1.1" 404 Not Found
