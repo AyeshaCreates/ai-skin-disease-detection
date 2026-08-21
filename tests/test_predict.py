@@ -3,9 +3,18 @@ from PIL import Image
 import os
 
 def main():
-    print("Generating dummy test skin image...")
-    img = Image.new('RGB', (224, 224), color = (200, 100, 100))
-    img.save('test_skin.jpg')
+    import shutil
+    from PIL import ImageDraw
+    img_path = 'data/skin_images/Atopic_Dermatitis_Eczema/synth_0.jpg'
+    if os.path.exists(img_path):
+        print("Loading realistic Eczema skin image from dataset...")
+        shutil.copy(img_path, 'test_skin.jpg')
+    else:
+        print("Generating realistic synthetic Eczema skin image...")
+        img = Image.new('RGB', (224, 224), color=(245, 220, 205))
+        draw = ImageDraw.Draw(img)
+        draw.ellipse([60, 60, 190, 190], fill=(235, 130, 120))
+        img.save('test_skin.jpg')
     
     print("Testing /api/predict endpoint on the public URL...")
     url = "https://small-eyes-know.loca.lt/api/predict"
