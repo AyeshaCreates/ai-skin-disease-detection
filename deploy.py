@@ -108,7 +108,7 @@ def main():
     # 3. Wait for FastAPI backend to load models and start listening
     print("Waiting for FastAPI backend to load models and start listening on port 8000...")
     backend_ready = False
-    for i in range(45):
+    for i in range(90):
         try:
             resp = requests.get("http://127.0.0.1:8000/api/health", timeout=5)
             if resp.status_code == 200:
@@ -120,7 +120,7 @@ def main():
         time.sleep(1)
         
     if not backend_ready:
-        print("Error: FastAPI backend failed to start listening within 45 seconds.")
+        print("Error: FastAPI backend failed to start listening within 90 seconds.")
         backend_proc.terminate()
         sys.exit(1)
         
