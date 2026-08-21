@@ -8,7 +8,7 @@ def main():
     img.save('test_skin.jpg')
     
     print("Testing /api/predict endpoint on the public URL...")
-    url = "https://polite-snakes-juggle.loca.lt/api/predict"
+    url = "https://small-eyes-know.loca.lt/api/predict"
     
     try:
         with open('test_skin.jpg', 'rb') as f:
