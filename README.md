@@ -2,8 +2,8 @@
 
 ### 🌐 Live Public HTTPS Deployment
 - **Vercel Web Application Portal**: [https://frontend-nine-ecru-ivt7r5yxm8.vercel.app](https://frontend-nine-ecru-ivt7r5yxm8.vercel.app)
-- **FastAPI API Swagger Docs**: [https://69fc7eefef264b2e-49-37-178-96.serveousercontent.com/docs](https://69fc7eefef264b2e-49-37-178-96.serveousercontent.com/docs)
-- **Unified Single-Port Backup Portal**: [https://69fc7eefef264b2e-49-37-178-96.serveousercontent.com](https://69fc7eefef264b2e-49-37-178-96.serveousercontent.com)
+- **FastAPI API Swagger Docs**: [https://28e40409371e631b-49-37-243-191.serveousercontent.com/docs](https://28e40409371e631b-49-37-243-191.serveousercontent.com/docs)
+- **Unified Single-Port Backup Portal**: [https://28e40409371e631b-49-37-243-191.serveousercontent.com](https://28e40409371e631b-49-37-243-191.serveousercontent.com)
 
 *Note: The Vercel frontend is fully integrated with the active public backend tunnel. Anyone can access this portal from any device.*
 
