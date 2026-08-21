@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,28 +6,28 @@
 
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-900 font-sans antialiased overflow-x-hidden;
+    @apply bg-stone-50 text-slate-800 font-sans antialiased overflow-x-hidden;
     background-image: 
-      radial-gradient(at 0% 0%, rgba(15, 118, 110, 0.05) 0px, transparent 50%),
-      radial-gradient(at 50% 0%, rgba(30, 58, 138, 0.05) 0px, transparent 50%);
+      radial-gradient(at 0% 0%, rgba(212, 175, 55, 0.08) 0px, transparent 50%),
+      radial-gradient(at 50% 0%, rgba(30, 27, 75, 0.04) 0px, transparent 50%);
   }
 }
 
 @layer components {
   .glass-card {
-    @apply bg-white/80 backdrop-blur-md border border-slate-200/50 shadow-sm rounded-2xl;
+    @apply bg-white/90 backdrop-blur-md border border-stone-200/80 shadow-md shadow-stone-200/40 rounded-2xl;
   }
   
   .glass-card-hover {
-    @apply transition-all duration-300 hover:shadow-md hover:border-slate-300/50;
+    @apply transition-all duration-300 hover:shadow-lg hover:border-amber-500/20;
   }
 
   .nav-link {
-    @apply px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200;
+    @apply px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200;
   }
   
   .nav-link-active {
-    @apply bg-medical-navy text-white shadow-sm;
+    @apply bg-gradient-to-r from-amber-600 to-yellow-600 text-white shadow-md shadow-amber-600/10;
   }
 
   .nav-link-inactive {
@@ -35,11 +35,11 @@
   }
 
   .btn-primary {
-    @apply px-6 py-3 bg-medical-navy text-white rounded-xl font-semibold shadow-sm hover:bg-blue-900 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none;
+    @apply px-6 py-3 bg-gradient-to-r from-amber-600 via-yellow-600 to-amber-700 text-white rounded-xl font-bold shadow-md shadow-amber-600/20 hover:shadow-lg hover:from-amber-700 hover:via-yellow-700 hover:to-amber-800 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none;
   }
   
   .btn-secondary {
-    @apply px-6 py-3 bg-white text-medical-navy border border-slate-200 rounded-xl font-semibold hover:bg-slate-50 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none;
+    @apply px-6 py-3 bg-white text-amber-700 border border-amber-600/30 rounded-xl font-bold hover:bg-amber-50 hover:border-amber-600/50 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none;
   }
 }
 

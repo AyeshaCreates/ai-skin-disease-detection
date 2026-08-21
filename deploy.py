@@ -77,7 +77,7 @@ def start_tunnel():
 
 def main():
     print("==================================================================")
-    print("     DERMASYNTH MULTI-MODAL SYSTEM AUTOMATED DEPLOYMENT AGENT     ")
+    print("     DERMASCAN MULTI-MODAL SYSTEM AUTOMATED DEPLOYMENT AGENT      ")
     print("==================================================================")
     
     # 1. Compile local React static assets (backup/unified fallback)

@@ -9,7 +9,7 @@
 
 ---
 
-Dermasynth is a production-ready, deployable AI healthcare web application built from scratch for a B.E. Final Year Engineering project. It performs multi-modal dermatological classification by fusing visual features from **skin lesion photographs** and linguistic features from **multilingual symptom descriptions** (supporting English, Hindi, and Kannada, both typed and spoken).
+Dermascan is a production-ready, deployable AI healthcare web application built from scratch for a B.E. Final Year Engineering project. It performs multi-modal dermatological classification by fusing visual features from **skin lesion photographs** and linguistic features from **multilingual symptom descriptions** (supporting English, Hindi, and Kannada, both typed and spoken).
 
 ---
 

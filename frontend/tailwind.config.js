@@ -8,8 +8,8 @@ export default {
     extend: {
       colors: {
         medical: {
-          navy: '#1E3A8A',      // Primary buttons, branding
-          teal: '#0F766E',      // Accents, highlights
+          navy: '#1E1B4B',      // Primary branding, royal midnight indigo
+          teal: '#D4AF37',      // Metallic classic gold
           emerald: '#10B981',   // Successful metrics, mild
           amber: '#F59E0B',     // Warnings, moderate
           rose: '#EF4444',      // Alerts, severe
@@ -19,6 +19,7 @@ export default {
       },
       fontFamily: {
         sans: ['Outfit', 'Inter', 'sans-serif'],
+        serif: ['Cinzel', 'serif'],
       },
       animation: {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',

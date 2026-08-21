@@ -359,12 +359,12 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('home')}>
-              <div className="p-2.5 bg-medical-navy rounded-2xl text-white shadow-md shadow-blue-900/10">
-                <Activity className="w-6 h-6 animate-pulse-slow" />
+              <div className="p-2.5 bg-gradient-to-r from-amber-500 to-yellow-600 rounded-2xl text-slate-950 shadow-md shadow-amber-600/25">
+                <Activity className="w-6 h-6 animate-pulse-slow text-white" />
               </div>
               <div>
-                <span className="text-xl font-bold tracking-tight text-slate-900 font-sans block leading-none">DERMASYNTH</span>
-                <span className="text-[10px] uppercase font-bold tracking-widest text-medical-teal font-sans">Multi-Modal AI System</span>
+                <span className="text-2xl font-serif font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-amber-600 via-yellow-600 to-amber-800 block leading-none">DERMASCAN</span>
+                <span className="text-[9px] uppercase font-bold tracking-widest text-slate-500 font-sans mt-1 block">Premium Multi-Modal AI</span>
               </div>
             </div>
             
@@ -1018,7 +1018,7 @@ export default function App() {
             {/* Academic Info */}
             <div className="text-center text-xs text-slate-400 font-semibold space-y-1">
               <p>Submitted as a Final Year Engineering Project for Bachelor of Engineering (B.E.) in Computer Science & Engineering.</p>
-              <p>© 2026 Dermasynth AI Project Team. Open Source Academic License.</p>
+              <p>© 2026 Dermascan AI Project Team. Open Source Academic License.</p>
             </div>
           </div>
         )}
