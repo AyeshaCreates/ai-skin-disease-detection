@@ -34,10 +34,15 @@ app = FastAPI(
 )
 
 # CORS setup to allow React frontend connection
+origins = [
+    "https://frontend-nine-ecru-ivt7r5yxm8.vercel.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, restrict this to the frontend URL
-    allow_credentials=False,
+    allow_origins=origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -64,11 +69,17 @@ async def startup_event():
     # 1. Initialize text encoder first (downloads or uses fallback)
     text_encoder = SymptomTextEncoder(use_cuda=torch.cuda.is_available())
     
-    # 2. Check if checkpoints exist. If not, trigger a fast 3-epoch training run to generate weights.
+    # 2. Check if checkpoints exist. If not, trigger a fast 3-epoch training run locally.
+    # In production (Render), we throw an error instead of running a heavy CPU training loop.
     cnn_path = os.path.join(CHECKPOINT_DIR, "cnn_model.pth")
     fusion_path = os.path.join(CHECKPOINT_DIR, "fusion_model.pth")
     
     if not os.path.exists(cnn_path) or not os.path.exists(fusion_path):
+        if os.getenv("RENDER") or os.getenv("STAGE") == "production":
+            raise FileNotFoundError(
+                f"Model weights not found at {cnn_path} or {fusion_path}. "
+                "Ensure checkpoints are committed and available on Render deployment."
+            )
         print("Model weights not found. Running end-to-end training and evaluation pipeline...")
         # Train for 3 epochs on startup (fast CPU check)
         train_multimodal_system(epochs=3)
@@ -98,6 +109,8 @@ async def startup_event():
             print(f"Warning: Model warm-up failed: {wu_err}")
             
     except Exception as e:
+        if os.getenv("RENDER") or os.getenv("STAGE") == "production":
+            raise RuntimeError(f"Failed to load weights in production: {e}")
         print(f"Error loading saved weights: {e}. Re-training model...")
         train_multimodal_system(epochs=3)
         cnn_model.load_state_dict(torch.load(cnn_path, map_location=device))
