@@ -17,7 +17,7 @@ def main():
         img.save('test_skin.jpg')
     
     print("Testing /api/predict endpoint on the public URL...")
-    url = "https://easy-walls-sniff.loca.lt/api/predict"
+    url = "https://fancy-donkeys-jam.loca.lt/api/predict"
     
     try:
         with open('test_skin.jpg', 'rb') as f:

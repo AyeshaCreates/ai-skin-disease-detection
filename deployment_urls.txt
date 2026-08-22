@@ -1,2 +1,2 @@
-Frontend/Backend: https://easy-walls-sniff.loca.lt
-Backend API Swagger: https://easy-walls-sniff.loca.lt/docs
+Frontend/Backend: https://fancy-donkeys-jam.loca.lt
+Backend API Swagger: https://fancy-donkeys-jam.loca.lt/docs

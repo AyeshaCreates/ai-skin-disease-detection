@@ -18,7 +18,7 @@ from backend.app.main import app
 
 def test_image_model_output_shape():
     """Verify that EfficientNet image model extracts correct dimensions."""
-    model = SkinDiseaseCNN(num_classes=7, pretrained=False)
+    model = SkinDiseaseCNN(num_classes=18, pretrained=False)
     # Synthetic batch of size 2, 3 channels, 224x224
     dummy_input = torch.randn(2, 3, 224, 224)
     
@@ -28,7 +28,7 @@ def test_image_model_output_shape():
     
     # Standalone classification check
     logits = model(dummy_input)
-    assert logits.shape == (2, 7)
+    assert logits.shape == (2, 18)
 
 def test_text_encoder_output_shape():
     """Verify that SymptomTextEncoder extracts 384-dimensional dense vectors."""
@@ -47,7 +47,7 @@ def test_text_encoder_output_shape():
 
 def test_fusion_model_output_shape():
     """Verify that the fusion layer fuses and outputs predictions correctly."""
-    model = MultiModalFusionNet(num_classes=7)
+    model = MultiModalFusionNet(num_classes=18)
     
     # Synthetic image features (1280-dim) and text features (384-dim)
     dummy_img_features = torch.randn(4, 1280)
@@ -55,8 +55,8 @@ def test_fusion_model_output_shape():
     
     d_logits, s_logits = model(dummy_img_features, dummy_text_features)
     
-    # 4 samples, 7 classes for disease, 3 classes for severity
-    assert d_logits.shape == (4, 7)
+    # 4 samples, 18 classes for disease, 3 classes for severity
+    assert d_logits.shape == (4, 18)
     assert s_logits.shape == (4, 3)
 
 def test_distance_calculator():

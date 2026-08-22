@@ -31,7 +31,18 @@ DISEASE_CLASSES = [
     "Seborrheic Keratosis",
     "Acne Vulgaris",
     "Basal Cell Carcinoma",
-    "Psoriasis"
+    "Psoriasis",
+    "Vitiligo",
+    "Rosacea",
+    "Tinea Corporis (Ringworm)",
+    "Impetigo",
+    "Urticaria (Hives)",
+    "Warts",
+    "Contact Dermatitis",
+    "Folliculitis",
+    "Lichen Planus",
+    "Herpes Zoster",
+    "Pityriasis Rosea"
 ]
 
 SEVERITY_LEVELS = ["Mild", "Moderate", "Severe"]
@@ -44,7 +55,18 @@ DISEASE_SEVERITY_MAP = {
     3: 0,  # Seborrheic Keratosis -> Mild
     4: 0,  # Acne -> Mild
     5: 2,  # Basal Cell Carcinoma -> Severe
-    6: 1   # Psoriasis -> Moderate
+    6: 1,  # Psoriasis -> Moderate
+    7: 0,  # Vitiligo -> Mild
+    8: 1,  # Rosacea -> Moderate
+    9: 0,  # Tinea Corporis -> Mild
+    10: 1, # Impetigo -> Moderate
+    11: 1, # Urticaria -> Moderate
+    12: 0, # Warts -> Mild
+    13: 1, # Contact Dermatitis -> Moderate
+    14: 0, # Folliculitis -> Mild
+    15: 1, # Lichen Planus -> Moderate
+    16: 2, # Herpes Zoster -> Severe
+    17: 0  # Pityriasis Rosea -> Mild
 }
 
 # Symptom templates in English, Hindi, Kannada
@@ -167,6 +189,193 @@ SYMPTOM_TEMPLATES = {
             "ನನ್ನ ಮೊಣಕಾಲುಗಳು ಮತ್ತು ತಲೆಯ ಚರ್ಮದ ಮೇಲೆ ಬೆಳ್ಳಿಯ ಪೊರೆಯಂತಿರುವ ತುರಿಕೆಯ ದಪ್ಪ ಚರ್ಮದ ಭಾಗಗಳು.",
             "ದೇಹದ ಕೀಲುಗಳ ಮೇಲೆ ಬೆಳ್ಳಿ ಬಣ್ಣದ ಹುರುಪನ್ನು ಹೊಂದಿರುವ ಸಮಪಾರ್ಶ್ವದ ಚರ್ಮದ ಕೆಂಪು ದದ್ದುಗಳು."
         ]
+    },
+    7: { # Vitiligo
+        "en": [
+            "White depigmented patches appearing on my hands and around my mouth.",
+            "I noticed flat milky-white spots on my skin where color pigment is completely gone.",
+            "Symmetrical white patches with sharp borders on my skin, completely painless."
+        ],
+        "hi": [
+            "मेरे हाथों और मुंह के आसपास सफेद रंगहीन धब्बे दिखाई दे रहे हैं।",
+            "मैंने अपनी त्वचा पर सपाट दूधिया-सफेद धब्बे देखे जहां रंगद्रव्य पूरी तरह से चला गया है।",
+            "मेरी त्वचा पर तेज किनारों वाले सममित सफेद धब्बे, पूरी तरह से दर्द रहित।"
+        ],
+        "kn": [
+            "ನನ್ನ ಕೈಗಳು ಮತ್ತು ಬಾಯಿಯ ಸುತ್ತ ಬಿಳಿ ಬಣ್ಣ ರಹಿತ ದದ್ದುಗಳು ಕಾಣಿಸಿಕೊಳ್ಳುತ್ತಿವೆ.",
+            "ನನ್ನ ಚರ್ಮದ ಮೇಲೆ ಬಣ್ಣದ ಪಿಗ್ಮೆಂಟ್ ಸಂಪೂರ್ಣವಾಗಿ ಕಣ್ಮರೆಯಾಗಿರುವ ಚಪ್ಪಟೆ ಹಾಲಿನಂತಹ ಬಿಳಿ ಕಲೆಗಳನ್ನು ನಾನು ಗಮನಿಸಿದೆ.",
+            "ನನ್ನ ಚರ್ಮದ ಮೇಲೆ ತೀಕ್ಷ್ಣವಾದ ಅಂಚುಗಳನ್ನು ಹೊಂದಿರುವ ಸಮಪಾರ್ಶ್ವದ ಬಿಳಿ ಕಲೆಗಳು, ಸಂಪೂರ್ಣವಾಗಿ ನೋವುರಹಿತವಾಗಿವೆ."
+        ]
+    },
+    8: { # Rosacea
+        "en": [
+            "Redness and visible tiny blood vessels on my cheeks and nose, feels warm.",
+            "I have persistent facial flushing with small red pus-filled bumps on my forehead and nose.",
+            "Red swollen skin on the center of my face, looking like acne but with spider veins."
+        ],
+        "hi": [
+            "मेरे गालों और नाक पर लालिमा और छोटी दिखाई देने वाली रक्त वाहिकाएं, त्वचा गर्म महसूस होती है।",
+            "मेरे माथे और नाक पर छोटे लाल मवाद से भरे दानों के साथ चेहरे पर लगातार लालिमा है।",
+            "मेरे चेहरे के बीच में लाल सूजी हुई त्वचा, मुंहासे जैसी दिखती है लेकिन उसमें मकड़ी जैसी नसें हैं।"
+        ],
+        "kn": [
+            "ನನ್ನ ಕೆನ್ನೆ ಮತ್ತು ಮೂಗಿನ ಮೇಲೆ ಕೆಂಪಾಗುವಿಕೆ ಹಾಗೂ ಸಣ್ಣ ಸಣ್ಣ ರಕ್ತನಾಳಗಳು ಕಾಣಿಸುತ್ತಿವೆ, ಬೆಚ್ಚಗೆ ಭಾಸವಾಗುತ್ತದೆ.",
+            "ನನ್ನ ಹಣೆ ಮತ್ತು ಮೂಗಿನ ಮೇಲೆ ಸಣ್ಣ ಕೆಂಪು ಮಜ್ಜೆಯುಕ್ತ ಗುಳ್ಳೆಗಳೊಂದಿಗೆ ಮುಖದ ಮೇಲೆ ನಿರಂತರ ಕೆಂಪಾಗುವಿಕೆ ಇದೆ.",
+            "ನನ್ನ ಮುಖದ ಮಧ್ಯಭಾಗದಲ್ಲಿ ಕೆಂಪು ಊದಿಕೊಂಡ ಚರ್ಮ, ಮೊಡವೆ ತರಹ ಕಾಣುತ್ತದೆ ಆದರೆ ಜೇಡರ ತಂತಿಯಂತಹ ರಕ್ತನಾಳಗಳಿವೆ."
+        ]
+    },
+    9: { # Tinea Corporis (Ringworm)
+        "en": [
+            "An itchy, red, circular ring-like rash on my arm with raised scaly edges.",
+            "There is a round ring-shaped patch on my skin that is clear in the middle but red and scaling on the borders.",
+            "Annular red lesions with active scaly borders and mild central clearing on torso."
+        ],
+        "hi": [
+            "मेरी बांह पर उभरे हुए पपड़ीदार किनारों के साथ एक खुजलीदार, लाल, गोलाकार अंगूठी जैसा दाद।",
+            "मेरी त्वचा पर एक गोल अंगूठी के आकार का धब्बा है जो बीच में साफ है लेकिन किनारों पर लाल और पपड़ीदार है।",
+            "पीठ या छाती पर सक्रिय पपड़ीदार किनारों और हल्के केंद्रीय स्पष्टता के साथ गोलाकार लाल घाव।"
+        ],
+        "kn": [
+            "ನನ್ನ ಕೈ ಮೇಲೆ ತುರಿಕೆಯುಳ್ಳ, ಕೆಂಪು, ವೃತ್ತಾಕಾರದ ಉಂಗುರದಂತಹ ದದ್ದು, ಇದು ಎದ್ದಿರುವ ಹುರುಪಿನ ಅಂಚುಗಳನ್ನು ಹೊಂದಿದೆ.",
+            "ನನ್ನ ಚರ್ಮದ ಮೇಲೆ ಗೋಳಾಕಾರದ ಉಂಗುರದ ಆಕಾರದ ದದ್ದಿದೆ, ಇದು ಮಧ್ಯದಲ್ಲಿ ಸ್ವಚ್ಛವಾಗಿದ್ದು ಅಂಚುಗಳಲ್ಲಿ ಕೆಂಪು ಮತ್ತು ಹುರುಪಿನಿಂದ ಕೂಡಿದೆ.",
+            "ದೇಹದ ಮೇಲೆ ಸಕ್ರಿಯ ಹುರುಪಿನ ಅಂಚುಗಳು ಮತ್ತು ಮಧ್ಯದಲ್ಲಿ ತಿಳಿ ಬಣ್ಣವನ್ನು ಹೊಂದಿರುವ ವೃತ್ತಾಕಾರದ ಕೆಂಪು ಗಾಯಗಳು."
+        ]
+    },
+    10: { # Impetigo
+        "en": [
+            "Golden honey-colored crusts forming on sores around my nose and lips.",
+            "I have small red blisters around my mouth that ruptured and turned into honey-colored crusty patches.",
+            "Contagious-looking yellow crusted sores on my child's chin that are oozing fluid."
+        ],
+        "hi": [
+            "मेरी नाक और होठों के आसपास के घावों पर सुनहरे शहद के रंग की पपड़ी बन रही है।",
+            "मेरे मुंह के आसपास छोटे लाल छाले हैं जो फट गए और शहद के रंग के पपड़ीदार धब्बों में बदल गए।",
+            "मेरे बच्चे की ठुड्डी पर संक्रामक दिखने वाले पीले पपड़ीदार घाव जिनसे तरल पदार्थ बह रहा है।"
+        ],
+        "kn": [
+            "ನನ್ನ ಮೂಗು ಮತ್ತು ತುಟಿಗಳ ಸುತ್ತಲಿನ ಹುಣ್ಣುಗಳ ಮೇಲೆ ಚಿನ್ನದ ಜೇನುತುಪ್ಪದ ಬಣ್ಣದ ಪೊರೆಗಳು ರೂಪುಗೊಳ್ಳುತ್ತಿವೆ.",
+            "ನನ್ನ ಬಾಯಿಯ ಸುತ್ತ ಸಣ್ಣ ಕೆಂಪು ಗುಳ್ಳೆಗಳಿದ್ದು, ಅವು ಒಡೆದು ಜೇನುತುಪ್ಪದ ಬಣ್ಣದ ಒರಟು ದದ್ದುಗಳಾಗಿ ಮಾರ್ಪಟ್ಟಿವೆ.",
+            "ನನ್ನ ಮಗುವಿನ ಗಲ್ಲದ ಮೇಲೆ ಸೋರುತ್ತಿರುವ ಹಳದಿ ಬಣ್ಣದ ಪೊರೆಯನ್ನು ಹೊಂದಿರುವ ಸಾಂಕ್ರಾಮಿಕವಾಗಿ ಕಾಣುವ ಹುಣ್ಣುಗಳು."
+        ]
+    },
+    11: { # Urticaria (Hives)
+        "en": [
+            "Sudden outbreak of extremely itchy, raised red wheals all over my body.",
+            "I have swollen red welts on my skin that appear, change shape, and fade within hours.",
+            "Intensely pruritic hives and swollen patches that look like nettle stings."
+        ],
+        "hi": [
+            "मेरे पूरे शरीर पर अचानक अत्यधिक खुजलीदार, उभरे हुए लाल चकत्ते निकल आए हैं।",
+            "मेरी त्वचा पर सूजे हुए लाल चपटे चकत्ते हैं जो दिखाई देते हैं, आकार बदलते हैं और कुछ घंटों में गायब हो जाते हैं।",
+            "तीव्र खुजली वाले पित्त और सूजे हुए धब्बे जो बिछुआ डंक जैसे दिखते हैं।"
+        ],
+        "kn": [
+            "ನನ್ನ ಇಡೀ ದೇಹದ ಮೇಲೆ ಇದ್ದಕ್ಕಿದ್ದಂತೆ ತೀವ್ರ ತುರಿಕೆಯುಳ್ಳ, ಎದ್ದಿರುವ ಕೆಂಪು ದದ್ದುಗಳು ಕಾಣಿಸಿಕೊಂಡಿವೆ.",
+            "ನನ್ನ ಚರ್ಮದ ಮೇಲೆ ಊದಿಕೊಂಡ ಕೆಂಪು ದದ್ದುಗಳಿದ್ದು, ಅವು ಕಾಣಿಸಿಕೊಂಡು, ಆಕಾರವನ್ನು ಬದಲಾಯಿಸಿ ಕೆಲವು ಗಂಟೆಗಳಲ್ಲಿ ಮಾಯವಾಗುತ್ತವೆ.",
+            "ತೀವ್ರ ತುರಿಕೆಯುಳ್ಳ ಜೇನುನೊಣ ಕಚ್ಚಿದಂತೆ ಕಾಣುವ ಊದಿಕೊಂಡ ದದ್ದುಗಳು."
+        ]
+    },
+    12: { # Warts
+        "en": [
+            "A rough, bumpy skin-colored growth on my finger with tiny black dots inside.",
+            "I have hard wart-like papules on my hands that feel rough and resemble cauliflower.",
+            "Benign small bumpy growths on my feet that are painful when walking."
+        ],
+        "hi": [
+            "मेरी उंगली पर एक खुरदरा, उभरा हुआ त्वचा के रंग का मस्सा जिसके अंदर छोटे काले बिंदु हैं।",
+            "मेरे हाथों पर सख्त मस्से जैसे दाने हैं जो खुरदरे लगते हैं और फूलगोभी जैसे दिखते हैं।",
+            "मेरे पैरों पर छोटे उभरे हुए मस्से जो चलने पर दर्द करते हैं।"
+        ],
+        "kn": [
+            "ನನ್ನ ಬೆರಳಿನ ಮೇಲೆ ಸಣ್ಣ ಕಪ್ಪು ಚುಕ್ಕೆಗಳನ್ನು ಹೊಂದಿರುವ ಒರಟಾದ, ಉಬ್ಬು ತರಹದ ಚರ್ಮದ ಬಣ್ಣದ ಬೆಳೆತ.",
+            "ನನ್ನ ಕೈಗಳ ಮೇಲೆ ಒರಟಾದ ಮತ್ತು ಹೂಕೋಸಿನಂತೆ ಕಾಣುವ ಗಟ್ಟಿಯಾದ ನರಹುಲಿ ತರಹದ ಗುಳ್ಳೆಗಳಿವೆ.",
+            "ನನ್ನ ಪಾದಗಳ ಮೇಲೆ ನಡೆಯುವಾಗ ನೋವುಂಟುಮಾಡುವ ಸಣ್ಣ ಉಬ್ಬು ತರಹದ ಬೆಳೆತಗಳು."
+        ]
+    },
+    13: { # Contact Dermatitis
+        "en": [
+            "Red itchy rash on my wrist where my watch metal touches the skin.",
+            "I touched poison ivy/harsh detergent and now my hands are red, blistered, and itching intensely.",
+            "Localized eczema-like inflamed skin patch after contact with a cosmetic cream."
+        ],
+        "hi": [
+            "मेरी कलाई पर लाल खुजलीदार दाने जहां मेरी घड़ी का धातु त्वचा को छूता है।",
+            "मैंने किसी रसायन/कठोर साबुन को छुआ और अब मेरे हाथ लाल हैं, उन पर छाले हैं और तेज खुजली हो रही है।",
+            "एक कॉस्मेटिक क्रीम के संपर्क में आने के बाद स्थानीयकृत एक्जिमा जैसी सूजी हुई त्वचा का धब्बा।"
+        ],
+        "kn": [
+            "ನನ್ನ ಮಣಿಕಟ್ಟಿನ ಮೇಲೆ ಕೆಂಪು ತುರಿಕೆಯ ದದ್ದು ಕಾಣಿಸಿಕೊಂಡಿದೆ, ಅಲ್ಲಿ ನನ್ನ ಕೈಗಡಿಯಾರದ ಲೋಹವು ಚರ್ಮವನ್ನು ಸ್ಪರ್ಶಿಸುತ್ತದೆ.",
+            "ನಾನು ಕಠಿಣ ಮಾರ್ಜಕ ಅಥವಾ ಗಿಡವನ್ನು ಸ್ಪರ್ಶಿಸಿದೆ ಮತ್ತು ಈಗ ನನ್ನ ಕೈಗಳು ಕೆಂಪಾಗಿ, ಗುಳ್ಳೆಗಳಾಗಿ ತೀವ್ರವಾಗಿ ತುರಿಯುತ್ತಿವೆ.",
+            "ಯಾವುದೋ ಕ್ರೀಮ್ ಬಳಸಿದ ನಂತರ ಆ ಭಾಗದಲ್ಲಿ ಮಾತ್ರ ಉಂಟಾಗಿರುವ ಕೆಂಪು ಊದಿಕೊಂಡ ಚರ್ಮದ ಭಾಗ."
+        ]
+    },
+    14: { # Folliculitis
+        "en": [
+            "Multiple tiny red bumps and pustules surrounding hair follicles on my thighs.",
+            "I have itchy small whiteheads centered around hair roots on my chest after shaving.",
+            "Inflamed hair follicles that look like a breakout of small pimples on my scalp."
+        ],
+        "hi": [
+            "मेरी जांघों पर बालों के रोमों के आसपास कई छोटे लाल उभार और मवाद वाले दाने।",
+            "शेविंग के बाद मेरी छाती पर बालों की जड़ों के आसपास केंद्रित खुजली वाले छोटे सफेद दाने हैं।",
+            "सूजे हुए बालों के रोम जो मेरे सिर की त्वचा पर छोटे मुंहासों जैसे दिखते हैं।"
+        ],
+        "kn": [
+            "ನನ್ನ ತೊಡೆಗಳ ಮೇಲೆ ಕೂದಲಿನ ಬುಡಗಳ ಸುತ್ತ ಹಲವಾರು ಸಣ್ಣ ಕೆಂಪು ಗುಳ್ಳೆಗಳು ಮತ್ತು ಮಜ್ಜೆಯುಳ್ಳ ದದ್ದುಗಳು ಕಾಣಿಸಿಕೊಂಡಿವೆ.",
+            "ಕ್ಷೌರ ಮಾಡಿದ ನಂತರ ನನ್ನ ಎದೆಯ ಮೇಲೆ ಕೂದಲಿನ ಬೇರುಗಳ ಸುತ್ತ ತುರಿಕೆಯ ಸಣ್ಣ ಬಿಳಿ ಮೊಡವೆಗಳಾಗಿವೆ.",
+            "ನನ್ನ ತಲೆಯ ಚರ್ಮದ ಮೇಲೆ ಸಣ್ಣ ಮೊಡವೆಗಳಂತೆ ಕಾಣುವ ಕೂದಲಿನ ಬುಡಗಳ ಊತ."
+        ]
+    },
+    15: { # Lichen Planus
+        "en": [
+            "Purple, flat-topped, itchy bumps with fine white lines on my inner wrists.",
+            "I have shiny polygonal violet-colored papules on my skin that itch constantly.",
+            "Flat-topped purplish lesions on my ankles showing fine lacy white patterns."
+        ],
+        "hi": [
+            "मेरी कलाई के अंदरूनी हिस्से पर महीन सफेद रेखाओं के साथ बैंगनी, चपटे, खुजलीदार उभार।",
+            "मेरी त्वचा पर चमकदार बहुकोणीय बैंगनी रंग के दाने हैं जिनमें लगातार खुजली होती है।",
+            "मेरे टखनों पर चपटे बैंगनी रंग के घाव जो महीन जालीदार सफेद पैटर्न दिखाते हैं।"
+        ],
+        "kn": [
+            "ನನ್ನ ಮಣಿಕಟ್ಟಿನ ಒಳಭಾಗದಲ್ಲಿ ಸೂಕ್ಷ್ಮ ಬಿಳಿ ಗೆರೆಗಳನ್ನು ಹೊಂದಿರುವ ನೇರಳೆ ಬಣ್ಣದ ಚಪ್ಪಟೆ ತುರಿಕೆಯ ಗುಳ್ಳೆಗಳು.",
+            "ನನ್ನ ಚರ್ಮದ ಮೇಲೆ ನಿರಂತರ ತುರಿಕೆಯುಳ್ಳ ಹೊಳೆಯುವ ನೇರಳೆ ಬಣ್ಣದ ಬಹುಕೋನ ಆಕಾರದ ಗುಳ್ಳೆಗಳಿವೆ.",
+            "ನನ್ನ ಪಾದದ ಬಳಿ ಸೂಕ್ಷ್ಮ ಬಿಳಿ ಜಾಲರಿಯಂತಹ ವಿನ್ಯಾಸವನ್ನು ಹೊಂದಿರುವ ಚಪ್ಪಟೆ ನೇರಳೆ ಬಣ್ಣದ ಗಾಯಗಳು."
+        ]
+    },
+    16: { # Herpes Zoster
+        "en": [
+            "A painful band of fluid-filled blisters wrapping around one side of my chest.",
+            "I have intense burning pain followed by a cluster of red blisters on my lower back.",
+            "Unilateral stripe of painful rash with fluid blisters aligned along a nerve path."
+        ],
+        "hi": [
+            "मेरी छाती के एक तरफ पानी से भरे छालों की एक दर्दनाक पट्टी बन गई है।",
+            "मुझे अत्यधिक जलन वाला दर्द है जिसके बाद मेरी पीठ के निचले हिस्से पर लाल छालों का झुंड बन गया है।",
+            "एक तंत्रिका पथ के साथ संरेखित तरल छालों के साथ दर्दनाक चकत्ते की एकतरफा पट्टी।"
+        ],
+        "kn": [
+            "ನನ್ನ ಎದೆಯ ಒಂದು ಭಾಗದಲ್ಲಿ ನೀರು ತುಂಬಿದ ಗುಳ್ಳೆಗಳ ನೋವಿನ ಪಟ್ಟಿಯೊಂದು ಕಾಣಿಸಿಕೊಂಡಿದೆ (ಹರಳು ಬೇನೆ).",
+            "ನನ್ನ ಬೆನ್ನಿನ ಕೆಳಭಾಗದಲ್ಲಿ ತೀವ್ರವಾದ ಉರಿಯೂತದ ನೋವಿನ ನಂತರ ಕೆಂಪು ಗುಳ್ಳೆಗಳ ಗುಂಪು ಕಾಣಿಸಿಕೊಂಡಿದೆ.",
+            "ನರಗಳ ಹಾದಿಯಲ್ಲಿ ಮಾತ್ರ ನೋವಿನಿಂದ ಕೂಡಿದ ನೀರು ತುಂಬಿದ ಗುಳ್ಳೆಗಳ ಸಾಲು."
+        ]
+    },
+    17: { # Pityriasis Rosea
+        "en": [
+            "A single large oval pink herald patch on my stomach followed by smaller spots.",
+            "I have a Christmas-tree pattern of oval scaly pink rashes across my back and chest.",
+            "Oval-shaped salmon-colored scaly lesions aligned along skin cleavage lines."
+        ],
+        "hi": [
+            "मेरे पेट पर एक बड़ा अंडाकार गुलाबी धब्बा (हेराल्ड पैच) और उसके बाद छोटे-छोटे धब्बे।",
+            "मेरी पीठ और छाती पर अंडाकार पपड़ीदार गुलाबी दानों का क्रिसमस-ट्री जैसा पैटर्न बन गया है।",
+            "त्वचा की रेखाओं के साथ संरेखित अंडाकार आकार के हल्के लाल पपड़ीदार घाव।"
+        ],
+        "kn": [
+            "ನನ್ನ ಹೊಟ್ಟೆಯ ಮೇಲೆ ಒಂದೇ ಒಂದು ದೊಡ್ಡ ಅಂಡಾಕಾರದ ಗುಲಾಬಿ ಬಣ್ಣದ ದದ್ದು ಕಾಣಿಸಿಕೊಂಡು, ನಂತರ ಸಣ್ಣ ಸಣ್ಣ ದದ್ದುಗಳು ಹರಡಿವೆ.",
+            "ನನ್ನ ಬೆನ್ನು ಮತ್ತು ಎದೆಯ ಮೇಲೆ ಅಂಡಾಕಾರದ ಗುಲಾಬಿ ದದ್ದುಗಳ ಕ್ರಿಸ್ಮಸ್ ಮರದಂತಹ ವಿನ್ಯಾಸವಿದೆ.",
+            "ಚರ್ಮದ ರೇಖೆಗಳ ಉದ್ದಕ್ಕೂ ಜೋಡಿಸಲ್ಪಟ್ಟ ಅಂಡಾಕಾರದ ಗುಲಾಬಿ ಬಣ್ಣದ ಹುರುಪಿನ ದದ್ದುಗಳು."
+        ]
     }
 }
 
@@ -256,6 +465,76 @@ def generate_synthetic_lesion(disease_idx, save_path):
             x = np.random.randint(85, 170)
             y = np.random.randint(85, 170)
             draw.ellipse([x, y, x+8, y+4], fill=(240, 240, 240))
+    elif disease_idx == 7: # Vitiligo - Depigmented milky white patch
+        draw.ellipse([80, 80, 176, 176], fill=(255, 245, 240)) # Milky white patch
+        draw.ellipse([95, 95, 160, 160], fill=(255, 255, 255))
+    elif disease_idx == 8: # Rosacea - Erythematous flushing
+        # Red facial flush
+        draw.ellipse([60, 60, 196, 196], fill=(235, 120, 110))
+        draw.ellipse([80, 80, 176, 176], fill=(240, 140, 130))
+        # Add small vascular lines
+        for i in range(8):
+            x = np.random.randint(90, 160)
+            y = np.random.randint(90, 160)
+            draw.line([x, y, x+np.random.randint(5, 15), y+np.random.randint(-5, 5)], fill=(210, 30, 30), width=1)
+    elif disease_idx == 9: # Tinea Corporis - Circular scaly ring
+        # Outer red ring
+        draw.ellipse([70, 70, 186, 186], fill=(215, 95, 80))
+        # Clear center (skin tone)
+        draw.ellipse([85, 85, 171, 171], fill=(245, 220, 205))
+    elif disease_idx == 10: # Impetigo - Honey-colored crusts
+        draw.ellipse([90, 90, 166, 166], fill=(220, 180, 110)) # Honey-gold crust
+        # Golden crusty spots
+        for i in range(12):
+            x = np.random.randint(95, 155)
+            y = np.random.randint(95, 155)
+            draw.ellipse([x, y, x+8, y+8], fill=(190, 140, 60))
+    elif disease_idx == 11: # Urticaria - Raised red welts
+        draw.ellipse([75, 75, 181, 181], fill=(240, 145, 135))
+        # Irregular welts
+        draw.ellipse([90, 80, 150, 130], fill=(245, 165, 155))
+        draw.ellipse([110, 120, 170, 170], fill=(245, 165, 155))
+    elif disease_idx == 12: # Warts - Rough bumpy growth
+        draw.ellipse([90, 90, 166, 166], fill=(210, 185, 170))
+        # Cauliflower bumps
+        for i in range(15):
+            x = np.random.randint(95, 155)
+            y = np.random.randint(95, 155)
+            draw.ellipse([x, y, x+10, y+10], fill=(185, 160, 145))
+    elif disease_idx == 13: # Contact Dermatitis - Red vesicular rash
+        draw.ellipse([65, 65, 191, 191], fill=(230, 95, 95))
+        # Small tiny blisters
+        for i in range(15):
+            x = np.random.randint(80, 170)
+            y = np.random.randint(80, 170)
+            draw.ellipse([x, y, x+4, y+4], fill=(255, 230, 230))
+    elif disease_idx == 14: # Folliculitis - Small red bumps around hairs
+        # Hair follicle red halos
+        halos = [(85, 90), (120, 80), (150, 110), (95, 140), (145, 150), (115, 120), (170, 100)]
+        for h in halos:
+            draw.ellipse([h[0]-8, h[1]-8, h[0]+8, h[1]+8], fill=(225, 80, 80)) # Red halo
+            draw.ellipse([h[0]-2, h[1]-2, h[0]+2, h[1]+2], fill=(250, 250, 220)) # Small pus head
+            draw.line([h[0], h[1]-12, h[0], h[1]+12], fill=(40, 30, 20), width=1) # Hair strand
+    elif disease_idx == 15: # Lichen Planus - Violet polygonal papules
+        # Violet patches
+        draw.ellipse([80, 80, 176, 176], fill=(160, 100, 160))
+        # Fine white patterns (Wickham's striae)
+        for i in range(10):
+            x = np.random.randint(90, 160)
+            y = np.random.randint(90, 160)
+            draw.line([x, y, x+10, y+5], fill=(245, 240, 245), width=1)
+    elif disease_idx == 16: # Herpes Zoster - Band of blisters
+        # Red band background
+        draw.ellipse([70, 90, 190, 160], fill=(230, 90, 90))
+        # Grouped blisters
+        blisters = [(80, 110), (105, 115), (120, 125), (145, 120), (160, 135), (110, 140), (135, 105)]
+        for b in blisters:
+            draw.ellipse([b[0]-6, b[1]-6, b[0]+6, b[1]+6], fill=(255, 240, 230))
+    elif disease_idx == 17: # Pityriasis Rosea - Salmon scaly ovals
+        # Large herald patch
+        draw.ellipse([90, 95, 166, 145], fill=(235, 150, 130)) # Salmon pink oval
+        # Scale border
+        draw.ellipse([100, 105, 156, 135], fill=(245, 190, 175))
             
     img.save(save_path)
 

@@ -226,6 +226,15 @@ async def predict_skin_disease(
             predicted_disease = DISEASE_CLASSES[pred_disease_idx]
             predicted_severity = SEVERITY_LEVELS[pred_severity_idx]
             
+            # Get top 3 predictions
+            topk_probs, topk_indices = torch.topk(disease_probs, k=min(3, len(DISEASE_CLASSES)))
+            top_predictions = []
+            for prob, idx in zip(topk_probs, topk_indices):
+                top_predictions.append({
+                    "disease": DISEASE_CLASSES[idx.item()],
+                    "confidence": float(prob.item())
+                })
+            
         # 7. Generate Grad-CAM Heatmap Overlay
         # Run Grad-CAM on the target layer features[-1] of the base EfficientNet model
         # Target layer is features[-1] (the final convolutional layer before pooling)
@@ -290,7 +299,8 @@ async def predict_skin_disease(
             "explanation": explanation,
             "recommendations": recommendations,
             "hospitals": hospitals,
-            "location": {"lat": current_lat, "lon": current_lon, "city": city}
+            "location": {"lat": current_lat, "lon": current_lon, "city": city},
+            "top_predictions": top_predictions
         })
         
     except Exception as e:
@@ -397,6 +407,61 @@ def get_clinical_explanation(disease: str) -> str:
             "Psoriasis is a chronic autoimmune skin condition that accelerates the life cycle of skin cells. "
             "This rapid turnover leads to cells building up rapidly on the surface of the skin. "
             "It presents as thick red plaques covered with silvery scales, commonly on elbows, knees, scalp, and torso."
+        ),
+        "Vitiligo": (
+            "Vitiligo is a long-term skin condition characterized by patches of the skin losing their pigment. "
+            "It occurs when melanocytes (cells responsible for skin color) are destroyed by the body's immune system, "
+            "resulting in flat, depigmented milky-white spots with sharp, distinct margins."
+        ),
+        "Rosacea": (
+            "Rosacea is a chronic inflammatory skin condition that primarily affects the face. "
+            "It causes persistent redness, flushing, and visible small blood vessels (telangiectasias), "
+            "often accompanied by small red pus-filled papules resembling acne."
+        ),
+        "Tinea Corporis (Ringworm)": (
+            "Tinea corporis is a superficial fungal infection of the body skin. "
+            "It is caused by dermatophyte fungi and typically presents as an itchy, circular ring-like rash "
+            "with elevated, scaly red borders and a relatively clear center."
+        ),
+        "Impetigo": (
+            "Impetigo is a highly contagious superficial bacterial skin infection, common in children. "
+            "It is caused by Staph or Strep bacteria and is characterized by honey-colored crusted sores "
+            "that form around the nose, lips, and extremities."
+        ),
+        "Urticaria (Hives)": (
+            "Urticaria (commonly known as hives) is a vascular skin reaction characterized by transient wheals. "
+            "It presents as raised, severely itchy red or skin-colored welts that appear and fade rapidly, "
+            "triggered by allergic responses, physical stimuli, or systemic stress."
+        ),
+        "Warts": (
+            "Warts are benign epidermal growths caused by infection with the Human Papillomavirus (HPV). "
+            "They present as rough, elevated skin-colored papules with a cauliflower-like texture, "
+            "often containing small black dots representing clotted capillary vessels."
+        ),
+        "Contact Dermatitis": (
+            "Contact dermatitis is an acute or chronic localized skin inflammation. "
+            "It is triggered by direct exposure to allergens (poison ivy, nickel) or irritants (soaps, acids), "
+            "presenting as an itchy, red rash with vesicles or scaling localized to the contact area."
+        ),
+        "Folliculitis": (
+            "Folliculitis is an inflammatory condition of the hair follicles, typically due to bacterial or fungal infection. "
+            "It presents as small, itchy, pus-filled pimples centered around hair shafts, commonly occurring on "
+            "shaved or friction-prone areas like the face, scalp, and thighs."
+        ),
+        "Lichen Planus": (
+            "Lichen planus is a chronic autoimmune condition affecting the skin and mucous membranes. "
+            "It presents as shiny, polygonal, flat-topped violaceous (purple) papules that are intensely itchy "
+            "and show fine white lacy lines known as Wickham's striae."
+        ),
+        "Herpes Zoster": (
+            "Herpes zoster (commonly known as shingles) is a painful viral infection caused by the reactivation of "
+            "the Varicella-Zoster virus (chickenpox). It presents as a painful, unilateral band-like rash "
+            "of grouped fluid-filled blisters along a specific sensory nerve path (dermatome)."
+        ),
+        "Pityriasis Rosea": (
+            "Pityriasis rosea is an acute, self-limiting inflammatory skin eruption. "
+            "It begins with a single larger oval 'herald patch' on the torso, followed by a widespread breakout "
+            "of smaller scaly pink oval spots aligned along skin cleavage lines in a 'Christmas tree' pattern."
         )
     }
     return explanations.get(disease, "A skin lesion displaying clinical features typical of the predicted class.")
@@ -446,20 +511,86 @@ def get_confidence_aware_recommendations(disease: str, confidence: float, severi
             "Avoid scrubbing plaques or peeling scales off, as this can trigger new lesions (Koebner phenomenon).",
             "Incorporate mild exposure to sunlight, as controlled UV light can improve plaque symptoms.",
             "Consult a physician about topical treatments (corticosteroids, salicylic acid) or systemic therapies."
+        ],
+        "Vitiligo": [
+            "Protect depigmented skin areas from sunburn using SPF 50+ broad-spectrum sunscreen.",
+            "Consult a dermatologist regarding phototherapy (NB-UVB) or topical corticosteroid treatment.",
+            "Avoid skin trauma or friction, as depigmentation can occur at injured sites (Koebner response).",
+            "Seek psychological support if the patches cause cosmetic distress or anxiety."
+        ],
+        "Rosacea": [
+            "Identify and avoid triggers such as spicy foods, alcohol, hot beverages, and extreme temperatures.",
+            "Apply a gentle, non-chemical mineral sunscreen (zinc oxide/titanium dioxide) daily.",
+            "Use mild, non-abrasive facial cleansers and avoid scrubbing or rubbing the skin.",
+            "Consult a physician about topical metronidazole, azelaic acid, or oral antibiotics for persistent bumps."
+        ],
+        "Tinea Corporis (Ringworm)": [
+            "Apply an over-the-counter topical antifungal cream (terbinafine, clotrimazole) 1-2 inches beyond the active border.",
+            "Keep the affected skin clean and completely dry, especially in hot or humid environments.",
+            "Avoid sharing towels, clothing, or personal items to prevent spreading the fungal infection.",
+            "Seek evaluation if the circular rash spreads or fails to improve after 2 weeks of antifungal treatment."
+        ],
+        "Impetigo": [
+            "Keep the sores clean by washing gently with mild soap and running water, then cover them loosely.",
+            "Avoid touching, scratching, or picking the honey-colored crusts to prevent auto-inoculation.",
+            "Wash hands thoroughly after touching the affected areas; wash linens and clothes separately.",
+            "Consult a physician for prescription topical mupirocin ointment or oral antibiotics."
+        ],
+        "Urticaria (Hives)": [
+            "Take an over-the-counter non-drowsy antihistamine to reduce itching and swelling.",
+            "Apply cool compresses or take a cool bath to soothe the inflamed welts.",
+            "Avoid hot water, tight clothing, and known triggers (certain foods or medicines).",
+            "Seek emergency medical care immediately if hives are accompanied by difficulty breathing or facial swelling."
+        ],
+        "Warts": [
+            "Avoid picking, scratching, or biting warts, as HPV can spread to other areas of your skin.",
+            "Keep warts clean and dry; wash hands thoroughly after touching a lesion.",
+            "Do not share emery boards, pumice stones, or nail clippers used on warts.",
+            "Consult a healthcare professional regarding cryotherapy, salicylic acid treatments, or laser removal."
+        ],
+        "Contact Dermatitis": [
+            "Wash the skin immediately with copious water if contact with a suspected irritant or allergen is recognized.",
+            "Apply cool compresses and calamine lotion to relieve localized itching.",
+            "Use fragrance-free moisturizers and avoid contact with the inciting substance.",
+            "Consult a physician if rash is extensive, painful, or does not improve within a week."
+        ],
+        "Folliculitis": [
+            "Wash the area twice daily with an antibacterial soap or wash.",
+            "Avoid shaving or waxing the affected area until the pustules have cleared.",
+            "Wear loose, breathable clothing to minimize friction and sweat buildup.",
+            "Consult a doctor if the folliculitis spreads, turns into a boil, or fails to resolve."
+        ],
+        "Lichen Planus": [
+            "Avoid scratching or rubbing the purple bumps to prevent secondary bacterial infection.",
+            "Use mild, soap-free body washes and apply thick emollients to calm the skin.",
+            "Consult a dermatologist regarding topical corticosteroids or phototherapy.",
+            "Perform regular oral checks if you experience purple rashes, as Lichen Planus can affect oral mucosa."
+        ],
+        "Herpes Zoster": [
+            "Seek immediate medical evaluation (within 72 hours of rash onset) to start antiviral therapy.",
+            "Keep the fluid-filled blisters clean and dry; cover them with a sterile, non-stick dressing.",
+            "Wear loose-fitting clothing to minimize pain and friction over the active nerve path.",
+            "Avoid contact with pregnant women, infants, and immunocompromised individuals who haven't had chickenpox."
+        ],
+        "Pityriasis Rosea": [
+            "Reassure yourself that this is a benign, self-limiting condition that typically resolves in 6-8 weeks.",
+            "Take lukewarm oatmeal baths and apply calamine lotion to soothe any itching.",
+            "Avoid vigorous exercise and hot showers, as body heat can temporarily worsen the pink spots.",
+            "Consult a doctor if the diagnosis is uncertain or if itching is severe."
         ]
     }
     
     precautions = base_precautions.get(disease, ["Consult a medical professional for advice."]).copy()
     
-    # Confidence Adjustments
-    if confidence < 0.40:
+    # Calibrated Confidence Categories
+    if confidence < 0.70:
         return [
             "WARNING: The AI system has LOW CONFIDENCE in this prediction.",
-            "The diagnostic findings are highly uncertain. Do not rely on this prediction as a confirmed diagnosis.",
-            "Please schedule an in-person consultation with a dermatologist for a professional evaluation.",
+            "The diagnostic findings are highly uncertain. Please upload a clearer image or consult a qualified dermatologist.",
+            "Do not rely on this prediction as a confirmed diagnosis.",
             "Avoid starting any self-treatments or topical medications without a professional prescription."
         ]
-    elif confidence < 0.75:
+    elif confidence < 0.90:
         monitoring_tips = [
             "NOTE: The AI prediction is moderately confident. We recommend careful monitoring.",
             "Track this lesion closely over the next 2-4 weeks. Take weekly photographs under identical lighting.",
@@ -468,7 +599,7 @@ def get_confidence_aware_recommendations(disease: str, confidence: float, severi
         return monitoring_tips + precautions
     else:
         # High confidence
-        return ["CONFIRMED PREDICTION: The AI system is highly confident in this analysis."] + precautions
+        return ["CONFIRMED PREDICTION: The AI system is highly confident in this analysis (High Confidence >= 90%)."] + precautions
 
 # Mount static files of the React frontend compiled build if the directory exists
 frontend_dist_path = os.path.abspath("frontend/dist")

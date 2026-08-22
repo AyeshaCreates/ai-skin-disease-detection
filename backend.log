@@ -1,4 +1,4 @@
-INFO:     Started server process [52300]
+INFO:     Started server process [32892]
 INFO:     Waiting for application startup.
 '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1081)' thrown while requesting HEAD https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2/resolve/main/config.json
 Retrying in 1s [Retry 1/5].
@@ -12,4 +12,4 @@ Warning: Failed to load Hugging Face model (Can't load the configuration of 'sen
 All models loaded successfully and ready for inference.
 Warming up models with dummy inference...
 Model warm-up completed successfully!
-INFO:     127.0.0.1:63680 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63230 - "GET /api/health HTTP/1.1" 200 OK
