@@ -29,7 +29,9 @@ DISEASE_CLASSES = [
     "Melanocytic Nevus",
     "Atopic Dermatitis (Eczema)",
     "Seborrheic Keratosis",
-    "Acne Vulgaris"
+    "Acne Vulgaris",
+    "Basal Cell Carcinoma",
+    "Psoriasis"
 ]
 
 SEVERITY_LEVELS = ["Mild", "Moderate", "Severe"]
@@ -40,7 +42,9 @@ DISEASE_SEVERITY_MAP = {
     1: 0,  # Nevus -> Mild
     2: 1,  # Eczema -> Moderate
     3: 0,  # Seborrheic Keratosis -> Mild
-    4: 0   # Acne -> Mild
+    4: 0,  # Acne -> Mild
+    5: 2,  # Basal Cell Carcinoma -> Severe
+    6: 1   # Psoriasis -> Moderate
 }
 
 # Symptom templates in English, Hindi, Kannada
@@ -129,6 +133,40 @@ SYMPTOM_TEMPLATES = {
             "ನನ್ನ ಹಣೆ ಮತ್ತು ಮೂಗಿನ ಮೇಲೆ ನೋವಿನ ಕೆಂಪು ಗುಳ್ಳೆಗಳು ಮತ್ತು ಮುಚ್ಚಿಹೋದ ರೋಮಕೂಪಗಳಿವೆ.",
             "ಕೆನ್ನೆಗಳ ಮೇಲೆ ಊತ ಮತ್ತು ಸಣ್ಣ ಬಿಳಿ ಮೊಡವೆಗಳೊಂದಿಗೆ ಮೊಡವೆಗಳ ಉಲ್ಬಣ."
         ]
+    },
+    5: { # Basal Cell Carcinoma
+        "en": [
+            "A shiny, pearly pink bump on my nose that has small visible blood vessels.",
+            "I have a slow-growing pink sore on my forehead that bleeds, heals, and then bleeds again.",
+            "A firm skin-colored nodule with a rolled border and a crusted center."
+        ],
+        "hi": [
+            "मेरी नाक पर एक चमकदार, मोती जैसा गुलाबी उभार जिसमें छोटी रक्त वाहिकाएं दिखाई दे रही हैं।",
+            "मेरे माथे पर एक धीरे-धीरे बढ़ने वाला गुलाबी घाव है जिससे खून बहता है, ठीक होता है और फिर खून बहता है।",
+            "एक उभरा हुआ त्वचा के रंग का गांठ जिसके किनारे मुड़े हुए हैं और बीच में पपड़ी है।"
+        ],
+        "kn": [
+            "ನನ್ನ ಮೂಗಿನ ಮೇಲೆ ಸಣ್ಣ ರಕ್ತನಾಳಗಳನ್ನು ಹೊಂದಿರುವ ಹೊಳೆಯುವ, ಮುತ್ತಿನಂತಹ ಗುಲಾಬಿ ಬಣ್ಣದ ಗುಳ್ಳೆ.",
+            "ನನ್ನ ಹಣೆಯ ಮೇಲೆ ನಿಧಾನವಾಗಿ ಬೆಳೆಯುತ್ತಿರುವ ಗುಲಾಬಿ ಬಣ್ಣದ ಹುಣ್ಣು ಇದ್ದು, ಅದು ರಕ್ತಸ್ರಾವವಾಗಿ, ಗುಣಮುಖವಾಗಿ ಮತ್ತೆ ರಕ್ತಸ್ರಾವವಾಗುತ್ತದೆ.",
+            "ಮಡಚಲ್ಪಟ್ಟ ಅಂಚುಗಳು ಮತ್ತು ಒಣಗಿದ ಮಧ್ಯಭಾಗವನ್ನು ಹೊಂದಿರುವ ಚರ್ಮದ ಬಣ್ಣದ ಗಟ್ಟಿ ಗಂಟು."
+        ]
+    },
+    6: { # Psoriasis
+        "en": [
+            "Thick red plaques on my elbows covered with silvery scales. It is dry and cracks.",
+            "Silvery scaly skin patches on my knees and scalp that itch and feel thick.",
+            "Symmetrical inflamed skin lesions with silver-colored scaling on extensor surfaces."
+        ],
+        "hi": [
+            "मेरी कोहनी पर चांदी जैसी पपड़ी से ढके मोटे लाल धब्बे। यह सूखा है और फट जाता है।",
+            "मेरे घुटनों और सिर पर चांदी जैसी पपड़ीदार त्वचा के धब्बे जिनमें खुजली होती है और वे मोटे लगते हैं।",
+            "शरीर के जोड़ों पर चांदी के रंग की पपड़ी के साथ सममित रूप से सूजे हुए त्वचा के घाव।"
+        ],
+        "kn": [
+            "ನನ್ನ ಮೊಣಕೈಗಳ ಮೇಲೆ ಬೆಳ್ಳಿಯಂತಹ ಹುರುಪಿನಿಂದ ಮುಚ್ಚಲ್ಪಟ್ಟ ದಪ್ಪನೆಯ ಕೆಂಪು ದದ್ದುಗಳು. ಇದು ಒಣಗಿದ್ದು ಬಿರುಕು ಬಿಡುತ್ತದೆ.",
+            "ನನ್ನ ಮೊಣಕಾಲುಗಳು ಮತ್ತು ತಲೆಯ ಚರ್ಮದ ಮೇಲೆ ಬೆಳ್ಳಿಯ ಪೊರೆಯಂತಿರುವ ತುರಿಕೆಯ ದಪ್ಪ ಚರ್ಮದ ಭಾಗಗಳು.",
+            "ದೇಹದ ಕೀಲುಗಳ ಮೇಲೆ ಬೆಳ್ಳಿ ಬಣ್ಣದ ಹುರುಪನ್ನು ಹೊಂದಿರುವ ಸಮಪಾರ್ಶ್ವದ ಚರ್ಮದ ಕೆಂಪು ದದ್ದುಗಳು."
+        ]
     }
 }
 
@@ -203,6 +241,21 @@ def generate_synthetic_lesion(disease_idx, save_path):
         for s in spots:
             draw.ellipse([s[0]-8, s[1]-8, s[0]+8, s[1]+8], fill=(230, 70, 70)) # Red halo
             draw.ellipse([s[0]-3, s[1]-3, s[0]+3, s[1]+3], fill=(255, 255, 230)) # Pus head
+    elif disease_idx == 5: # Basal Cell Carcinoma - Pink pearly nodule, shiny, rolled borders
+        # Base nodule
+        draw.ellipse([80, 80, 176, 176], fill=(235, 160, 160))
+        # Shiny center
+        draw.ellipse([100, 100, 156, 156], fill=(245, 195, 195))
+        # Central ulceration (crusted/brown)
+        draw.ellipse([115, 115, 140, 140], fill=(120, 60, 50))
+    elif disease_idx == 6: # Psoriasis - Red plaque with silvery/white scaling
+        # Thick red plaque
+        draw.ellipse([70, 70, 186, 186], fill=(225, 90, 90))
+        # Silvery scales (white spots)
+        for i in range(25):
+            x = np.random.randint(85, 170)
+            y = np.random.randint(85, 170)
+            draw.ellipse([x, y, x+8, y+4], fill=(240, 240, 240))
             
     img.save(save_path)
 
@@ -228,12 +281,13 @@ def download_or_generate_dataset(data_dir="data"):
     isic_diagnoses = {
         0: "melanoma",
         1: "nevus",
-        3: "seborrheic keratosis"
+        3: "seborrheic keratosis",
+        5: "basal cell carcinoma"
     }
     
     print("Building dataset...")
     
-    for class_idx in range(5):
+    for class_idx in range(len(DISEASE_CLASSES)):
         class_name = DISEASE_CLASSES[class_idx]
         class_dir = os.path.join(images_dir, class_name.replace(" ", "_").replace("(", "").replace(")", ""))
         os.makedirs(class_dir, exist_ok=True)
@@ -330,9 +384,10 @@ def train_multimodal_system(data_dir="data", checkpoint_dir="backend/app/models/
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Training on device: {device}")
     
-    cnn_model = SkinDiseaseCNN(num_classes=5, pretrained=True).to(device)
+    num_classes = len(DISEASE_CLASSES)
+    cnn_model = SkinDiseaseCNN(num_classes=num_classes, pretrained=True).to(device)
     text_encoder = SymptomTextEncoder(use_cuda=torch.cuda.is_available())
-    fusion_model = MultiModalFusionNet(num_classes=5).to(device)
+    fusion_model = MultiModalFusionNet(num_classes=num_classes).to(device)
     
     # Freeze the CNN backbone features to make training ultra-fast on CPU
     for param in cnn_model.features.parameters():
@@ -514,7 +569,7 @@ def train_multimodal_system(data_dir="data", checkpoint_dir="backend/app/models/
     )
     accuracy = np.mean(np.array(val_preds) == np.array(val_targets))
     
-    cm = confusion_matrix(val_targets, val_preds, labels=list(range(5)))
+    cm = confusion_matrix(val_targets, val_preds, labels=list(range(len(DISEASE_CLASSES))))
     
     metrics = {
         "accuracy": float(accuracy),

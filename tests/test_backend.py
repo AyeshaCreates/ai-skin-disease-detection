@@ -18,7 +18,7 @@ from backend.app.main import app
 
 def test_image_model_output_shape():
     """Verify that EfficientNet image model extracts correct dimensions."""
-    model = SkinDiseaseCNN(num_classes=5, pretrained=False)
+    model = SkinDiseaseCNN(num_classes=7, pretrained=False)
     # Synthetic batch of size 2, 3 channels, 224x224
     dummy_input = torch.randn(2, 3, 224, 224)
     
@@ -28,7 +28,7 @@ def test_image_model_output_shape():
     
     # Standalone classification check
     logits = model(dummy_input)
-    assert logits.shape == (2, 5)
+    assert logits.shape == (2, 7)
 
 def test_text_encoder_output_shape():
     """Verify that SymptomTextEncoder extracts 384-dimensional dense vectors."""
@@ -47,7 +47,7 @@ def test_text_encoder_output_shape():
 
 def test_fusion_model_output_shape():
     """Verify that the fusion layer fuses and outputs predictions correctly."""
-    model = MultiModalFusionNet(num_classes=5)
+    model = MultiModalFusionNet(num_classes=7)
     
     # Synthetic image features (1280-dim) and text features (384-dim)
     dummy_img_features = torch.randn(4, 1280)
@@ -55,8 +55,8 @@ def test_fusion_model_output_shape():
     
     d_logits, s_logits = model(dummy_img_features, dummy_text_features)
     
-    # 4 samples, 5 classes for disease, 3 classes for severity
-    assert d_logits.shape == (4, 5)
+    # 4 samples, 7 classes for disease, 3 classes for severity
+    assert d_logits.shape == (4, 7)
     assert s_logits.shape == (4, 3)
 
 def test_distance_calculator():
@@ -110,3 +110,42 @@ def test_api_health_endpoint():
     response = client.get("/api/health")
     assert response.status_code == 200
     assert response.json()["status"] == "healthy"
+
+
+def test_image_validation_cases():
+    """Verify image validation detects unrelated, healthy, blurry, and valid images."""
+    from backend.app.models.image_model import validate_skin_image
+    from PIL import Image, ImageDraw
+    import cv2
+    
+    # 1. Unrelated (non-skin blue color)
+    img_unrelated = Image.new('RGB', (224, 224), color=(0, 0, 255))
+    res_unrelated = validate_skin_image(img_unrelated)
+    assert res_unrelated["valid"] is False
+    assert "Invalid Image" in res_unrelated["message"]
+    
+    # 2. Healthy skin (skin tone with zero abnormalities)
+    img_healthy = Image.new('RGB', (224, 224), color=(245, 220, 205))
+    np_healthy = np.array(img_healthy)
+    noise = np.random.normal(0, 2.5, np_healthy.shape).astype(np.int16)
+    np_healthy = np.clip(np_healthy + noise, 0, 255).astype(np.uint8)
+    img_healthy = Image.fromarray(np_healthy)
+    res_healthy = validate_skin_image(img_healthy)
+    assert res_healthy["valid"] is False
+    assert "No Skin Abnormality" in res_healthy["message"]
+    
+    # 3. Blurry image
+    img_blurry = Image.new('RGB', (224, 224), color=(245, 220, 205))
+    np_blur = np.array(img_blurry)
+    cv2.GaussianBlur(np_blur, (51, 51), 0, dst=np_blur)
+    img_blurry = Image.fromarray(np_blur)
+    res_blurry = validate_skin_image(img_blurry)
+    assert res_blurry["valid"] is False
+    assert "Image Quality Too Low" in res_blurry["message"]
+    
+    # 4. Valid lesion
+    img_lesion = Image.new('RGB', (224, 224), color=(245, 220, 205))
+    draw = ImageDraw.Draw(img_lesion)
+    draw.ellipse([70, 70, 154, 154], fill=(120, 70, 45))
+    res_lesion = validate_skin_image(img_lesion)
+    assert res_lesion["valid"] is True

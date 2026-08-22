@@ -163,3 +163,81 @@ def overlay_heatmap(original_img: Image.Image, heatmap: np.ndarray, alpha=0.5):
     overlay_pil = Image.fromarray(overlay)
     
     return original_pil, heatmap_pil, overlay_pil
+
+
+def validate_skin_image(image: Image.Image) -> dict:
+    """
+    Validates that the uploaded image is a clear, well-lit skin-surface image
+    containing a suspected abnormality (lesion, rash, pimples), filtering out:
+      1. Completely unrelated images (no skin detected).
+      2. Normal/healthy skin (too uniform).
+      3. Poor quality (blurry, too bright, too dark).
+      4. Faces/full body shots (too high contrast, hair, eyes).
+    """
+    np_img = np.array(image.convert("RGB"))
+    
+    h, w, c = np_img.shape
+    if h < 64 or w < 64:
+        return {
+            "valid": False,
+            "reason": "quality",
+            "message": "Image size too small. Please upload a higher resolution image."
+        }
+        
+    # 1. Skin Presence detection (YCrCb color space segmentation)
+    ycrcb = cv2.cvtColor(np_img, cv2.COLOR_RGB2YCrCb)
+    Cr = ycrcb[:, :, 1]
+    Cb = ycrcb[:, :, 2]
+    
+    skin_mask = (Cr >= 133) & (Cr <= 173) & (Cb >= 77) & (Cb <= 127)
+    skin_percentage = np.sum(skin_mask) / skin_mask.size
+    
+    if skin_percentage < 0.15:
+        return {
+            "valid": False,
+            "reason": "unrelated",
+            "message": "Invalid Image\nPlease upload a clear image of a suspected skin condition or skin lesion."
+        }
+        
+    gray = cv2.cvtColor(np_img, cv2.COLOR_RGB2GRAY)
+    
+    # 2. Brightness checks
+    mean_brightness = np.mean(gray)
+    if mean_brightness < 30.0 or mean_brightness > 240.0:
+        return {
+            "valid": False,
+            "reason": "quality",
+            "message": "Image Quality Too Low\nPlease upload a clear, well-lit image of the affected skin area."
+        }
+        
+    # 3. Blur check (Laplacian variance)
+    blur_value = cv2.Laplacian(gray, cv2.CV_64F).var()
+    if blur_value < 4.0:
+        return {
+            "valid": False,
+            "reason": "quality",
+            "message": "Image Quality Too Low\nPlease upload a clear, well-lit image of the affected skin area."
+        }
+        
+    # 4. Abnormality / Healthy skin check
+    skin_gray = gray[skin_mask]
+    if skin_gray.size > 0:
+        std_val = np.std(skin_gray)
+        if std_val < 5.0:
+            return {
+                "valid": False,
+                "reason": "healthy",
+                "message": "No Skin Abnormality Detected\nThe uploaded image does not appear to contain a visible skin condition. Please upload an image showing the affected area."
+            }
+        if std_val > 52.0:
+            return {
+                "valid": False,
+                "reason": "unrelated",
+                "message": "Invalid Image\nPlease upload a clear image of a suspected skin condition or skin lesion."
+            }
+            
+    return {
+        "valid": True,
+        "reason": "ok",
+        "message": "Image validated successfully."
+    }

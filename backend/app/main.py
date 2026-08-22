@@ -18,7 +18,7 @@ from typing import Optional, List
 from PIL import Image
 
 # Import models & services
-from backend.app.models.image_model import SkinDiseaseCNN, GradCAM, overlay_heatmap, get_image_transforms
+from backend.app.models.image_model import SkinDiseaseCNN, GradCAM, overlay_heatmap, get_image_transforms, validate_skin_image
 from backend.app.models.text_model import SymptomTextEncoder
 from backend.app.models.fusion_model import MultiModalFusionNet
 from backend.app.services.training import train_multimodal_system, DISEASE_CLASSES, SEVERITY_LEVELS
@@ -85,8 +85,9 @@ async def startup_event():
         train_multimodal_system(epochs=3)
         
     # 3. Load model structures
-    cnn_model = SkinDiseaseCNN(num_classes=5, pretrained=True).to(device)
-    fusion_model = MultiModalFusionNet(num_classes=5).to(device)
+    num_classes = len(DISEASE_CLASSES)
+    cnn_model = SkinDiseaseCNN(num_classes=num_classes, pretrained=True).to(device)
+    fusion_model = MultiModalFusionNet(num_classes=num_classes).to(device)
     
     # 4. Load weights
     try:
@@ -186,6 +187,15 @@ async def predict_skin_disease(
             
         # 2. Process image tensor
         pil_img = Image.open(orig_img_path).convert("RGB")
+        
+        # Image input validation / OOD protection
+        validation_res = validate_skin_image(pil_img)
+        if not validation_res["valid"]:
+            # Delete temporary file
+            if os.path.exists(orig_img_path):
+                os.remove(orig_img_path)
+            raise HTTPException(status_code=400, detail=validation_res["message"])
+            
         img_transform = get_image_transforms(train=False)
         img_tensor = img_transform(pil_img).unsqueeze(0).to(device)
         
@@ -376,6 +386,17 @@ def get_clinical_explanation(disease: str) -> str:
             "Acne vulgaris is a common inflammatory dermatosis of the pilosebaceous units. "
             "It is caused by sebum overproduction, follicular hyperkeratinization, and bacterial colonization by C. acnes. "
             "It presents as comedones (blackheads/whiteheads), papules, and pustules on sebum-rich areas like the face."
+        ),
+        "Basal Cell Carcinoma": (
+            "Basal cell carcinoma (BCC) is the most common type of skin cancer. "
+            "It originates in the basal cells of the epidermis, typically on sun-exposed areas. "
+            "It often presents as a shiny pearly pink nodule with visible tiny blood vessels (telangiectasias), "
+            "rolled borders, and sometimes central ulceration or crusting."
+        ),
+        "Psoriasis": (
+            "Psoriasis is a chronic autoimmune skin condition that accelerates the life cycle of skin cells. "
+            "This rapid turnover leads to cells building up rapidly on the surface of the skin. "
+            "It presents as thick red plaques covered with silvery scales, commonly on elbows, knees, scalp, and torso."
         )
     }
     return explanations.get(disease, "A skin lesion displaying clinical features typical of the predicted class.")
@@ -413,6 +434,18 @@ def get_confidence_aware_recommendations(disease: str, confidence: float, severi
             "Incorporate over-the-counter active agents such as Salicylic Acid or Benzoyl Peroxide.",
             "Avoid picking or squeezing pimples, as this worsens inflammation and leads to permanent scarring.",
             "Consult a doctor for prescription-strength retinoids or topical antibiotics if condition persists."
+        ],
+        "Basal Cell Carcinoma": [
+            "Schedule a clinical evaluation with a dermatologist for a biopsy and potential excision.",
+            "Protect the lesion and your surrounding skin from UV exposure with SPF 50+ sunscreen.",
+            "Avoid picking or scratching the crusted center, as BCCs bleed easily.",
+            "Ensure regular full-body skin screening to monitor for new lesions."
+        ],
+        "Psoriasis": [
+            "Apply rich moisturizing creams or ointments daily to maintain the skin barrier.",
+            "Avoid scrubbing plaques or peeling scales off, as this can trigger new lesions (Koebner phenomenon).",
+            "Incorporate mild exposure to sunlight, as controlled UV light can improve plaque symptoms.",
+            "Consult a physician about topical treatments (corticosteroids, salicylic acid) or systemic therapies."
         ]
     }
     

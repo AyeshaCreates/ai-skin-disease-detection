@@ -17,7 +17,8 @@ import {
   ChevronRight,
   ShieldAlert,
   Download,
-  Camera
+  Camera,
+  ArrowLeft
 } from 'lucide-react';
 import SpeechRecorder from './components/SpeechRecorder';
 
@@ -500,8 +501,16 @@ export default function App() {
             {/* Project Specs */}
             <div className="glass-card p-8 border-slate-200/50">
               <h3 className="text-xl font-bold text-slate-900 mb-6">Diagnostic Range & Covered Dermatoses</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-                {["Melanoma (Cancerous)", "Melanocytic Nevus (Mole)", "Atopic Dermatitis (Eczema)", "Seborrheic Keratosis", "Acne Vulgaris"].map((disease, idx) => (
+              <div className="grid grid-cols-2 md:grid-cols-7 gap-4">
+                {[
+                  "Melanoma (Cancerous)", 
+                  "Melanocytic Nevus (Mole)", 
+                  "Atopic Dermatitis (Eczema)", 
+                  "Seborrheic Keratosis", 
+                  "Acne Vulgaris",
+                  "Basal Cell Carcinoma (Cancerous)",
+                  "Psoriasis (Inflammatory)"
+                ].map((disease, idx) => (
                   <div key={idx} className="bg-slate-100/50 border border-slate-200/30 p-4 rounded-xl text-center">
                     <span className="block text-xs font-bold text-medical-teal mb-1">Class 0{idx+1}</span>
                     <span className="text-sm font-semibold text-slate-800">{disease}</span>
@@ -679,7 +688,7 @@ export default function App() {
                   <Download className="w-4 h-4" /> Download PDF Report
                 </button>
                 <button onClick={() => { setActiveTab('diagnosis'); setError(null); }} className="btn-secondary flex items-center gap-2 py-2.5 text-sm">
-                  <RefreshCw className="w-4 h-4" /> Start New
+                  <ArrowLeft className="w-4 h-4" /> Back to Diagnosis
                 </button>
               </div>
             </div>

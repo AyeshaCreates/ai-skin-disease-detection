@@ -1,2 +1,2 @@
-Frontend/Backend: https://small-eyes-know.loca.lt
-Backend API Swagger: https://small-eyes-know.loca.lt/docs
+Frontend/Backend: https://easy-walls-sniff.loca.lt
+Backend API Swagger: https://easy-walls-sniff.loca.lt/docs
