@@ -37,7 +37,7 @@ import { API_BASE } from './config';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
-  const [theme, setTheme] = useState(() => localStorage.getItem('dermascan_theme') || 'light');
+  const [theme, setTheme] = useState(() => localStorage.getItem('dermascan_theme') || 'dark');
   const [language, setLanguage] = useState('en');
   const [symptoms, setSymptoms] = useState('');
   const [image, setImage] = useState(null);

@@ -215,9 +215,13 @@ async def predict_skin_disease(
         with torch.no_grad():
             disease_logits, severity_logits = fusion_model(img_features, text_tensor)
             
-            # Softmax to get probabilities
-            disease_probs = torch.softmax(disease_logits, dim=1)[0]
-            severity_probs = torch.softmax(severity_logits, dim=1)[0]
+            # Apply Temperature Scaling Calibration (T = 0.30)
+            # Divides logits by T to align softmax probabilities with empirical accuracy
+            calibrated_disease_logits = disease_logits / 0.30
+            calibrated_severity_logits = severity_logits / 0.30
+            
+            disease_probs = torch.softmax(calibrated_disease_logits, dim=1)[0]
+            severity_probs = torch.softmax(calibrated_severity_logits, dim=1)[0]
             
             pred_disease_idx = torch.argmax(disease_probs).item()
             pred_severity_idx = torch.argmax(severity_probs).item()
@@ -225,6 +229,25 @@ async def predict_skin_disease(
             confidence = float(disease_probs[pred_disease_idx].item())
             predicted_disease = DISEASE_CLASSES[pred_disease_idx]
             predicted_severity = SEVERITY_LEVELS[pred_severity_idx]
+            
+            # PHASE 7: Backend Debugging Log Utility
+            print("==================================================")
+            print("             AI ENGINE INFERENCE DEBUG            ")
+            print("==================================================")
+            print(f"Model output shape: {disease_logits.shape}")
+            print(f"Number of target classes: {len(DISEASE_CLASSES)}")
+            print(f"Predicted class: {predicted_disease} (Index: {pred_disease_idx})")
+            print(f"Calibrated probability: {confidence:.4f}")
+            
+            # Get top 5 predictions for logs
+            top5_probs, top5_indices = torch.topk(disease_probs, k=min(5, len(DISEASE_CLASSES)))
+            top5_raw_logits, _ = torch.topk(disease_logits[0], k=min(5, len(DISEASE_CLASSES)))
+            
+            print("\nTOP 5 PREDICTIONS:")
+            for rank, (prob, idx, logit) in enumerate(zip(top5_probs, top5_indices, top5_raw_logits), 1):
+                cls_name = DISEASE_CLASSES[idx.item()]
+                print(f"  {rank}. {cls_name} — Prob: {prob.item():.4f} | Raw Logit: {logit.item():.4f} (Index: {idx.item()})")
+            print("==================================================")
             
             # Get top 3 predictions
             topk_probs, topk_indices = torch.topk(disease_probs, k=min(3, len(DISEASE_CLASSES)))

@@ -741,12 +741,16 @@ def train_multimodal_system(data_dir="data", checkpoint_dir="backend/app/models/
             optimizer.zero_grad()
             
             # Forward pass
+            img_logits = cnn_model(images)
             img_feats = cnn_model.extract_features(images)
             disease_logits, severity_logits = fusion_model(img_feats, text_feats)
             
+            loss_img = disease_criterion(img_logits, disease_labels)
             loss_d = disease_criterion(disease_logits, disease_labels)
             loss_s = severity_criterion(severity_logits, severity_labels)
-            loss = loss_d + 0.5 * loss_s # Weighted loss
+            
+            # Combined Loss: joint training of image branch and multimodal fusion branch
+            loss = loss_d + 0.5 * loss_s + 0.5 * loss_img
             
             loss.backward()
             optimizer.step()
@@ -774,12 +778,14 @@ def train_multimodal_system(data_dir="data", checkpoint_dir="backend/app/models/
                 s_label = item["severity_label"].unsqueeze(0).to(device)
                 t_feat = val_text_features[i].unsqueeze(0).to(device)
                 
+                img_logits = cnn_model(img)
                 img_feats = cnn_model.extract_features(img)
                 d_logits, s_logits = fusion_model(img_feats, t_feat)
                 
+                loss_img = disease_criterion(img_logits, d_label)
                 loss_d = disease_criterion(d_logits, d_label)
                 loss_s = severity_criterion(s_logits, s_label)
-                loss = loss_d + 0.5 * loss_s
+                loss = loss_d + 0.5 * loss_s + 0.5 * loss_img
                 
                 val_loss += loss.item()
                 

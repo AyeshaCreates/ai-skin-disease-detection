@@ -6,7 +6,15 @@
 
 @layer base {
   body {
-    @apply bg-stone-50 text-slate-800 font-sans antialiased overflow-x-hidden;
+    @apply bg-neutral-950 text-stone-100 font-sans antialiased overflow-x-hidden transition-colors duration-300;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(212, 175, 55, 0.15) 0px, transparent 50%),
+      radial-gradient(at 50% 0%, rgba(17, 24, 39, 0.85) 0px, transparent 50%);
+  }
+
+  /* Fallback to Light Gold Theme */
+  html:not(.dark) body {
+    @apply bg-stone-50 text-slate-800;
     background-image: 
       radial-gradient(at 0% 0%, rgba(212, 175, 55, 0.08) 0px, transparent 50%),
       radial-gradient(at 50% 0%, rgba(30, 27, 75, 0.04) 0px, transparent 50%);
@@ -15,11 +23,15 @@
 
 @layer components {
   .glass-card {
-    @apply bg-white/90 backdrop-blur-md border border-stone-200/80 shadow-md shadow-stone-200/40 rounded-2xl;
+    @apply bg-neutral-900/95 backdrop-blur-md border border-neutral-850 shadow-xl shadow-black/40 rounded-2xl transition-all duration-300;
+  }
+
+  html:not(.dark) .glass-card {
+    @apply bg-white/90 border border-stone-200/80 shadow-md shadow-stone-200/40;
   }
   
   .glass-card-hover {
-    @apply transition-all duration-300 hover:shadow-lg hover:border-amber-500/20;
+    @apply transition-all duration-300 hover:shadow-2xl hover:border-amber-500/30;
   }
 
   .nav-link {
@@ -31,6 +43,10 @@
   }
 
   .nav-link-inactive {
+    @apply text-stone-400 hover:bg-neutral-800 hover:text-white transition-all duration-200;
+  }
+
+  html:not(.dark) .nav-link-inactive {
     @apply text-slate-600 hover:bg-slate-100 hover:text-slate-900;
   }
 
@@ -39,7 +55,11 @@
   }
   
   .btn-secondary {
-    @apply px-6 py-3 bg-white text-amber-700 border border-amber-600/30 rounded-xl font-bold hover:bg-amber-50 hover:border-amber-600/50 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none;
+    @apply px-6 py-3 bg-neutral-900 text-amber-500 border border-amber-600/35 rounded-xl font-bold hover:bg-neutral-800 hover:border-amber-600/60 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  html:not(.dark) .btn-secondary {
+    @apply bg-white text-amber-700 border border-amber-600/30 hover:bg-amber-50 hover:border-amber-600/50;
   }
 }
 
