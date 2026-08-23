@@ -143,8 +143,10 @@ class PDFRequest(BaseModel):
     severity: str
     symptoms: str
     language: str
-    original_image_b64: str
-    heatmap_image_b64: str
+    original_image_b64: Optional[str] = None
+    heatmap_image_b64: Optional[str] = None
+    original_image: Optional[str] = None
+    heatmap_image: Optional[str] = None
     hospitals: List[dict]
 
 # API Endpoints
@@ -342,8 +344,14 @@ def export_pdf_report(request: PDFRequest):
         pdf_path = os.path.join(TEMP_DIR, f"report_{file_id}.pdf")
         
         # Decode base64 images to temporary physical files for ReportLab inclusion
-        orig_img_data = base64.b64decode(request.original_image_b64.split(",")[-1])
-        heat_img_data = base64.b64decode(request.heatmap_image_b64.split(",")[-1])
+        orig_b64 = request.original_image_b64 or request.original_image
+        heat_b64 = request.heatmap_image_b64 or request.heatmap_image
+        
+        if not orig_b64 or not heat_b64:
+            raise HTTPException(status_code=400, detail="Missing base64 images for report.")
+            
+        orig_img_data = base64.b64decode(orig_b64.split(",")[-1])
+        heat_img_data = base64.b64decode(heat_b64.split(",")[-1])
         
         temp_orig = os.path.join(TEMP_DIR, f"{file_id}_temp_orig.jpg")
         temp_heat = os.path.join(TEMP_DIR, f"{file_id}_temp_heat.jpg")

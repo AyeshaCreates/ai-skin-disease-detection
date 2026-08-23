@@ -1,4 +1,4 @@
-INFO:     Started server process [62712]
+INFO:     Started server process [46312]
 INFO:     Waiting for application startup.
 '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1081)' thrown while requesting HEAD https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2/resolve/main/config.json
 Retrying in 1s [Retry 1/5].
@@ -12,4 +12,25 @@ Warning: Failed to load Hugging Face model (Can't load the configuration of 'sen
 All models loaded successfully and ready for inference.
 Warming up models with dummy inference...
 Model warm-up completed successfully!
-INFO:     127.0.0.1:52179 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56887 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     49.37.241.229:0 - "OPTIONS /api/metrics HTTP/1.1" 200 OK
+INFO:     49.37.241.229:0 - "GET /api/metrics HTTP/1.1" 200 OK
+INFO:     49.37.241.229:0 - "OPTIONS /api/predict HTTP/1.1" 200 OK
+==================================================
+             AI ENGINE INFERENCE DEBUG            
+==================================================
+Model output shape: torch.Size([1, 18])
+Number of target classes: 18
+Predicted class: Lichen Planus (Index: 15)
+Calibrated probability: 0.5866
+
+TOP 5 PREDICTIONS:
+  1. Lichen Planus — Prob: 0.5866 | Raw Logit: 0.6934 (Index: 15)
+  2. Folliculitis — Prob: 0.1088 | Raw Logit: 0.1879 (Index: 14)
+  3. Vitiligo — Prob: 0.0433 | Raw Logit: -0.0883 (Index: 7)
+  4. Contact Dermatitis — Prob: 0.0424 | Raw Logit: -0.0949 (Index: 13)
+  5. Psoriasis — Prob: 0.0408 | Raw Logit: -0.1063 (Index: 6)
+==================================================
+INFO:     49.37.241.229:0 - "POST /api/predict HTTP/1.1" 200 OK
+INFO:     49.37.241.229:0 - "OPTIONS /api/export-pdf HTTP/1.1" 200 OK
+INFO:     49.37.241.229:0 - "POST /api/export-pdf HTTP/1.1" 422 Unprocessable Content

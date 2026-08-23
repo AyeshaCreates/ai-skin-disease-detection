@@ -1,11 +1,10 @@
 # AI Skin Disease Detection System using Multi-Modal AI
 
-### 🌐 Live Public HTTPS Deployment
-- **Vercel Web Application Portal**: [https://frontend-nine-ecru-ivt7r5yxm8.vercel.app](https://frontend-nine-ecru-ivt7r5yxm8.vercel.app)
-- **FastAPI API Swagger Docs**: [https://a4d42e9b68a5c66d-49-37-243-191.serveousercontent.com/docs](https://a4d42e9b68a5c66d-49-37-243-191.serveousercontent.com/docs)
-- **Unified Single-Port Backup Portal**: [https://a4d42e9b68a5c66d-49-37-243-191.serveousercontent.com](https://a4d42e9b68a5c66d-49-37-243-191.serveousercontent.com)
+### 🌐 Live Cloud Deployment
+- **Unified Production Web Application Portal**: [https://ai-skin-disease-detection-one.vercel.app](https://ai-skin-disease-detection-one.vercel.app)
+- **FastAPI API Health Check**: [https://ai-skin-disease-detection-one.vercel.app/api/health](https://ai-skin-disease-detection-one.vercel.app/api/health)
 
-*Note: The Vercel frontend is fully integrated with the active public backend tunnel. Anyone can access this portal from any device.*
+*Note: The React frontend and the Python serverless backend are hosted together on the same domain, running optimized ONNX model inference without any LocalTunnel or localhost dependencies.*
 
 ---
 

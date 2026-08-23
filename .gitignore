@@ -34,3 +34,10 @@ backend/app/models/checkpoints/*.pth
 *.njsproj
 *.sln
 *.swp
+
+.vercel
+
+# Heavy datasets and logs
+*.parquet
+backup_synthetic/
+*.log

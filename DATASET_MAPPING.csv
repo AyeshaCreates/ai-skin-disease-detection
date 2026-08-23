@@ -1,0 +1,19 @@
+source_dataset,source_label,target_class,image_type,image_count,license,source_url
+ISIC Archive V2,diagnosis_3:*,Melanoma,clinical,50,CC-0 / CC-BY (ISIC),https://api.isic-archive.com/api/v2/images/
+ISIC Archive V2,diagnosis_3:*,Melanocytic Nevus,clinical,50,CC-0 / CC-BY (ISIC),https://api.isic-archive.com/api/v2/images/
+"Atlas Dermatologico (Fitzpatrick17k), Wikimedia Commons","atopic dermatitis (eczema), Category member",Atopic Dermatitis (Eczema),clinical,9,"CC-BY-NC (AtlasDermatologico), CC-BY / Public Domain (Wikimedia)",http://atlasdermatologico.com.br/
+ISIC Archive V2,diagnosis_3:*,Seborrheic Keratosis,clinical,50,CC-0 / CC-BY (ISIC),https://api.isic-archive.com/api/v2/images/
+"Atlas Dermatologico (Fitzpatrick17k), Wikimedia Commons","acne vulgaris, Category member",Acne Vulgaris,clinical,25,"CC-BY-NC (AtlasDermatologico), CC-BY / Public Domain (Wikimedia)",http://atlasdermatologico.com.br/
+ISIC Archive V2,diagnosis_3:*,Basal Cell Carcinoma,clinical,50,CC-0 / CC-BY (ISIC),https://api.isic-archive.com/api/v2/images/
+Atlas Dermatologico (Fitzpatrick17k),psoriasis,Psoriasis,clinical,50,CC-BY-NC (AtlasDermatologico),http://atlasdermatologico.com.br/
+Atlas Dermatologico (Fitzpatrick17k),vitiligo,Vitiligo,clinical,43,CC-BY-NC (AtlasDermatologico),http://atlasdermatologico.com.br/
+Atlas Dermatologico (Fitzpatrick17k),rosacea,Rosacea,clinical,3,CC-BY-NC (AtlasDermatologico),http://atlasdermatologico.com.br/
+Wikimedia Commons,Category member,Tinea Corporis (Ringworm),clinical,5,CC-BY / Public Domain (Wikimedia),https://commons.wikimedia.org/
+Wikimedia Commons,Category member,Impetigo,clinical,3,CC-BY / Public Domain (Wikimedia),https://commons.wikimedia.org/
+"Atlas Dermatologico (Fitzpatrick17k), Wikimedia Commons","urticaria (hives), Category member",Urticaria (Hives),clinical,36,"CC-BY-NC (AtlasDermatologico), CC-BY / Public Domain (Wikimedia)",http://atlasdermatologico.com.br/
+Wikimedia Commons,Category member,Warts,clinical,4,CC-BY / Public Domain (Wikimedia),https://commons.wikimedia.org/
+Atlas Dermatologico (Fitzpatrick17k),contact dermatitis,Contact Dermatitis,clinical,43,CC-BY-NC (AtlasDermatologico),http://atlasdermatologico.com.br/
+Atlas Dermatologico (Fitzpatrick17k),folliculitis,Folliculitis,clinical,50,CC-BY-NC (AtlasDermatologico),http://atlasdermatologico.com.br/
+Atlas Dermatologico (Fitzpatrick17k),lichen planus,Lichen Planus,clinical,50,CC-BY-NC (AtlasDermatologico),http://atlasdermatologico.com.br/
+Wikimedia Commons,Category member,Herpes Zoster,clinical,2,CC-BY / Public Domain (Wikimedia),https://commons.wikimedia.org/
+Atlas Dermatologico (Fitzpatrick17k),pityriasis rosea,Pityriasis Rosea,clinical,50,CC-BY-NC (AtlasDermatologico),http://atlasdermatologico.com.br/

@@ -1,2 +1,2 @@
-Frontend/Backend: https://rude-years-fly.loca.lt
-Backend API Swagger: https://rude-years-fly.loca.lt/docs
+Frontend/Backend: https://modern-walls-smell.loca.lt
+Backend API Swagger: https://modern-walls-smell.loca.lt/docs

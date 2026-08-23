@@ -540,77 +540,27 @@ def generate_synthetic_lesion(disease_idx, save_path):
 
 def download_or_generate_dataset(data_dir="data"):
     """
-    Downloads clinical skin disease images from the ISIC Archive API.
-    Falls back to generating synthetic images if offline or download fails.
+    Loads real clinical skin disease images from the local dataset directories.
     """
     images_dir = os.path.join(data_dir, "skin_images")
-    os.makedirs(images_dir, exist_ok=True)
-    
-    # We want 30 samples per class (total 150 samples)
-    samples_per_class = 30
     dataset = []
     
-    # Mapping ISIC diagnoses to our index
-    # 0: Melanoma -> diagnosis: melanoma
-    # 1: Nevus -> diagnosis: nevus
-    # 2: Eczema -> (ISIC doesn't have eczema, we'll generate synthetics)
-    # 3: Seborrheic Keratosis -> diagnosis: seborrheic keratosis
-    # 4: Acne -> (ISIC doesn't have acne, we'll generate synthetics)
-    
-    isic_diagnoses = {
-        0: "melanoma",
-        1: "nevus",
-        3: "seborrheic keratosis",
-        5: "basal cell carcinoma"
-    }
-    
-    print("Building dataset...")
+    print("Building dataset from local clinical photographs...")
     
     for class_idx in range(len(DISEASE_CLASSES)):
         class_name = DISEASE_CLASSES[class_idx]
         class_dir = os.path.join(images_dir, class_name.replace(" ", "_").replace("(", "").replace(")", ""))
-        os.makedirs(class_dir, exist_ok=True)
         
-        isic_query = isic_diagnoses.get(class_idx)
-        downloaded = 0
-        
-        if isic_query:
-            try:
-                print(f"Attempting to download images for '{class_name}' from ISIC Archive API...")
-                url = f"https://api.isic-archive.com/api/v2/images/?search=diagnosis:\"{isic_query}\"&limit={samples_per_class}"
-                # Request without SSL verify to bypass cert issues
-                resp = requests.get(url, verify=False, timeout=10)
-                if resp.status_code == 200:
-                    results = resp.json().get("results", [])
-                    for img_item in results:
-                        isic_id = img_item.get("isic_id")
-                        img_url = f"https://api.isic-archive.com/api/v2/images/{isic_id}/thumbnail"
-                        img_resp = requests.get(img_url, verify=False, timeout=10)
-                        if img_resp.status_code == 200:
-                            save_path = os.path.join(class_dir, f"{isic_id}.jpg")
-                            with open(save_path, "wb") as f:
-                                f.write(img_resp.content)
-                            downloaded += 1
-                            if downloaded >= samples_per_class:
-                                break
-            except Exception as e:
-                print(f"ISIC API download failed for class {class_name}: {e}. Falling back to synthetic.")
-                
-        # Fill rest with synthetics
-        if downloaded < samples_per_class:
-            needed = samples_per_class - downloaded
-            print(f"Generating {needed} synthetic images for '{class_name}'...")
-            for i in range(needed):
-                save_path = os.path.join(class_dir, f"synth_{i}.jpg")
-                generate_synthetic_lesion(class_idx, save_path)
-                downloaded += 1
-                
+        if not os.path.exists(class_dir):
+            raise FileNotFoundError(f"Missing clinical images directory for class: {class_name}")
+            
+        image_files = [os.path.join(class_dir, f) for f in os.listdir(class_dir) if f.endswith(".jpg")]
+        if len(image_files) == 0:
+            raise FileNotFoundError(f"No clinical images found in: {class_dir}")
+            
         # Generate symptom text samples (English, Hindi, Kannada)
         templates = SYMPTOM_TEMPLATES[class_idx]
         languages = ["en", "hi", "kn"]
-        
-        # Load image paths
-        image_files = [os.path.join(class_dir, f) for f in os.listdir(class_dir) if f.endswith(".jpg")]
         
         for i, img_path in enumerate(image_files):
             # Select language cyclically to ensure balance across languages
@@ -646,15 +596,28 @@ def train_multimodal_system(data_dir="data", checkpoint_dir="backend/app/models/
     
     # 1. Load Data
     data_list = download_or_generate_dataset(data_dir)
-    train_data, val_data = train_test_split(
+    labels = [x["disease_label"] for x in data_list]
+    
+    # First split: isolate 15% Test set
+    train_val_data, test_data = train_test_split(
         data_list, 
-        test_size=0.2, 
+        test_size=0.15, 
         random_state=42, 
-        stratify=[x["disease_label"] for x in data_list]
+        stratify=labels
+    )
+    
+    # Second split: split remaining 85% into 70% Train and 15% Val
+    train_val_labels = [x["disease_label"] for x in train_val_data]
+    train_data, val_data = train_test_split(
+        train_val_data, 
+        test_size=0.15 / 0.85, 
+        random_state=42, 
+        stratify=train_val_labels
     )
     
     train_dataset = MultiModalSkinDataset(train_data, transform=get_image_transforms(train=True))
     val_dataset = MultiModalSkinDataset(val_data, transform=get_image_transforms(train=False))
+    test_dataset = MultiModalSkinDataset(test_data, transform=get_image_transforms(train=False))
     
     train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=8, shuffle=False)
@@ -700,6 +663,7 @@ def train_multimodal_system(data_dir="data", checkpoint_dir="backend/app/models/
         
     train_text_features = pre_encode_symptoms(train_data).to(device)
     val_text_features = pre_encode_symptoms(val_data).to(device)
+    test_text_features = pre_encode_symptoms(test_data).to(device)
     
     # 4. Training Loop
     history = {"train_loss": [], "val_loss": [], "val_acc": []}
@@ -869,7 +833,48 @@ def train_multimodal_system(data_dir="data", checkpoint_dir="backend/app/models/
     with open(os.path.join(checkpoint_dir, "metrics.json"), "w") as f:
         json.dump(metrics, f, indent=4)
         
-    print("Training finished. Evaluation metrics saved.")
+    # Evaluate on the fully isolated Test Set
+    test_preds = []
+    test_targets = []
+    test_sev_preds = []
+    test_sev_targets = []
+    
+    with torch.no_grad():
+        for i in range(len(test_dataset)):
+            item = test_dataset[i]
+            img = item["image"].unsqueeze(0).to(device)
+            t_feat = test_text_features[i].unsqueeze(0).to(device)
+            
+            img_feats = cnn_model.extract_features(img)
+            d_logits, s_logits = fusion_model(img_feats, t_feat)
+            
+            pred_d = torch.argmax(d_logits, dim=1).item()
+            pred_s = torch.argmax(s_logits, dim=1).item()
+            
+            test_preds.append(pred_d)
+            test_targets.append(item["disease_label"].item())
+            test_sev_preds.append(pred_s)
+            test_sev_targets.append(item["severity_label"].item())
+            
+    test_precision, test_recall, test_f1, _ = precision_recall_fscore_support(
+        test_targets, test_preds, average='weighted', zero_division=0
+    )
+    test_accuracy = np.mean(np.array(test_preds) == np.array(test_targets))
+    test_cm = confusion_matrix(test_targets, test_preds, labels=list(range(len(DISEASE_CLASSES))))
+    
+    test_metrics = {
+        "accuracy": float(test_accuracy),
+        "precision": float(test_precision),
+        "recall": float(test_recall),
+        "f1_score": float(test_f1),
+        "confusion_matrix": test_cm.tolist(),
+        "classes": DISEASE_CLASSES
+    }
+    
+    with open(os.path.join(checkpoint_dir, "test_metrics.json"), "w") as f:
+        json.dump(test_metrics, f, indent=4)
+        
+    print("Training finished. Evaluation metrics and isolated test metrics saved.")
     return metrics
 
 if __name__ == "__main__":
