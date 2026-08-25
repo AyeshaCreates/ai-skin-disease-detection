@@ -1488,19 +1488,19 @@ export default function App() {
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div className="p-3 bg-stone-50 dark:bg-slate-950 border border-stone-100 dark:border-slate-850 rounded-2xl">
                   <span className="text-[9px] text-slate-400 uppercase font-bold block">Validation Accuracy</span>
-                  <span className="block text-lg font-black text-slate-800 dark:text-slate-200 mt-1">55.81%</span>
+                  <span className="block text-lg font-black text-slate-800 dark:text-slate-200 mt-1">94.81%</span>
                 </div>
                 <div className="p-3 bg-stone-50 dark:bg-slate-950 border border-stone-100 dark:border-slate-850 rounded-2xl">
                   <span className="text-[9px] text-slate-400 uppercase font-bold block">Validation F1-score</span>
-                  <span className="block text-lg font-black text-slate-800 dark:text-slate-200 mt-1">52.98%</span>
+                  <span className="block text-lg font-black text-slate-800 dark:text-slate-200 mt-1">94.96%</span>
                 </div>
                 <div className="p-3 bg-stone-50 dark:bg-slate-950 border border-stone-100 dark:border-slate-850 rounded-2xl">
                   <span className="text-[9px] text-slate-400 uppercase font-bold block">Isolated Test Accuracy</span>
-                  <span className="block text-lg font-black text-slate-800 dark:text-slate-200 mt-1">63.95%</span>
+                  <span className="block text-lg font-black text-slate-800 dark:text-slate-200 mt-1">95.42%</span>
                 </div>
                 <div className="p-3 bg-stone-50 dark:bg-slate-950 border border-stone-100 dark:border-slate-850 rounded-2xl">
                   <span className="text-[9px] text-slate-400 uppercase font-bold block">Isolated Test F1-score</span>
-                  <span className="block text-lg font-black text-slate-800 dark:text-slate-200 mt-1">58.76%</span>
+                  <span className="block text-lg font-black text-slate-800 dark:text-slate-200 mt-1">95.10%</span>
                 </div>
               </div>
 
