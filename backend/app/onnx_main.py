@@ -407,3 +407,8 @@ def export_pdf_report(request: PDFRequest):
 
 # Recommendations & Explanations helpers
 from backend.app.utils.clinical_data import get_clinical_explanation, get_confidence_aware_recommendations
+
+from fastapi.staticfiles import StaticFiles
+frontend_dist_path = os.path.abspath("frontend/dist")
+if os.path.exists(frontend_dist_path):
+    app.mount("/", StaticFiles(directory=frontend_dist_path, html=True), name="static")

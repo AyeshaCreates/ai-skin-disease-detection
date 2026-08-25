@@ -96,7 +96,7 @@ def main():
     print("\n[2/4] Starting FastAPI Unified Application Server on port 8000...")
     backend_log = open("backend.log", "w", encoding="utf-8")
     backend_proc = subprocess.Popen(
-        [sys.executable, "-m", "uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"],
+        [sys.executable, "-m", "uvicorn", "backend.app.onnx_main:app", "--host", "0.0.0.0", "--port", "8000"],
         stdout=backend_log,
         stderr=subprocess.STDOUT
     )
