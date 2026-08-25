@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Cinzel:wght@600;700;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,86 +6,170 @@
 
 @layer base {
   body {
-    @apply bg-neutral-950 text-stone-100 font-sans antialiased overflow-x-hidden transition-colors duration-300;
-    background-image: 
-      radial-gradient(at 0% 0%, rgba(212, 175, 55, 0.15) 0px, transparent 50%),
-      radial-gradient(at 50% 0%, rgba(17, 24, 39, 0.85) 0px, transparent 50%);
+    @apply text-slate-100 font-sans antialiased overflow-x-hidden transition-colors duration-300;
+    font-family: 'Outfit', sans-serif;
+    background: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(20, 184, 166, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(217, 119, 6, 0.08) 0%, transparent 50%),
+                #030712;
   }
 
-  /* Fallback to Light Gold Theme */
   html:not(.dark) body {
-    @apply bg-stone-50 text-slate-800;
-    background-image: 
-      radial-gradient(at 0% 0%, rgba(212, 175, 55, 0.08) 0px, transparent 50%),
-      radial-gradient(at 50% 0%, rgba(30, 27, 75, 0.04) 0px, transparent 50%);
+    @apply text-slate-800;
+    background: radial-gradient(circle at 10% 20%, rgba(224, 242, 254, 0.6) 0%, transparent 50%),
+                radial-gradient(circle at 90% 80%, rgba(240, 253, 250, 0.5) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(254, 243, 199, 0.4) 0%, transparent 50%),
+                #f8fafc;
   }
 }
 
 @layer components {
-  .glass-card {
-    @apply bg-neutral-900/95 backdrop-blur-md border border-neutral-850 shadow-xl shadow-black/40 rounded-2xl transition-all duration-300;
+  /* Premium colored glass cards */
+  .premium-card-teal {
+    @apply bg-slate-900/90 border border-teal-500/20 shadow-lg shadow-teal-950/15 rounded-3xl backdrop-blur-md transition-all duration-300 hover:border-teal-500/40 hover:shadow-teal-500/5;
+  }
+  html:not(.dark) .premium-card-teal {
+    @apply bg-white/95 border border-teal-100 shadow-md shadow-teal-100/30 hover:border-teal-300;
   }
 
-  html:not(.dark) .glass-card {
-    @apply bg-white/90 border border-stone-200/80 shadow-md shadow-stone-200/40;
+  .premium-card-purple {
+    @apply bg-slate-900/90 border border-purple-500/20 shadow-lg shadow-purple-950/15 rounded-3xl backdrop-blur-md transition-all duration-300 hover:border-purple-500/40 hover:shadow-purple-500/5;
   }
-  
-  .glass-card-hover {
-    @apply transition-all duration-300 hover:shadow-2xl hover:border-amber-500/30;
-  }
-
-  .nav-link {
-    @apply px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200;
-  }
-  
-  .nav-link-active {
-    @apply bg-gradient-to-r from-amber-600 to-yellow-600 text-white shadow-md shadow-amber-600/10;
+  html:not(.dark) .premium-card-purple {
+    @apply bg-white/95 border border-purple-100 shadow-md shadow-purple-100/30 hover:border-purple-300;
   }
 
-  .nav-link-inactive {
-    @apply text-stone-400 hover:bg-neutral-800 hover:text-white transition-all duration-200;
+  .premium-card-amber {
+    @apply bg-slate-900/90 border border-amber-500/20 shadow-lg shadow-amber-950/15 rounded-3xl backdrop-blur-md transition-all duration-300 hover:border-amber-500/40 hover:shadow-amber-500/5;
+  }
+  html:not(.dark) .premium-card-amber {
+    @apply bg-white/95 border border-amber-100 shadow-md shadow-amber-100/30 hover:border-amber-300;
   }
 
-  html:not(.dark) .nav-link-inactive {
-    @apply text-slate-600 hover:bg-slate-100 hover:text-slate-900;
+  .premium-card-blue {
+    @apply bg-slate-900/90 border border-blue-500/20 shadow-lg shadow-blue-950/15 rounded-3xl backdrop-blur-md transition-all duration-300 hover:border-blue-500/40 hover:shadow-blue-500/5;
+  }
+  html:not(.dark) .premium-card-blue {
+    @apply bg-white/95 border border-blue-100 shadow-md shadow-blue-100/30 hover:border-blue-300;
   }
 
-  .btn-primary {
-    @apply px-6 py-3 bg-gradient-to-r from-amber-600 via-yellow-600 to-amber-700 text-white rounded-xl font-bold shadow-md shadow-amber-600/20 hover:shadow-lg hover:from-amber-700 hover:via-yellow-700 hover:to-amber-800 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none;
+  /* Animated Buttons */
+  .btn-gradient-amber {
+    @apply px-6 py-3.5 bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 text-white rounded-2xl font-bold shadow-lg shadow-amber-500/20 hover:shadow-xl hover:shadow-amber-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none;
   }
-  
-  .btn-secondary {
-    @apply px-6 py-3 bg-neutral-900 text-amber-500 border border-amber-600/35 rounded-xl font-bold hover:bg-neutral-800 hover:border-amber-600/60 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none;
+  .btn-gradient-teal {
+    @apply px-6 py-3.5 bg-gradient-to-r from-teal-500 via-emerald-500 to-cyan-500 text-white rounded-2xl font-bold shadow-lg shadow-teal-500/20 hover:shadow-xl hover:shadow-teal-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-gradient-purple {
+    @apply px-6 py-3.5 bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-500 text-white rounded-2xl font-bold shadow-lg shadow-purple-600/20 hover:shadow-xl hover:shadow-purple-600/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none;
   }
 
-  html:not(.dark) .btn-secondary {
-    @apply bg-white text-amber-700 border border-amber-600/30 hover:bg-amber-50 hover:border-amber-600/50;
+  /* Custom input components */
+  .input-premium {
+    @apply w-full border border-slate-700/60 dark:border-slate-800 rounded-2xl px-4 py-3 text-xs bg-slate-950/80 text-slate-100 outline-none focus:border-teal-500/60 focus:ring-1 focus:ring-teal-500/20 font-medium transition-all;
+  }
+  html:not(.dark) .input-premium {
+    @apply border-stone-200 bg-stone-50/50 text-slate-800 focus:border-teal-500 focus:bg-white;
   }
 }
 
-/* Custom interactive classes */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* --- Dynamic Creative Animations --- */
+
+/* Floating Motion */
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
+/* Pulsing Outer Glow */
+.animate-glow-ring {
+  animation: glow-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes glow-ring {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(20, 184, 166, 0); }
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
-  border-radius: 4px;
+/* Slide-Up Dialogs */
+.animate-slide-up {
+  animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes slide-up {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
+/* Fade-in panels */
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out forwards;
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-/* Leaflet map styles */
+/* Scale-In reveal */
+.animate-scale-in {
+  animation: scale-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+@keyframes scale-in {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Clinical Scanner laser bar animation */
+@keyframes scan-laser {
+  0%, 100% { transform: translateY(0px); opacity: 0.8; }
+  50% { transform: translateY(216px); opacity: 1; }
+}
+
+/* Shimmer/Skeleton loader */
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Leaflet map overrides */
 .leaflet-container {
   width: 100%;
   height: 100%;
-  border-radius: 1rem;
+  border-radius: 1.5rem;
   z-index: 10;
+}
+.leaflet-bar {
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+}
+.leaflet-bar a {
+  background-color: #0f172a !important;
+  color: #cbd5e1 !important;
+  border-bottom: 1px solid #1e293b !important;
+}
+html:not(.dark) .leaflet-bar a {
+  background-color: #ffffff !important;
+  color: #334155 !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+/* Custom Scrollbars */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-slate-700/60 rounded-full;
+}
+html:not(.dark) .custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-slate-300;
 }

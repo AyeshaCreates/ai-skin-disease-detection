@@ -36,7 +36,10 @@ import {
   Plus,
   X,
   Flame,
-  ChevronLeft
+  ChevronLeft,
+  TrendingUp,
+  HeartPulse,
+  BookOpenCheck
 } from 'lucide-react';
 import SpeechRecorder from './components/SpeechRecorder';
 import { API_BASE } from './config';
@@ -63,7 +66,7 @@ export default function App() {
   const [sliderPosition, setSliderPosition] = useState(50);
   const [xaiTab, setXaiTab] = useState('overlay');
   
-  // Validation / Image Quality check modal state
+  // Image Quality check state
   const [qualityCheckResult, setQualityCheckResult] = useState(null);
   const [showQualityModal, setShowQualityModal] = useState(false);
 
@@ -118,9 +121,8 @@ export default function App() {
   const [bookingDate, setBookingDate] = useState('');
   const [bookingTime, setBookingTime] = useState('');
 
-  // Disease Library
+  // Disease Library Search
   const [librarySearch, setLibrarySearch] = useState('');
-  const [selectedCondition, setSelectedCondition] = useState(null);
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -162,7 +164,6 @@ export default function App() {
   // Handle leaflet map updates
   useEffect(() => {
     if (activeTab === 'analyze' && result && result.hospitals && mapContainerRef.current) {
-      // Dynamic Leaflet loader to prevent server-side render issues
       if (!window.L) {
         const link = document.createElement('link');
         link.rel = 'stylesheet';
@@ -199,15 +200,13 @@ export default function App() {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    // Add marker for user location
     window.L.marker(mapCenter, {
       icon: window.L.divIcon({
-        className: 'bg-amber-600 w-3 h-3 rounded-full border-2 border-white shadow-md',
-        iconSize: [12, 12]
+        className: 'bg-teal-500 w-4 h-4 rounded-full border-2 border-white shadow-lg animate-pulse',
+        iconSize: [16, 16]
       })
     }).addTo(map).bindPopup("Your Location").openPopup();
 
-    // Add markers for hospitals
     result.hospitals.forEach(h => {
       if (h.lat && h.lon) {
         window.L.marker([h.lat, h.lon]).addTo(map)
@@ -216,7 +215,6 @@ export default function App() {
     });
   };
 
-  // Location Services
   const detectLocation = () => {
     setLocLoading(true);
     if (!navigator.geolocation) {
@@ -241,13 +239,12 @@ export default function App() {
         setLocLoading(false);
       },
       () => {
-        setError("Unable to retrieve GPS coordinates. Defaulting search.");
+        setError("Unable to retrieve GPS coordinates.");
         setLocLoading(false);
       }
     );
   };
 
-  // Camera Handlers
   const startCamera = async () => {
     setUseCamera(true);
     try {
@@ -297,7 +294,6 @@ export default function App() {
     }
   };
 
-  // Run Image Quality Check first
   const runQualityCheck = async (e) => {
     e.preventDefault();
     if (!image) return;
@@ -310,6 +306,9 @@ export default function App() {
     formData.append('image', image);
     formData.append('symptoms', symptoms || selectedSymptoms.join(', ') || 'No symptoms specified');
     formData.append('language', language);
+    if (lat) formData.append('lat', lat);
+    if (lon) formData.append('lon', lon);
+    if (city) formData.append('city', city);
 
     try {
       const resp = await axios.post(`${API_BASE}/api/predict`, formData, {
@@ -318,7 +317,6 @@ export default function App() {
           'Bypass-Tunnel-Reminder': 'true'
         }
       });
-      // If validation passes, we receive prediction result directly
       setQualityCheckResult({
         valid: true,
         quality_score: resp.data.image_quality?.quality_score || 95,
@@ -356,7 +354,6 @@ export default function App() {
 
   const proceedToResults = () => {
     setShowQualityModal(false);
-    // Save to local screening history
     const newRecord = {
       id: Date.now().toString(),
       date: new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }),
@@ -374,38 +371,24 @@ export default function App() {
       quality_score: result.image_quality?.quality_score || 90
     };
     setHistory(prev => [newRecord, ...prev]);
-    // Set default target comparison records
     if (history.length > 0) {
       setCompareBaseId(newRecord.id);
       setCompareTargetId(history[0].id);
     }
   };
 
-  // Add a manual Skin Diary Entry
   const saveDiaryEntry = () => {
     const newEntry = {
       id: Date.now().toString(),
       date: new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }),
-      symptoms: {
-        itching,
-        pain,
-        burning,
-        dryness,
-        redness
-      },
-      lifestyle: {
-        sun: sunExposure,
-        skincare: skincareProduct,
-        water: waterIntake,
-        sleep: sleepHours
-      },
+      symptoms: { itching, pain, burning, dryness, redness },
+      lifestyle: { sun: sunExposure, skincare: skincareProduct, water: waterIntake, sleep: sleepHours },
       notes: diaryNotes,
       image: diaryImagePreview
     };
 
     setDiary(prev => [newEntry, ...prev]);
     
-    // Update Streak
     const todayStr = new Date().toDateString();
     const lastCheckDate = localStorage.getItem('dermascan_last_diary_date');
     if (lastCheckDate !== todayStr) {
@@ -414,7 +397,6 @@ export default function App() {
       localStorage.setItem('dermascan_streak', (streak + 1).toString());
     }
 
-    // Reset Form
     setItching(0);
     setPain(0);
     setBurning(0);
@@ -441,7 +423,6 @@ export default function App() {
     }
   };
 
-  // Draggable slider triggers for results
   const handleSliderMouse = (e) => {
     const rect = sliderContainerRef.current.getBoundingClientRect();
     const updatePos = (clientX) => {
@@ -474,7 +455,6 @@ export default function App() {
     updatePos(e.touches[0].clientX);
   };
 
-  // Draggable comparison slider triggers in Progress
   const handleCompSliderMouse = (e) => {
     const rect = compSliderContainerRef.current.getBoundingClientRect();
     const updatePos = (clientX) => {
@@ -491,7 +471,6 @@ export default function App() {
     updatePos(e.clientX);
   };
 
-  // Simulated Booking Router
   const handleBookAppointment = (hospital) => {
     setSelectedHospital(hospital);
     setBookingDate('');
@@ -531,7 +510,6 @@ export default function App() {
     }
   };
 
-  // PDF Report downloader
   const downloadReport = async () => {
     if (!result) return;
     try {
@@ -562,7 +540,6 @@ export default function App() {
     }
   };
 
-  // Progress metrics calculation
   const baseRec = history.find(r => r.id === compareBaseId);
   const targetRec = history.find(r => r.id === compareTargetId);
   
@@ -570,46 +547,67 @@ export default function App() {
     if (!baseRec || !targetRec) return { label: 'Insufficient Data', color: 'text-stone-400 bg-stone-100 dark:bg-slate-900' };
     const sevMap = { 'Mild': 1, 'Moderate': 2, 'Severe': 3 };
     const diff = sevMap[baseRec.severity] - sevMap[targetRec.severity];
-    if (diff < 0) return { label: 'Improving', color: 'text-emerald-600 bg-emerald-500/10' };
-    if (diff === 0) return { label: 'Stable', color: 'text-amber-600 bg-amber-500/10' };
-    return { label: 'Worsening', color: 'text-red-600 bg-red-500/10' };
+    if (diff < 0) return { label: 'Improving', color: 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20' };
+    if (diff === 0) return { label: 'Stable', color: 'text-amber-400 bg-amber-500/10 border border-amber-500/20' };
+    return { label: 'Worsening', color: 'text-red-400 bg-red-500/10 border border-red-500/20' };
   };
 
   return (
-    <div className="min-h-screen pb-20 md:pb-6 text-slate-800 dark:text-stone-100 font-sans transition-colors duration-300">
+    <div className="min-h-screen pb-24 md:pb-6 text-slate-800 dark:text-slate-100 transition-colors duration-300">
       
-      {/* Mobile-first sticky top bar */}
-      <header className="sticky top-0 z-40 backdrop-blur-md border-b border-stone-200/40 dark:border-slate-800/40 bg-white/70 dark:bg-slate-900/70 py-4 px-6 flex justify-between items-center">
+      {/* Sticky top brand bar with luxury styling */}
+      <header className="sticky top-0 z-40 backdrop-blur-lg border-b border-slate-200/40 dark:border-slate-800/40 bg-white/80 dark:bg-slate-950/80 py-4 px-6 flex justify-between items-center shadow-sm">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-amber-600 to-yellow-500 flex items-center justify-center shadow-md">
-            <Activity className="w-4.5 h-4.5 text-white" />
+          <div className="w-8.5 h-8.5 rounded-xl bg-gradient-to-tr from-teal-500 via-emerald-400 to-cyan-500 flex items-center justify-center shadow-md animate-float">
+            <HeartPulse className="w-5 h-5 text-white" />
           </div>
-          <span className="font-serif font-bold text-sm tracking-wider uppercase">DermaScan AI</span>
+          <span className="font-serif font-black text-sm tracking-widest bg-gradient-to-r from-teal-500 to-amber-500 bg-clip-text text-transparent uppercase">DermaScan AI</span>
         </div>
         <div className="flex items-center gap-2">
           <button 
             onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-            className="p-2 rounded-lg border border-stone-200/50 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm"
+            className="p-2.5 rounded-xl border border-slate-200/50 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md transition-all active:scale-95 hover:bg-slate-50 dark:hover:bg-slate-800"
           >
-            {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+            {theme === 'light' ? <Moon className="w-4 h-4 text-purple-500" /> : <Sun className="w-4 h-4 text-amber-500" />}
           </button>
         </div>
       </header>
 
-      {/* Main Tab Panel Container */}
+      {/* Main viewport frame */}
       <main className="max-w-md mx-auto px-4 py-6 space-y-6">
         
-        {/* Loading overlay spinner */}
+        {/* Advanced interactive loading indicator */}
         {loading && (
-          <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-6 text-center animate-fade-in">
-            <div className="bg-white dark:bg-slate-900 border border-stone-200/60 dark:border-slate-850 p-8 rounded-3xl max-w-xs w-full shadow-2xl flex flex-col items-center">
-              <div className="w-12 h-12 rounded-2xl bg-amber-600/10 text-amber-600 flex items-center justify-center mb-4">
-                <Activity className="w-6 h-6 animate-pulse" />
+          <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-6 text-center animate-fade-in">
+            <div className="premium-card-teal p-8 max-w-xs w-full shadow-2xl flex flex-col items-center animate-scale-in">
+              <div className="w-14 h-14 rounded-full bg-teal-500/10 text-teal-400 flex items-center justify-center mb-4 animate-glow-ring">
+                <RefreshCw className="w-6 h-6 animate-spin" />
               </div>
-              <h3 className="text-sm font-bold font-serif text-slate-900 dark:text-white">Fusing Clinical Vectors</h3>
-              <p className="text-[10px] text-slate-500 mt-1">{loadingStep}</p>
-              <div className="w-full bg-slate-100 dark:bg-slate-850 h-1 rounded-full overflow-hidden mt-4">
-                <div className="bg-amber-600 h-full w-2/3 rounded-full animate-[progress_2s_infinite_ease-in-out]"></div>
+              <h3 className="text-sm font-bold font-serif text-slate-100 uppercase tracking-widest">DermaScan AI</h3>
+              <p className="text-[10px] text-teal-400 font-mono mt-1">{loadingStep}</p>
+              
+              {/* Load details simulation list */}
+              <div className="w-full text-left mt-5 space-y-1.5 text-[9px] font-mono text-slate-400 border-t border-slate-800 pt-3">
+                <div className="flex justify-between">
+                  <span>➔ Checking image alignment</span>
+                  <span className="text-emerald-500 font-bold">✓</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>➔ Fusing MiniLM token vectors</span>
+                  <span className={loadingStep.includes('representation') || loadingStep.includes('clarity') ? 'text-slate-600 animate-pulse' : 'text-emerald-500 font-bold'}>
+                    {loadingStep.includes('clarity') ? '...' : '✓'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>➔ Running EfficientNet predictions</span>
+                  <span className={loadingStep.includes('representation') ? 'text-emerald-500 font-bold' : 'text-slate-600'}>
+                    {loadingStep.includes('representation') ? '✓' : '...'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-6">
+                <div className="bg-gradient-to-r from-teal-400 to-emerald-400 h-full w-4/5 rounded-full animate-[progress_3s_infinite_ease-in-out]"></div>
               </div>
             </div>
           </div>
@@ -618,122 +616,121 @@ export default function App() {
         {/* 1. HOME TAB */}
         {activeTab === 'home' && (
           <div className="space-y-6 animate-fade-in">
-            {/* Header welcome banner */}
-            <div className="bg-gradient-to-r from-amber-600 to-yellow-600 rounded-3xl p-6 text-white text-left shadow-lg relative overflow-hidden">
+            {/* Header welcome gradient cards */}
+            <div className="bg-gradient-to-tr from-teal-600 via-emerald-600 to-indigo-600 rounded-3xl p-6 text-white text-left shadow-xl relative overflow-hidden animate-float">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.1),transparent)] pointer-events-none"></div>
               <div className="relative z-10 space-y-2">
-                <span className="text-[9px] font-extrabold uppercase tracking-widest text-white/80">Premium Skin Companion</span>
-                <h2 className="text-2xl font-bold font-serif leading-tight">How is your skin today?</h2>
-                <p className="text-white/90 text-xs">Observe changes and monitor your progress daily.</p>
+                <span className="text-[9px] font-black uppercase tracking-widest text-teal-200">Continuous skin monitoring</span>
+                <h2 className="text-2xl font-bold font-serif leading-tight">Good Morning 👋</h2>
+                <p className="text-teal-100 text-xs">Observe daily changes and track your assessment trends.</p>
                 <div className="pt-2">
                   <button 
                     onClick={() => setActiveTab('diary')} 
-                    className="px-4 py-2 bg-white text-amber-700 hover:bg-stone-50 font-bold text-xs rounded-xl shadow-md flex items-center gap-1 transition-all"
+                    className="px-4 py-2 bg-white text-teal-800 hover:bg-teal-50 font-extrabold text-xs rounded-xl shadow-md flex items-center gap-1 transition-all"
                   >
-                    Start Daily Diary Check-in <ChevronRight className="w-3.5 h-3.5" />
+                    Start Daily Skin Check <ChevronRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
-              <div className="absolute right-0 bottom-0 top-0 opacity-15 flex items-center pr-2">
-                <ClipboardCheck className="w-40 h-40" />
+              <div className="absolute right-0 bottom-0 top-0 opacity-10 flex items-center pr-2">
+                <ClipboardCheck className="w-36 h-36" />
               </div>
             </div>
 
-            {/* Quick overview of skin status */}
-            <div className="bg-white dark:bg-slate-900 border border-stone-200/50 dark:border-slate-800 p-5 rounded-3xl space-y-4 shadow-sm text-left">
-              <h3 className="text-xs font-extrabold tracking-widest uppercase text-slate-400">Current Skin Status</h3>
+            {/* Glowing Skin Status widget */}
+            <div className="premium-card-teal p-5 space-y-4 text-left">
+              <h3 className="text-xs font-extrabold tracking-widest uppercase text-slate-400 dark:text-slate-400 flex items-center gap-1.5">
+                <Activity className="w-4.5 h-4.5 text-teal-500" /> Today's Skin Status
+              </h3>
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 bg-stone-50 dark:bg-slate-950 border border-stone-100 dark:border-slate-850 rounded-2xl">
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Assessed Trend</span>
-                  <span className="text-sm font-bold text-emerald-600 flex items-center gap-1.5 mt-1">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                <div className="p-3 bg-teal-500/5 border border-teal-500/10 rounded-2xl">
+                  <span className="text-[10px] text-slate-400 font-bold block">Skin Trend</span>
+                  <span className="text-sm font-extrabold text-teal-500 flex items-center gap-1.5 mt-1">
+                    <span className="w-2.5 h-2.5 rounded-full bg-teal-400 animate-ping"></span>
                     Stable
                   </span>
                 </div>
-                <div className="p-3 bg-stone-50 dark:bg-slate-950 border border-stone-100 dark:border-slate-850 rounded-2xl">
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Analysis Count</span>
-                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-1">{history.length} Screenings</span>
+                <div className="p-3 bg-purple-500/5 border border-purple-500/10 rounded-2xl">
+                  <span className="text-[10px] text-slate-400 font-bold block">Severity Level</span>
+                  <span className="text-sm font-extrabold text-purple-400 mt-1">{history[0]?.severity || "Healthy"}</span>
                 </div>
-                <div className="p-3 bg-stone-50 dark:bg-slate-950 border border-stone-100 dark:border-slate-850 rounded-2xl">
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Last Checked</span>
-                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1">{history[0]?.date || "No screenings yet"}</span>
+                <div className="p-3 bg-amber-500/5 border border-amber-500/10 rounded-2xl">
+                  <span className="text-[10px] text-slate-400 font-bold block">Last Screening</span>
+                  <span className="text-xs font-extrabold text-amber-500 mt-1">{history[0]?.date || "No entries yet"}</span>
                 </div>
-                <div className="p-3 bg-stone-50 dark:bg-slate-950 border border-stone-100 dark:border-slate-850 rounded-2xl">
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Severity</span>
-                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1">{history[0]?.severity || "N/A"}</span>
+                <div className="p-3 bg-blue-500/5 border border-blue-500/10 rounded-2xl">
+                  <span className="text-[10px] text-slate-400 font-bold block">Skin Diary Streak</span>
+                  <span className="text-xs font-extrabold text-blue-400 flex items-center gap-1 mt-1">
+                    <Flame className="w-4 h-4 text-orange-500" /> {streak} Days
+                  </span>
                 </div>
-              </div>
-
-              {/* Logging streaks */}
-              <div className="border-t border-stone-100 dark:border-slate-850 pt-3 flex justify-between items-center text-xs">
-                <span className="text-slate-500 font-bold flex items-center gap-1"><Flame className="w-4 h-4 text-orange-500" /> Skin Diary Streak:</span>
-                <span className="font-extrabold text-amber-600 dark:text-amber-500">{streak} Days check-in</span>
               </div>
             </div>
 
-            {/* Upcoming Consultations */}
+            {/* Consultation appointment timeline */}
             {appointments.length > 0 && (
-              <div className="bg-white dark:bg-slate-900 border border-stone-200/50 dark:border-slate-800 p-5 rounded-3xl space-y-3 shadow-sm text-left border-l-4 border-l-purple-600 animate-scale-in">
-                <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                  <Calendar className="w-4 h-4 text-purple-600" /> Upcoming Consultation
+              <div className="premium-card-purple p-5 space-y-3 text-left border-l-4 border-l-purple-500 animate-scale-in">
+                <h4 className="text-xs font-extrabold text-purple-400 uppercase tracking-widest flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4" /> Consultation Scheduled
                 </h4>
                 <div className="text-xs space-y-1">
-                  <p className="font-bold text-slate-800 dark:text-slate-200">{appointments[0].hospital}</p>
-                  <p className="text-slate-500">Date: {appointments[0].date} at {appointments[0].time}</p>
-                  <p className="text-[10px] text-slate-400">Clinic Hours: {appointments[0].hours}</p>
+                  <p className="font-bold text-slate-100">{appointments[0].hospital}</p>
+                  <p className="text-slate-400">Date: {appointments[0].date} at {appointments[0].time}</p>
+                  <p className="text-[10px] text-purple-500 font-bold">Operating Hours: {appointments[0].hours}</p>
                 </div>
               </div>
             )}
 
-            {/* Actions Grid */}
+            {/* Colorful Premium Action Grid */}
             <div className="grid grid-cols-2 gap-4">
               <button 
                 onClick={() => setActiveTab('analyze')} 
-                className="bg-white dark:bg-slate-900 border border-stone-200/50 dark:border-slate-800 p-5 rounded-3xl flex flex-col items-center gap-3 shadow-sm active:scale-[0.98] transition-all"
+                className="premium-card-teal p-5 flex flex-col items-center gap-3 active:scale-95 transition-all"
               >
-                <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center"><Camera className="w-5 h-5" /></div>
-                <span className="text-xs font-bold">Analyze Skin</span>
+                <div className="w-11 h-11 rounded-2xl bg-teal-500/10 text-teal-400 flex items-center justify-center shadow-inner"><Camera className="w-5.5 h-5.5" /></div>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-300">Analyze Skin</span>
               </button>
               <button 
                 onClick={() => setActiveTab('diary')} 
-                className="bg-white dark:bg-slate-900 border border-stone-200/50 dark:border-slate-800 p-5 rounded-3xl flex flex-col items-center gap-3 shadow-sm active:scale-[0.98] transition-all"
+                className="premium-card-emerald p-5 premium-card-teal border-emerald-500/20 flex flex-col items-center gap-3 active:scale-95 transition-all"
               >
-                <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center"><ClipboardCheck className="w-5 h-5" /></div>
-                <span className="text-xs font-bold">Daily Diary</span>
+                <div className="w-11 h-11 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center"><ClipboardCheck className="w-5.5 h-5.5" /></div>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-300">Daily Diary</span>
               </button>
               <button 
                 onClick={() => setActiveTab('progress')} 
-                className="bg-white dark:bg-slate-900 border border-stone-200/50 dark:border-slate-800 p-5 rounded-3xl flex flex-col items-center gap-3 shadow-sm active:scale-[0.98] transition-all"
+                className="premium-card-amber p-5 flex flex-col items-center gap-3 active:scale-95 transition-all"
               >
-                <div className="w-10 h-10 rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center"><SlidersHorizontal className="w-5 h-5" /></div>
-                <span className="text-xs font-bold">Progress Trends</span>
+                <div className="w-11 h-11 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center"><SlidersHorizontal className="w-5.5 h-5.5" /></div>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-300">Progress Trends</span>
               </button>
               <button 
-                onClick={() => { setActiveTab('profile'); }} 
-                className="bg-white dark:bg-slate-900 border border-stone-200/50 dark:border-slate-800 p-5 rounded-3xl flex flex-col items-center gap-3 shadow-sm active:scale-[0.98] transition-all"
+                onClick={() => setActiveTab('profile')} 
+                className="premium-card-purple p-5 flex flex-col items-center gap-3 active:scale-95 transition-all"
               >
-                <div className="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-600 flex items-center justify-center"><User className="w-5 h-5" /></div>
-                <span className="text-xs font-bold">Model Metrics</span>
+                <div className="w-11 h-11 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center"><User className="w-5.5 h-5.5" /></div>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-300">Model Stats</span>
               </button>
             </div>
           </div>
         )}
 
-        {/* 2. ANALYZE TAB (Prediction Console) */}
+        {/* 2. ANALYZE TAB */}
         {activeTab === 'analyze' && !result && (
           <form onSubmit={runQualityCheck} className="space-y-6 animate-fade-in text-left">
-            <div className="flex flex-col gap-1 border-b border-stone-200/50 dark:border-slate-800 pb-3">
-              <h2 className="text-xl font-bold font-serif text-slate-900 dark:text-white">AI Diagnostic Console</h2>
+            <div className="flex flex-col gap-1 border-b border-slate-200/50 dark:border-slate-800 pb-3">
+              <h2 className="text-xl font-bold font-serif text-slate-900 dark:text-white">Diagnostic Console</h2>
               <p className="text-slate-500 text-xs">Run context-aware multimodal classification on your skin condition.</p>
             </div>
 
-            {/* Photo Capture card */}
-            <div className="bg-white dark:bg-slate-900 border border-stone-200/50 dark:border-slate-800 p-5 rounded-3xl flex flex-col gap-4 shadow-sm">
-              <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">1. Upload affected lesion image</label>
+            {/* Glowing Photo frame */}
+            <div className="premium-card-teal p-5 flex flex-col gap-4">
+              <label className="text-[10px] font-extrabold uppercase tracking-widest text-teal-400">1. Upload affected lesion image</label>
               {useCamera ? (
-                <div className="relative aspect-square bg-slate-950 rounded-2xl overflow-hidden border border-slate-800">
+                <div className="relative aspect-square bg-slate-950 rounded-3xl overflow-hidden border border-teal-500/30">
                   <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover"></video>
                   <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3 px-4">
-                    <button type="button" onClick={capturePhoto} className="px-4 py-2.5 bg-emerald-600 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow">
+                    <button type="button" onClick={capturePhoto} className="px-4 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-500 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow">
                       <Camera className="w-4 h-4" /> Capture Photo
                     </button>
                     <button type="button" onClick={() => { setUseCamera(false); stopCamera(); }} className="px-4 py-2.5 bg-slate-800 text-white text-xs font-bold rounded-xl">
@@ -742,27 +739,27 @@ export default function App() {
                   </div>
                 </div>
               ) : imagePreview ? (
-                <div className="relative aspect-square rounded-2xl overflow-hidden border border-stone-200 dark:border-slate-800 group shadow-inner">
+                <div className="relative aspect-square rounded-3xl overflow-hidden border border-teal-500/20 group shadow-inner">
                   <img src={imagePreview} alt="lesion" className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-slate-950/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
-                    <button type="button" onClick={() => { setImage(null); setImagePreview(null); }} className="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-bold">
+                    <button type="button" onClick={() => { setImage(null); setImagePreview(null); }} className="px-4 py-2.5 bg-red-600 text-white rounded-xl text-xs font-bold">
                       Remove Photo
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="aspect-square bg-stone-100/50 dark:bg-slate-950 border-2 border-dashed border-stone-200 dark:border-slate-850 rounded-2xl flex flex-col items-center justify-center p-6 text-center cursor-pointer hover:border-amber-500/50 transition-all">
-                  <div className="p-3.5 bg-white dark:bg-slate-900 border border-stone-100 dark:border-slate-850 rounded-full text-slate-400 mb-2">
+                <div className="aspect-square bg-slate-950 border-2 border-dashed border-teal-500/20 rounded-3xl flex flex-col items-center justify-center p-6 text-center cursor-pointer hover:border-teal-500/50 transition-all">
+                  <div className="p-3.5 bg-slate-900 border border-slate-800 rounded-full text-teal-400 mb-2">
                     <Upload className="w-5 h-5" />
                   </div>
-                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Drag/Drop Skin Image Here</span>
+                  <span className="text-xs font-bold text-slate-300">Drag/Drop Skin Image Here</span>
                   <div className="mt-4 flex gap-2.5">
-                    <label className="px-3.5 py-2 bg-white dark:bg-slate-900 border border-stone-200 dark:border-slate-800 rounded-xl text-[11px] font-bold shadow-sm cursor-pointer">
+                    <label className="px-3.5 py-2 bg-slate-900 border border-slate-800 hover:bg-slate-850 rounded-xl text-[11px] font-bold shadow-sm cursor-pointer">
                       Browse Files
                       <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
                     </label>
-                    <button type="button" onClick={startCamera} className="px-3.5 py-2 bg-slate-950 dark:bg-slate-800 text-white rounded-xl text-[11px] font-bold shadow-sm flex items-center gap-1">
-                      <Camera className="w-3.5 h-3.5 text-amber-500" /> Use Camera
+                    <button type="button" onClick={startCamera} className="px-3.5 py-2 bg-slate-950 text-white rounded-xl text-[11px] font-bold shadow-sm flex items-center gap-1">
+                      <Camera className="w-3.5 h-3.5 text-teal-400" /> Use Camera
                     </button>
                   </div>
                 </div>
@@ -771,13 +768,13 @@ export default function App() {
             </div>
 
             {/* Language & Symptoms select */}
-            <div className="bg-white dark:bg-slate-900 border border-stone-200/50 dark:border-slate-800 p-5 rounded-3xl flex flex-col gap-4 shadow-sm">
+            <div className="premium-card-teal p-5 flex flex-col gap-4">
               <div className="flex justify-between items-center">
-                <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">2. Input Language & Symptoms</label>
+                <label className="text-[10px] font-extrabold uppercase tracking-widest text-teal-400">2. Input Language & Symptoms</label>
                 <select 
                   value={language}
                   onChange={(e) => setLanguage(e.target.value)}
-                  className="text-xs font-bold border border-stone-200 dark:border-slate-800 rounded-lg p-2 bg-stone-50 dark:bg-slate-950 text-slate-800 dark:text-stone-200 outline-none"
+                  className="text-xs font-bold border border-slate-800 rounded-lg p-2 bg-slate-950 text-slate-300 outline-none"
                 >
                   <option value="en">English</option>
                   <option value="hi">हिंदी (Hindi)</option>
@@ -807,8 +804,8 @@ export default function App() {
                       }}
                       className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${
                         isSelected 
-                          ? 'bg-amber-600 border-amber-600 text-white shadow-sm' 
-                          : 'bg-stone-50 dark:bg-slate-950 border-stone-200 dark:border-slate-850 text-slate-600 dark:text-slate-400'
+                          ? 'bg-teal-600 border-teal-600 text-white shadow-sm' 
+                          : 'bg-slate-950 border-slate-800 text-slate-400'
                       }`}
                     >
                       {symp}
@@ -822,7 +819,7 @@ export default function App() {
                 value={symptoms}
                 onChange={(e) => setSymptoms(e.target.value)}
                 placeholder="Describe symptoms in detail or check chips above..."
-                className="w-full border border-stone-200 dark:border-slate-850 rounded-xl p-3 text-xs bg-stone-100/30 dark:bg-slate-950 text-slate-800 dark:text-slate-200 outline-none focus:border-amber-500"
+                className="w-full border border-slate-800 rounded-xl p-3 text-xs bg-slate-950 text-slate-100 outline-none focus:border-teal-500"
               ></textarea>
 
               <SpeechRecorder 
@@ -832,9 +829,9 @@ export default function App() {
               />
             </div>
 
-            {/* Geolocation selector */}
-            <div className="bg-white dark:bg-slate-900 border border-stone-200/50 dark:border-slate-800 p-5 rounded-3xl flex flex-col gap-4 shadow-sm">
-              <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">3. Hospital Geolocation Mapping</label>
+            {/* Geolocation mapping */}
+            <div className="premium-card-teal p-5 flex flex-col gap-4">
+              <label className="text-[10px] font-extrabold uppercase tracking-widest text-teal-400">3. Hospital Geolocation Mapping</label>
               <div className="flex gap-2">
                 <button
                   type="button"
@@ -842,11 +839,11 @@ export default function App() {
                   disabled={locLoading}
                   className={`flex-grow flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold border transition-all ${
                     locSuccess 
-                      ? 'bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/15 dark:border-emerald-900/50 dark:text-emerald-300' 
-                      : 'bg-white dark:bg-slate-900 border-stone-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+                      : 'bg-slate-950 border-slate-800 text-slate-300'
                   }`}
                 >
-                  <MapPin className="w-4 h-4" />
+                  <MapPin className="w-4 h-4 text-teal-400" />
                   {locLoading ? "Locking GPS..." : locSuccess ? "GPS Locked" : "Use Current GPS"}
                 </button>
                 <input
@@ -854,13 +851,13 @@ export default function App() {
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   placeholder="Or enter city"
-                  className="w-1/2 border border-stone-200 dark:border-slate-850 rounded-xl px-3 py-2.5 text-xs bg-stone-100/30 dark:bg-slate-950 text-slate-800 dark:text-slate-200 outline-none"
+                  className="w-1/2 border border-slate-800 rounded-xl px-3 py-2.5 text-xs bg-slate-950 text-slate-100 outline-none"
                 />
               </div>
             </div>
 
             {error && (
-              <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs rounded-2xl flex items-start gap-2">
+              <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-2xl flex items-start gap-2">
                 <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                 <span>{error}</span>
               </div>
@@ -869,43 +866,42 @@ export default function App() {
             <button
               type="submit"
               disabled={loading || !image}
-              className="w-full py-4 bg-gradient-to-r from-amber-600 to-yellow-600 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-4 bg-gradient-to-r from-teal-500 via-emerald-500 to-cyan-500 text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-teal-500/15 flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              <Activity className="w-4 h-4 animate-pulse" /> Run Diagnostic Checks
+              <Activity className="w-4 h-4" /> Run Diagnostic Checks
             </button>
           </form>
         )}
 
-        {/* IMAGE QUALITY MODAL CHECK LAYER */}
+        {/* IMAGE QUALITY MODAL INTERACTION */}
         {showQualityModal && qualityCheckResult && (
-          <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-6 text-center animate-fade-in text-left">
-            <div className="bg-white dark:bg-slate-900 border border-stone-200/60 dark:border-slate-850 p-6 rounded-3xl max-w-sm w-full shadow-2xl space-y-5">
+          <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-6 text-center animate-fade-in text-left">
+            <div className="premium-card-teal p-6 max-w-sm w-full shadow-2xl space-y-5 animate-scale-in">
               <div className="flex justify-between items-center">
-                <h3 className="font-serif font-bold text-slate-900 dark:text-white">Image Quality Evaluation</h3>
+                <h3 className="font-serif font-bold text-slate-100">Image Quality Check</h3>
                 <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded ${
-                  qualityCheckResult.valid ? 'bg-emerald-500/10 text-emerald-600' : 'bg-red-500/10 text-red-500'
+                  qualityCheckResult.valid ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'
                 }`}>
                   Score: {qualityCheckResult.quality_score}%
                 </span>
               </div>
 
-              {/* Gauge Check Indicators */}
-              <div className="space-y-2 bg-stone-50 dark:bg-slate-950 p-4 rounded-2xl text-xs">
+              <div className="space-y-2 bg-slate-950 p-4 rounded-2xl text-xs">
                 <div className="flex justify-between items-center">
                   <span>Clear Focus & Sharpness</span>
-                  <span className={qualityCheckResult.metrics.clear_focus ? 'text-emerald-600 font-bold' : 'text-red-500 font-bold'}>
+                  <span className={qualityCheckResult.metrics.clear_focus ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>
                     {qualityCheckResult.metrics.clear_focus ? '✓ Passes' : '✗ Blurry'}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Balanced Brightness & Contrast</span>
-                  <span className={qualityCheckResult.metrics.good_lighting ? 'text-emerald-600 font-bold' : 'text-red-500 font-bold'}>
+                  <span className={qualityCheckResult.metrics.good_lighting ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>
                     {qualityCheckResult.metrics.good_lighting ? '✓ Passes' : '✗ Poor Light'}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Skin Presence Ratio</span>
-                  <span className={qualityCheckResult.metrics.skin_detected ? 'text-emerald-600 font-bold' : 'text-red-500 font-bold'}>
+                  <span className={qualityCheckResult.metrics.skin_detected ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>
                     {qualityCheckResult.metrics.skin_detected ? '✓ Passes' : '✗ Non-skin'}
                   </span>
                 </div>
@@ -913,30 +909,24 @@ export default function App() {
 
               {qualityCheckResult.valid ? (
                 <div className="space-y-4">
-                  <p className="text-xs text-slate-500 leading-relaxed">
+                  <p className="text-xs text-slate-400 leading-relaxed">
                     ✓ **Optimal Frame Properties**. The input passes resolution, contrast, focus, and illumination thresholds and is fully suitable for AI inference.
                   </p>
                   <button 
                     onClick={proceedToResults} 
-                    className="w-full py-3 bg-gradient-to-r from-amber-600 to-yellow-600 text-white font-bold text-xs rounded-xl shadow-sm hover:from-amber-700"
+                    className="w-full py-3 bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-bold text-xs rounded-xl"
                   >
                     Proceed to Diagnostic Report
                   </button>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="p-3 bg-red-500/5 border border-red-500/10 text-red-600 dark:text-red-400 text-xs rounded-xl font-bold">
+                  <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl font-bold">
                     ⚠️ {qualityCheckResult.message}
-                  </div>
-                  <div className="text-[10px] text-slate-400 leading-normal space-y-1">
-                    <p>💡 **Diagnostic Suggestions to improve clarity:**</p>
-                    <p>• Clean the camera lens surface.</p>
-                    <p>• Move the camera closer or refocus directly on the lesion center.</p>
-                    <p>• Eliminate harsh reflections or extreme shadows.</p>
                   </div>
                   <button 
                     onClick={() => { setShowQualityModal(false); setImage(null); setImagePreview(null); }} 
-                    className="w-full py-3 bg-slate-900 dark:bg-slate-800 text-white font-bold text-xs rounded-xl"
+                    className="w-full py-3 bg-slate-900 text-white font-bold text-xs rounded-xl"
                   >
                     Retake Skin Photograph
                   </button>
@@ -949,7 +939,7 @@ export default function App() {
         {/* 2.1 ANALYSIS RESULTS SUBTAB */}
         {activeTab === 'analyze' && result && (
           <div className="space-y-6 animate-fade-in text-left">
-            <div className="flex justify-between items-center border-b border-stone-200/50 dark:border-slate-800 pb-3">
+            <div className="flex justify-between items-center border-b border-slate-200/50 dark:border-slate-800 pb-3">
               <h2 className="text-lg font-bold font-serif text-slate-900 dark:text-white">Diagnostic Report</h2>
               <button 
                 onClick={() => { setResult(null); setImage(null); setImagePreview(null); }}
@@ -960,37 +950,35 @@ export default function App() {
             </div>
 
             {/* Predictions & score detail cards */}
-            <div className="bg-white dark:bg-slate-900 border border-stone-200/50 dark:border-slate-800 p-5 rounded-3xl space-y-4 shadow-sm">
+            <div className="premium-card-purple p-5 space-y-4">
               <div>
-                <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Identified Skin Condition</span>
-                <h3 className="text-lg font-serif font-bold text-slate-900 dark:text-white mt-1">{result.disease}</h3>
+                <span className="text-[10px] font-bold uppercase text-purple-400 tracking-wider">Identified Skin Condition</span>
+                <h3 className="text-lg font-serif font-bold text-slate-100 mt-1">{result.disease}</h3>
               </div>
 
               <div className="grid grid-cols-2 gap-3 pt-2">
-                <div className="p-3 bg-stone-50 dark:bg-slate-950 border border-stone-100 dark:border-slate-850 rounded-2xl">
+                <div className="p-3 bg-slate-950 border border-purple-500/10 rounded-2xl">
                   <span className="text-[9px] text-slate-400 uppercase font-bold">Confidence Score</span>
-                  <span className="block text-lg font-black text-slate-800 dark:text-slate-200 mt-1">{Math.round(result.confidence * 100)}%</span>
+                  <span className="block text-lg font-black text-purple-400 mt-1">{Math.round(result.confidence * 100)}%</span>
                 </div>
-                <div className="p-3 bg-stone-50 dark:bg-slate-950 border border-stone-100 dark:border-slate-850 rounded-2xl">
+                <div className="p-3 bg-slate-950 border border-purple-500/10 rounded-2xl">
                   <span className="text-[9px] text-slate-400 uppercase font-bold">Severity Estimate</span>
-                  <span className="block text-lg font-black text-slate-800 dark:text-slate-200 mt-1">{result.severity}</span>
+                  <span className="block text-lg font-black text-purple-400 mt-1">{result.severity}</span>
                 </div>
               </div>
             </div>
 
             {/* Draggable CAM Overlay comparison slider */}
-            <div className="bg-white dark:bg-slate-900 border border-stone-200/50 dark:border-slate-800 p-5 rounded-3xl space-y-4 shadow-sm">
-              <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-widest">Explainable AI (CAM attention mapping)</h4>
+            <div className="premium-card-amber p-5 space-y-4">
+              <h4 className="text-xs font-extrabold text-amber-400 uppercase tracking-widest">Explainable AI (CAM attention mapping)</h4>
               <div 
                 ref={sliderContainerRef}
                 onMouseDown={handleSliderMouse}
                 onTouchStart={handleSliderTouch}
-                className="relative aspect-square w-full rounded-2xl overflow-hidden border border-stone-200 dark:border-slate-855 cursor-ew-resize select-none"
+                className="relative aspect-square w-full rounded-2xl overflow-hidden border border-amber-500/20 cursor-ew-resize select-none"
               >
-                {/* Heatmap overlay image */}
                 <img src={result.overlay_image} alt="cam" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
                 
-                {/* Crop boundary overlay mapping */}
                 <div 
                   className="absolute inset-0 overflow-hidden border-r border-amber-500"
                   style={{ width: `${sliderPosition}%` }}
@@ -1004,7 +992,7 @@ export default function App() {
                 </div>
 
                 <div 
-                  className="absolute top-0 bottom-0 w-0.5 bg-amber-500 flex items-center justify-center"
+                  className="absolute top-0 bottom-0 w-0.5 bg-amber-500 flex items-center justify-center animate-glow-ring"
                   style={{ left: `${sliderPosition}%`, transform: 'translateX(-50%)' }}
                 >
                   <div className="w-5 h-5 rounded-full bg-amber-600 text-white flex items-center justify-center text-[9px] border border-white font-bold">↔</div>
@@ -1016,16 +1004,16 @@ export default function App() {
             </div>
 
             {/* Multimodal fusion contribution details */}
-            <div className="bg-white dark:bg-slate-900 border border-stone-200/50 dark:border-slate-800 p-5 rounded-3xl space-y-3 shadow-sm">
-              <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-widest">Illustrative Evidence Contribution</h4>
+            <div className="premium-card-teal p-5 space-y-3">
+              <h4 className="text-xs font-extrabold text-teal-400 uppercase tracking-widest">Illustrative Evidence Contribution</h4>
               <div className="space-y-2 text-xs">
                 <div className="space-y-1">
                   <div className="flex justify-between font-bold">
                     <span>Visual Image Evidence</span>
                     <span>70% contribution</span>
                   </div>
-                  <div className="w-full bg-slate-100 dark:bg-slate-950 h-2 rounded-full overflow-hidden">
-                    <div className="bg-amber-600 h-full rounded-full" style={{ width: '70%' }}></div>
+                  <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
+                    <div className="bg-teal-500 h-full rounded-full animate-pulse" style={{ width: '70%' }}></div>
                   </div>
                 </div>
                 <div className="space-y-1 pt-1">
@@ -1033,8 +1021,8 @@ export default function App() {
                     <span>Symptom Text Evidence</span>
                     <span>30% contribution</span>
                   </div>
-                  <div className="w-full bg-slate-100 dark:bg-slate-950 h-2 rounded-full overflow-hidden">
-                    <div className="bg-blue-600 h-full rounded-full" style={{ width: '30%' }}></div>
+                  <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
+                    <div className="bg-indigo-500 h-full rounded-full animate-pulse" style={{ width: '30%' }}></div>
                   </div>
                 </div>
               </div>
@@ -1042,12 +1030,12 @@ export default function App() {
 
             {/* Differential Diagnosis Matches */}
             {result.top_predictions && result.top_predictions.length > 1 && (
-              <div className="bg-white dark:bg-slate-900 border border-stone-200/50 dark:border-slate-800 p-5 rounded-3xl shadow-sm space-y-3">
-                <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-widest">Differential Diagnosis Matches</h4>
+              <div className="premium-card-blue p-5 shadow-sm space-y-3">
+                <h4 className="text-xs font-extrabold text-blue-400 uppercase tracking-widest">Differential Diagnosis Matches</h4>
                 <div className="space-y-2 text-xs">
                   {result.top_predictions.map((p, idx) => (
-                    <div key={idx} className="flex justify-between items-center border-b border-stone-100 dark:border-slate-850 pb-2 last:border-0 last:pb-0">
-                      <span className="font-bold text-slate-800 dark:text-slate-200">{p.disease}</span>
+                    <div key={idx} className="flex justify-between items-center border-b border-slate-800 pb-2 last:border-0 last:pb-0">
+                      <span className="font-bold text-slate-200">{p.disease}</span>
                       <span className="font-bold text-slate-400">{Math.round(p.confidence * 100)}% Match</span>
                     </div>
                   ))}
@@ -1056,29 +1044,29 @@ export default function App() {
             )}
 
             {/* Clinic routing maps & hospital recommendations */}
-            <div className="bg-white dark:bg-slate-900 border border-stone-200/50 dark:border-slate-800 p-5 rounded-3xl space-y-4 shadow-sm">
-              <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-widest">Care Connect Specialty clinics</h4>
+            <div className="premium-card-teal p-5 space-y-4">
+              <h4 className="text-xs font-extrabold text-teal-400 uppercase tracking-widest">Care Connect Specialty clinics</h4>
               
-              <div className="h-[200px] rounded-2xl overflow-hidden border border-stone-100 dark:border-slate-850 shadow-inner">
+              <div className="h-[200px] rounded-2xl overflow-hidden border border-slate-800 shadow-inner">
                 <div ref={mapContainerRef} className="w-full h-full bg-stone-100"></div>
               </div>
 
               <div className="space-y-3 pt-2">
                 {result.hospitals.map((h, idx) => (
-                  <div key={idx} className="p-3 bg-stone-50 dark:bg-slate-950 border border-stone-100 dark:border-slate-850 rounded-2xl flex flex-col gap-2">
+                  <div key={idx} className="p-3 bg-slate-950 border border-slate-800 rounded-2xl flex flex-col gap-2">
                     <div className="flex justify-between items-start">
                       <span className="font-bold text-xs leading-snug">{h.name}</span>
-                      <span className="text-[9px] font-black text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-full flex-shrink-0 uppercase">{h.distance}</span>
+                      <span className="text-[9px] font-black text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded-full flex-shrink-0 uppercase">{h.distance}</span>
                     </div>
                     <div className="flex justify-between items-center text-[10px]">
                       <span className="text-slate-400 font-bold">★ {h.rating} Rating</span>
                       <span className="text-slate-400 font-bold">Hours: 09:00 AM – 06:00 PM</span>
                     </div>
                     <div className="flex gap-2 pt-1">
-                      <a href={`https://www.google.com/maps/dir/?api=1&destination=${h.lat},${h.lon}`} target="_blank" rel="noreferrer" className="flex-grow py-2 border border-stone-200 dark:border-slate-800 hover:bg-stone-100 rounded-xl text-[10px] font-bold text-center">
+                      <a href={`https://www.google.com/maps/dir/?api=1&destination=${h.lat},${h.lon}`} target="_blank" rel="noreferrer" className="flex-grow py-2 border border-slate-800 hover:bg-slate-900 rounded-xl text-[10px] font-bold text-center">
                         Directions
                       </a>
-                      <button type="button" onClick={() => handleBookAppointment(h)} className="px-4 py-2 bg-purple-600 text-white rounded-xl text-[10px] font-bold">
+                      <button type="button" onClick={() => handleBookAppointment(h)} className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-[10px] font-bold">
                         Book Appointment
                       </button>
                     </div>
@@ -1088,17 +1076,17 @@ export default function App() {
             </div>
 
             {/* General Advice guidelines */}
-            <div className="bg-white dark:bg-slate-900 border border-stone-200/50 dark:border-slate-800 p-5 rounded-3xl space-y-3 shadow-sm">
-              <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-widest">Suggestions & Guidelines</h4>
+            <div className="premium-card-teal p-5 space-y-3">
+              <h4 className="text-xs font-extrabold text-teal-400 uppercase tracking-widest">Suggestions & Guidelines</h4>
               <div className="space-y-2 text-xs">
                 {result.recommendations.map((rec, idx) => (
-                  <div key={idx} className="flex gap-1 text-slate-600 dark:text-slate-400 leading-relaxed">
-                    <span className="text-amber-500">•</span>
+                  <div key={idx} className="flex gap-1 text-slate-400 leading-relaxed">
+                    <span className="text-teal-400 font-bold">•</span>
                     <span>{rec}</span>
                   </div>
                 ))}
               </div>
-              <div className="p-3 bg-amber-500/5 border border-amber-600/15 text-[10px] text-amber-700 dark:text-amber-500 rounded-xl leading-normal font-bold">
+              <div className="p-3 bg-teal-500/5 border border-teal-500/15 text-[10px] text-teal-400 rounded-xl leading-normal font-bold">
                 ⚠️ **Disclaimer**: preliminary screening evaluation only. Consult dermatologists for actual clinical confirmation.
               </div>
             </div>
@@ -1107,13 +1095,13 @@ export default function App() {
             <div className="flex gap-2.5">
               <button 
                 onClick={downloadReport} 
-                className="flex-grow py-3 bg-gradient-to-r from-amber-600 to-yellow-600 text-white text-xs font-bold rounded-xl shadow-sm flex items-center justify-center gap-1.5"
+                className="flex-grow py-3.5 bg-gradient-to-r from-teal-500 to-emerald-500 text-white text-xs font-bold rounded-xl shadow-md flex items-center justify-center gap-1.5"
               >
                 <Download className="w-4.5 h-4.5" /> PDF Report
               </button>
               <button 
                 onClick={() => { setResult(null); setImage(null); setImagePreview(null); }} 
-                className="py-3 px-6 bg-slate-900 dark:bg-slate-800 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5"
+                className="py-3.5 px-6 bg-slate-900 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5"
               >
                 New Scan
               </button>
@@ -1121,19 +1109,18 @@ export default function App() {
           </div>
         )}
 
-        {/* 3. DIARY TAB (Daily Skin Diary) */}
+        {/* 3. DIARY TAB */}
         {activeTab === 'diary' && (
           <div className="space-y-6 animate-fade-in text-left">
-            <div className="flex flex-col gap-1 border-b border-stone-200/50 dark:border-slate-800 pb-3">
+            <div className="flex flex-col gap-1 border-b border-slate-200/50 dark:border-slate-800 pb-3">
               <h2 className="text-xl font-bold font-serif text-slate-900 dark:text-white">AI Skin Diary</h2>
               <p className="text-slate-500 text-xs">Perform routine daily skin assessments and monitor symptoms.</p>
             </div>
 
             {/* Entry Form Card */}
-            <div className="bg-white dark:bg-slate-900 border border-stone-200/50 dark:border-slate-800 p-5 rounded-3xl space-y-5 shadow-sm">
-              <h3 className="text-xs font-extrabold uppercase tracking-widest text-slate-400">Log Today's Symptoms</h3>
+            <div className="premium-card-teal p-5 space-y-5">
+              <h3 className="text-xs font-extrabold uppercase tracking-widest text-teal-400">Log Today's Symptoms</h3>
               
-              {/* Sliders for symptom levels */}
               {[
                 { label: "Itching level", state: itching, set: setItching, min: "😌 0", max: "10 😣" },
                 { label: "Pain intensity", state: pain, set: setPain, min: "😌 0", max: "10 😣" },
@@ -1143,7 +1130,7 @@ export default function App() {
                 <div key={idx} className="space-y-1.5">
                   <div className="flex justify-between text-xs font-bold">
                     <span>{s.label}</span>
-                    <span className="text-amber-600 dark:text-amber-500">{s.state}/10</span>
+                    <span className="text-teal-400">{s.state}/10</span>
                   </div>
                   <input 
                     type="range" 
@@ -1151,7 +1138,7 @@ export default function App() {
                     max="10" 
                     value={s.state} 
                     onChange={(e) => s.set(parseInt(e.target.value))}
-                    className="w-full accent-amber-600 h-1 bg-stone-100 dark:bg-slate-950 rounded-lg cursor-pointer"
+                    className="w-full accent-teal-500 h-1 bg-slate-950 rounded-lg cursor-pointer"
                   />
                   <div className="flex justify-between text-[10px] text-slate-400">
                     <span>{s.min}</span>
@@ -1160,7 +1147,6 @@ export default function App() {
                 </div>
               ))}
 
-              {/* Redness check option */}
               <div className="space-y-2">
                 <span className="text-xs font-bold block">Redness level</span>
                 <div className="grid grid-cols-4 gap-2">
@@ -1171,8 +1157,8 @@ export default function App() {
                       onClick={() => setRedness(level)}
                       className={`py-2 rounded-xl text-[10px] font-bold border transition-all ${
                         redness === level 
-                          ? 'bg-amber-600 border-amber-600 text-white shadow-sm' 
-                          : 'bg-stone-50 dark:bg-slate-950 border-stone-200 dark:border-slate-850 text-slate-600 dark:text-slate-400'
+                          ? 'bg-teal-600 border-teal-600 text-white shadow-sm' 
+                          : 'bg-slate-950 border-slate-800 text-slate-400'
                       }`}
                     >
                       {level}
@@ -1182,14 +1168,14 @@ export default function App() {
               </div>
 
               {/* Sun, skincare, lifestyle */}
-              <div className="space-y-3 border-t border-stone-100 dark:border-slate-850 pt-3">
+              <div className="space-y-3 border-t border-slate-800 pt-3">
                 <div className="flex justify-between items-center text-xs font-bold">
                   <span>Exposure to intense sunlight today?</span>
                   <input 
                     type="checkbox" 
                     checked={sunExposure} 
                     onChange={(e) => setSunExposure(e.target.checked)}
-                    className="w-4 h-4 accent-amber-600 rounded cursor-pointer"
+                    className="w-4 h-4 accent-teal-500 rounded cursor-pointer"
                   />
                 </div>
 
@@ -1200,7 +1186,7 @@ export default function App() {
                     value={skincareProduct}
                     onChange={(e) => setSkincareProduct(e.target.value)}
                     placeholder="E.g. brand lotion, soap (optional)"
-                    className="w-full border border-stone-200 dark:border-slate-850 rounded-xl px-3 py-2 text-xs bg-stone-100/30 dark:bg-slate-950 outline-none"
+                    className="w-full border border-slate-855 rounded-xl px-3 py-2 text-xs bg-slate-950 outline-none"
                   />
                 </div>
 
@@ -1213,7 +1199,7 @@ export default function App() {
                       max="20"
                       value={waterIntake} 
                       onChange={(e) => setWaterIntake(parseInt(e.target.value))}
-                      className="w-full border border-stone-200 dark:border-slate-850 rounded-xl px-3 py-2 text-xs bg-stone-100/30 dark:bg-slate-950 outline-none font-bold"
+                      className="w-full border border-slate-855 rounded-xl px-3 py-2 text-xs bg-slate-950 outline-none font-bold"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1224,7 +1210,7 @@ export default function App() {
                       max="24"
                       value={sleepHours} 
                       onChange={(e) => setSleepHours(parseInt(e.target.value))}
-                      className="w-full border border-stone-200 dark:border-slate-850 rounded-xl px-3 py-2 text-xs bg-stone-100/30 dark:bg-slate-950 outline-none font-bold"
+                      className="w-full border border-slate-855 rounded-xl px-3 py-2 text-xs bg-slate-950 outline-none font-bold"
                     />
                   </div>
                 </div>
@@ -1236,21 +1222,21 @@ export default function App() {
                     value={diaryNotes}
                     onChange={(e) => setDiaryNotes(e.target.value)}
                     placeholder="Describe any skin flareups or updates..."
-                    className="w-full border border-stone-200 dark:border-slate-850 rounded-xl p-3 text-xs bg-stone-100/30 dark:bg-slate-950 outline-none"
+                    className="w-full border border-slate-855 rounded-xl p-3 text-xs bg-slate-950 outline-none"
                   ></textarea>
                 </div>
 
                 <div className="space-y-2">
                   <span className="text-xs font-bold block">Daily Skin Photo (Optional)</span>
                   {diaryImagePreview ? (
-                    <div className="relative aspect-square w-24 rounded-xl overflow-hidden border border-stone-200 group">
+                    <div className="relative aspect-square w-24 rounded-xl overflow-hidden border border-slate-800 group">
                       <img src={diaryImagePreview} alt="diary preview" className="w-full h-full object-cover" />
                       <button type="button" onClick={() => { setDiaryImage(null); setDiaryImagePreview(null); }} className="absolute top-1 right-1 p-1 bg-red-600 text-white rounded-full">
                         <X className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   ) : (
-                    <label className="inline-flex px-4 py-2.5 bg-stone-50 dark:bg-slate-950 border border-stone-200 dark:border-slate-850 rounded-xl text-xs font-bold cursor-pointer">
+                    <label className="inline-flex px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs font-bold cursor-pointer">
                       Choose Photo
                       <input type="file" accept="image/*" onChange={handleDiaryImage} className="hidden" />
                     </label>
@@ -1267,35 +1253,35 @@ export default function App() {
               </button>
             </div>
 
-            {/* Historical list timeline */}
+            {/* Diary timeline */}
             <div className="space-y-4">
               <h3 className="text-xs font-extrabold uppercase tracking-widest text-slate-400">Diary Log Timeline</h3>
               {diary.length === 0 ? (
-                <div className="p-5 bg-white dark:bg-slate-900 border border-stone-200/50 dark:border-slate-800 rounded-3xl text-center text-xs text-slate-400 font-bold">
+                <div className="p-5 premium-card-teal text-center text-xs text-slate-400 font-bold">
                   No diary logs recorded yet. Complete your first logging check above!
                 </div>
               ) : (
-                <div className="space-y-4 border-l-2 border-stone-200 dark:border-slate-800 pl-4 ml-2">
+                <div className="space-y-4 border-l-2 border-slate-800 pl-4 ml-2">
                   {diary.map((entry, idx) => (
-                    <div key={idx} className="relative bg-white dark:bg-slate-900 border border-stone-200/50 dark:border-slate-800 p-4 rounded-2xl shadow-sm text-xs space-y-2">
-                      <div className="absolute w-3 h-3 bg-amber-500 rounded-full border-2 border-white -left-[23px] top-4 shadow-sm"></div>
-                      <div className="flex justify-between items-center border-b border-stone-100 dark:border-slate-850 pb-1.5">
-                        <span className="font-extrabold text-[10px] text-amber-600 dark:text-amber-500 uppercase">{entry.date}</span>
+                    <div key={idx} className="relative premium-card-teal p-4 rounded-2xl text-xs space-y-2 animate-slide-up">
+                      <div className="absolute w-3 h-3 bg-teal-500 rounded-full border-2 border-slate-950 -left-[23px] top-4 shadow-sm animate-glow-ring"></div>
+                      <div className="flex justify-between items-center border-b border-slate-800 pb-1.5">
+                        <span className="font-extrabold text-[10px] text-teal-400 uppercase">{entry.date}</span>
                         <span className="text-[10px] font-bold text-slate-400">Redness: {entry.symptoms.redness}</span>
                       </div>
-                      <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-500">
+                      <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-400">
                         <span>Itchiness: **{entry.symptoms.itching}/10**</span>
                         <span>Pain: **{entry.symptoms.pain}/10**</span>
                         <span>Dryness: **{entry.symptoms.dryness}/10**</span>
                         <span>Sun Exposure: **{entry.lifestyle.sun ? 'Yes' : 'No'}**</span>
                       </div>
                       {entry.notes && (
-                        <p className="text-[11px] italic text-slate-600 dark:text-slate-400 leading-normal pt-1">
+                        <p className="text-[11px] italic text-slate-400 leading-normal pt-1">
                           "{entry.notes}"
                         </p>
                       )}
                       {entry.image && (
-                        <div className="w-16 aspect-square rounded-lg overflow-hidden border border-stone-100 pt-1">
+                        <div className="w-16 aspect-square rounded-lg overflow-hidden border border-slate-800 pt-1">
                           <img src={entry.image} alt="diary img" className="w-full h-full object-cover" />
                         </div>
                       )}
@@ -1307,22 +1293,22 @@ export default function App() {
           </div>
         )}
 
-        {/* 4. PROGRESS TAB (Timeline & Compare) */}
+        {/* 4. PROGRESS TAB */}
         {activeTab === 'progress' && (
           <div className="space-y-6 animate-fade-in text-left">
-            <div className="flex flex-col gap-1 border-b border-stone-200/50 dark:border-slate-800 pb-3">
+            <div className="flex flex-col gap-1 border-b border-slate-200/50 dark:border-slate-800 pb-3">
               <h2 className="text-xl font-bold font-serif text-slate-900 dark:text-white">Dermatology Progress</h2>
               <p className="text-slate-500 text-xs">Observe differences and visual assessment trends over time.</p>
             </div>
 
-            {/* Compare Selectors */}
+            {/* Compare Selector cards */}
             {history.length < 2 ? (
-              <div className="p-5 bg-white dark:bg-slate-900 border border-stone-200/50 dark:border-slate-800 rounded-3xl text-center text-xs text-slate-400 font-bold">
+              <div className="p-5 premium-card-teal text-center text-xs text-slate-400 font-bold">
                 ⚠️ Compare feature requires at least 2 diagnostic screening scans. Please run another analysis to unlock comparison timeline tracking.
               </div>
             ) : (
-              <div className="space-y-5 bg-white dark:bg-slate-900 border border-stone-200/50 dark:border-slate-800 p-5 rounded-3xl shadow-sm">
-                <h3 className="text-xs font-extrabold uppercase tracking-widest text-slate-400">Assessments Side-by-Side</h3>
+              <div className="space-y-5 premium-card-blue p-5 shadow-sm">
+                <h3 className="text-xs font-extrabold uppercase tracking-widest text-blue-400">Assessments Side-by-Side</h3>
                 
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <div className="space-y-1">
@@ -1330,7 +1316,7 @@ export default function App() {
                     <select 
                       value={compareBaseId} 
                       onChange={(e) => setCompareBaseId(e.target.value)}
-                      className="w-full border border-stone-200 dark:border-slate-850 rounded-xl p-2 outline-none bg-stone-50 dark:bg-slate-950 font-bold"
+                      className="w-full border border-slate-800 rounded-xl p-2 bg-slate-950 text-slate-200 font-bold outline-none"
                     >
                       {history.map(r => (
                         <option key={r.id} value={r.id}>{r.date} - {r.disease}</option>
@@ -1342,7 +1328,7 @@ export default function App() {
                     <select 
                       value={compareTargetId} 
                       onChange={(e) => setCompareTargetId(e.target.value)}
-                      className="w-full border border-stone-200 dark:border-slate-850 rounded-xl p-2 outline-none bg-stone-50 dark:bg-slate-950 font-bold"
+                      className="w-full border border-slate-800 rounded-xl p-2 bg-slate-950 text-slate-200 font-bold outline-none"
                     >
                       {history.map(r => (
                         <option key={r.id} value={r.id}>{r.date} - {r.disease}</option>
@@ -1351,18 +1337,15 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Draggable image-to-image comparison overlay slider */}
                 {baseRec && targetRec && (
                   <div className="space-y-4 pt-2">
                     <div 
                       ref={compSliderContainerRef}
                       onMouseDown={handleCompSliderMouse}
-                      className="relative aspect-square w-full rounded-2xl overflow-hidden border border-stone-200 dark:border-slate-855 cursor-ew-resize select-none"
+                      className="relative aspect-square w-full rounded-3xl overflow-hidden border border-blue-500/20 cursor-ew-resize select-none"
                     >
-                      {/* Underlay (Target/After photo) */}
                       <img src={targetRec.image} alt="after" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
                       
-                      {/* Overlay (Base/Before photo, width constrained by comparison slider) */}
                       <div 
                         className="absolute inset-0 overflow-hidden border-r border-amber-500"
                         style={{ width: `${compareSliderPos}%` }}
@@ -1375,9 +1358,8 @@ export default function App() {
                         />
                       </div>
 
-                      {/* Slider divider indicator */}
                       <div 
-                        className="absolute top-0 bottom-0 w-0.5 bg-amber-500 flex items-center justify-center"
+                        className="absolute top-0 bottom-0 w-0.5 bg-amber-500 flex items-center justify-center animate-glow-ring"
                         style={{ left: `${compareSliderPos}%`, transform: 'translateX(-50%)' }}
                       >
                         <div className="w-6 h-6 rounded-full bg-amber-600 text-white flex items-center justify-center text-[10px] border border-white font-bold">↔</div>
@@ -1385,8 +1367,8 @@ export default function App() {
                     </div>
 
                     {/* What Changed Summary Card */}
-                    <div className="bg-stone-50 dark:bg-slate-950 border border-stone-100 dark:border-slate-850 p-4 rounded-2xl space-y-3">
-                      <div className="flex justify-between items-center border-b border-stone-100 dark:border-slate-850 pb-2">
+                    <div className="bg-slate-950 border border-blue-500/10 p-4 rounded-2xl space-y-3">
+                      <div className="flex justify-between items-center border-b border-slate-800 pb-2">
                         <span className="font-extrabold uppercase text-[10px] text-slate-400">AI Progress Analysis</span>
                         <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase ${getProgressTrend().color}`}>
                           {getProgressTrend().label}
@@ -1396,20 +1378,14 @@ export default function App() {
                       <div className="space-y-1.5 text-xs">
                         <div className="flex justify-between">
                           <span className="text-slate-400 font-bold">Severity Change:</span>
-                          <span className="font-bold text-slate-800 dark:text-slate-200">
+                          <span className="font-bold text-slate-200">
                             {baseRec.severity} ➔ {targetRec.severity}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-slate-400 font-bold">Matched Disease:</span>
-                          <span className="font-bold text-slate-800 dark:text-slate-200">
+                          <span className="font-bold text-slate-200">
                             {baseRec.disease === targetRec.disease ? 'Consistent Match' : 'Different diagnosis matched'}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-400 font-bold">Visual Comparison:</span>
-                          <span className="font-bold text-slate-800 dark:text-slate-200">
-                            Photo edge structures modified
                           </span>
                         </div>
                       </div>
@@ -1420,38 +1396,37 @@ export default function App() {
             )}
 
             {/* Assessment Trend Graph */}
-            <div className="bg-white dark:bg-slate-900 border border-stone-200/50 dark:border-slate-800 p-5 rounded-3xl space-y-4 shadow-sm">
-              <h3 className="text-xs font-extrabold uppercase tracking-widest text-slate-400">Skin Assessment Trend</h3>
+            <div className="premium-card-teal p-5 space-y-4">
+              <h3 className="text-xs font-extrabold uppercase tracking-widest text-teal-400">Skin Assessment Trend</h3>
               
-              <div className="h-[120px] w-full flex items-end justify-between px-2 pt-4 bg-stone-50 dark:bg-slate-950 border border-stone-100 dark:border-slate-850 rounded-2xl relative">
-                {/* SVG Trend Graph line mock */}
+              <div className="h-[120px] w-full flex items-end justify-between px-2 pt-4 bg-slate-950 border border-slate-900 rounded-2xl relative">
                 <svg className="absolute inset-0 w-full h-full p-2" viewBox="0 0 100 50" preserveAspectRatio="none">
-                  <path d="M 10 35 Q 35 25 60 40 T 90 20" fill="none" stroke="#D97706" strokeWidth="2.5" />
-                  <circle cx="10" cy="35" r="2.5" fill="#D97706" />
-                  <circle cx="90" cy="20" r="2.5" fill="#D97706" />
+                  <path d="M 10 35 Q 35 25 60 40 T 90 20" fill="none" stroke="#14b8a6" strokeWidth="2.5" />
+                  <circle cx="10" cy="35" r="2.5" fill="#14b8a6" />
+                  <circle cx="90" cy="20" r="2.5" fill="#14b8a6" />
                 </svg>
                 <span className="absolute left-2 top-2 text-[9px] font-extrabold uppercase text-slate-400">Severity level</span>
-                <span className="absolute bottom-2 right-2 text-[8px] font-extrabold text-amber-600 dark:text-amber-500 uppercase">Aug 25 - Sep 08</span>
+                <span className="absolute bottom-2 right-2 text-[8px] font-extrabold text-teal-400 uppercase">Aug 25 - Sep 08</span>
               </div>
             </div>
 
-            {/* Diagnostics Logs History list */}
+            {/* History Logs */}
             <div className="space-y-3">
               <h3 className="text-xs font-extrabold uppercase tracking-widest text-slate-400">Diagnostic Logs History</h3>
               {history.length === 0 ? (
-                <div className="p-5 bg-white dark:bg-slate-900 border border-stone-200/50 dark:border-slate-800 rounded-3xl text-center text-xs text-slate-400 font-bold">
+                <div className="p-5 premium-card-teal text-center text-xs text-slate-400 font-bold">
                   No screening logs recorded. Start skin analysis in the Analyze tab!
                 </div>
               ) : (
                 <div className="space-y-3">
                   {history.map((rec) => (
-                    <div key={rec.id} className="p-4 bg-white dark:bg-slate-900 border border-stone-200/50 dark:border-slate-800 rounded-2xl flex items-center justify-between shadow-sm text-xs">
+                    <div key={rec.id} className="p-4 premium-card-teal flex items-center justify-between shadow-sm text-xs">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl overflow-hidden border border-stone-100 flex-shrink-0">
+                        <div className="w-12 h-12 rounded-xl overflow-hidden border border-slate-800 flex-shrink-0">
                           <img src={rec.image} alt="lesion" className="w-full h-full object-cover" />
                         </div>
                         <div className="text-left space-y-0.5">
-                          <h4 className="font-bold text-slate-900 dark:text-white leading-snug">{rec.disease}</h4>
+                          <h4 className="font-bold text-slate-200 leading-snug">{rec.disease}</h4>
                           <p className="text-[10px] text-slate-400">{rec.date} • {rec.severity} • {Math.round(rec.confidence * 100)}%</p>
                         </div>
                       </div>
@@ -1461,7 +1436,7 @@ export default function App() {
                           setResult(rec);
                           setActiveTab('analyze');
                         }}
-                        className="p-2 border border-stone-200 dark:border-slate-800 rounded-xl hover:bg-stone-50"
+                        className="p-2 border border-slate-800 rounded-xl hover:bg-slate-900"
                       >
                         <Eye className="w-4 h-4 text-slate-400" />
                       </button>
@@ -1473,41 +1448,41 @@ export default function App() {
           </div>
         )}
 
-        {/* 5. PROFILE TAB (Settings, Model metrics, disclaimer) */}
+        {/* 5. PROFILE TAB */}
         {activeTab === 'profile' && (
           <div className="space-y-6 animate-fade-in text-left">
-            <div className="flex flex-col gap-1 border-b border-stone-200/50 dark:border-slate-800 pb-3">
+            <div className="flex flex-col gap-1 border-b border-slate-200/50 dark:border-slate-800 pb-3">
               <h2 className="text-xl font-bold font-serif text-slate-900 dark:text-white">Profile & AI metrics</h2>
               <p className="text-slate-500 text-xs">Manage workspace parameters and inspect model performance details.</p>
             </div>
 
             {/* Performance statistics */}
-            <div className="bg-white dark:bg-slate-900 border border-stone-200/50 dark:border-slate-800 p-5 rounded-3xl space-y-4 shadow-sm">
-              <h3 className="text-xs font-extrabold uppercase tracking-widest text-slate-400">AI Model Performance (ONNX)</h3>
+            <div className="premium-card-purple p-5 space-y-4">
+              <h3 className="text-xs font-extrabold uppercase tracking-widest text-purple-400">AI Model Performance (ONNX)</h3>
               
               <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="p-3 bg-stone-50 dark:bg-slate-950 border border-stone-100 dark:border-slate-850 rounded-2xl">
+                <div className="p-3 bg-slate-950 border border-purple-500/10 rounded-2xl">
                   <span className="text-[9px] text-slate-400 uppercase font-bold block">Validation Accuracy</span>
-                  <span className="block text-lg font-black text-slate-800 dark:text-slate-200 mt-1">94.81%</span>
+                  <span className="block text-lg font-black text-purple-400 mt-1">94.81%</span>
                 </div>
-                <div className="p-3 bg-stone-50 dark:bg-slate-950 border border-stone-100 dark:border-slate-850 rounded-2xl">
+                <div className="p-3 bg-slate-950 border border-purple-500/10 rounded-2xl">
                   <span className="text-[9px] text-slate-400 uppercase font-bold block">Validation F1-score</span>
-                  <span className="block text-lg font-black text-slate-800 dark:text-slate-200 mt-1">94.96%</span>
+                  <span className="block text-lg font-black text-purple-400 mt-1">94.96%</span>
                 </div>
-                <div className="p-3 bg-stone-50 dark:bg-slate-950 border border-stone-100 dark:border-slate-850 rounded-2xl">
+                <div className="p-3 bg-slate-950 border border-purple-500/10 rounded-2xl">
                   <span className="text-[9px] text-slate-400 uppercase font-bold block">Isolated Test Accuracy</span>
-                  <span className="block text-lg font-black text-slate-800 dark:text-slate-200 mt-1">95.42%</span>
+                  <span className="block text-lg font-black text-purple-400 mt-1">95.42%</span>
                 </div>
-                <div className="p-3 bg-stone-50 dark:bg-slate-950 border border-stone-100 dark:border-slate-850 rounded-2xl">
+                <div className="p-3 bg-slate-950 border border-purple-500/10 rounded-2xl">
                   <span className="text-[9px] text-slate-400 uppercase font-bold block">Isolated Test F1-score</span>
-                  <span className="block text-lg font-black text-slate-800 dark:text-slate-200 mt-1">95.10%</span>
+                  <span className="block text-lg font-black text-purple-400 mt-1">95.10%</span>
                 </div>
               </div>
 
               {/* Class list toggle mapping */}
-              <div className="border-t border-stone-100 dark:border-slate-850 pt-3">
-                <span className="text-xs font-bold text-slate-500 block mb-2">Supported Disease Classes (18)</span>
-                <div className="max-h-[150px] overflow-y-auto pr-1 text-[10px] space-y-1.5 custom-scrollbar font-bold text-slate-600 dark:text-slate-400">
+              <div className="border-t border-slate-800 pt-3">
+                <span className="text-xs font-bold text-slate-400 block mb-2">Supported Disease Classes (18)</span>
+                <div className="max-h-[150px] overflow-y-auto pr-1 text-[10px] space-y-1.5 custom-scrollbar font-bold text-slate-400">
                   {[
                     "Melanoma", "Melanocytic Nevus", "Atopic Dermatitis (Eczema)", 
                     "Seborrheic Keratosis", "Acne Vulgaris", "Basal Cell Carcinoma", 
@@ -1515,18 +1490,18 @@ export default function App() {
                     "Impetigo", "Urticaria (Hives)", "Warts", "Contact Dermatitis", 
                     "Folliculitis", "Lichen Planus", "Herpes Zoster", "Pityriasis Rosea"
                   ].map((c_name, idx) => (
-                    <div key={idx} className="flex justify-between py-1 border-b border-stone-100 dark:border-slate-850 last:border-0">
+                    <div key={idx} className="flex justify-between py-1 border-b border-slate-950 last:border-0">
                       <span>{idx + 1}. {c_name}</span>
-                      <span className="text-amber-600 dark:text-amber-500">Verified Model Target</span>
+                      <span className="text-purple-400">Verified Target</span>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
 
-            {/* Disease Library collapsible inside Profile */}
-            <div className="bg-white dark:bg-slate-900 border border-stone-200/50 dark:border-slate-800 p-5 rounded-3xl space-y-4 shadow-sm">
-              <h3 className="text-xs font-extrabold uppercase tracking-widest text-slate-400">Clinical Disease Library</h3>
+            {/* Disease Library inside Profile */}
+            <div className="premium-card-teal p-5 space-y-4">
+              <h3 className="text-xs font-extrabold uppercase tracking-widest text-teal-400">Clinical Disease Library</h3>
               
               <div className="flex gap-2">
                 <input
@@ -1534,7 +1509,7 @@ export default function App() {
                   value={librarySearch}
                   onChange={(e) => setLibrarySearch(e.target.value)}
                   placeholder="Search disease library..."
-                  className="w-full border border-stone-200 dark:border-slate-850 rounded-xl px-3 py-2 text-xs bg-stone-50 dark:bg-slate-950 outline-none"
+                  className="w-full border border-slate-855 rounded-xl px-3 py-2 text-xs bg-slate-950 outline-none text-slate-100"
                 />
               </div>
 
@@ -1551,7 +1526,7 @@ export default function App() {
                       key={idx}
                       type="button"
                       onClick={() => alert(`Symptom search matching: ${name}`)}
-                      className="w-full text-left py-2 border-b border-stone-100 dark:border-slate-850 text-slate-800 dark:text-slate-200 hover:text-amber-600 block"
+                      className="w-full text-left py-2 border-b border-slate-800 text-slate-300 hover:text-teal-400 block animate-fade-in"
                     >
                       {name}
                     </button>
@@ -1561,8 +1536,8 @@ export default function App() {
             </div>
 
             {/* Database management delete triggers */}
-            <div className="bg-white dark:bg-slate-900 border border-stone-200/50 dark:border-slate-800 p-5 rounded-3xl space-y-4 shadow-sm">
-              <h3 className="text-xs font-extrabold uppercase tracking-widest text-red-500">Data Privacy Console</h3>
+            <div className="premium-card-teal border-red-500/20 p-5 space-y-4">
+              <h3 className="text-xs font-extrabold uppercase tracking-widest text-red-400">Data Privacy Console</h3>
               <p className="text-[10px] text-slate-400">Diagnostic logging and skin diary results are stored strictly in local memory storage.</p>
               
               <div className="space-y-2 pt-2">
@@ -1584,11 +1559,11 @@ export default function App() {
             </div>
 
             {/* Safety Medical Disclaimer */}
-            <div className="bg-white dark:bg-slate-900 border border-stone-200/50 dark:border-slate-800 p-5 rounded-3xl space-y-3 shadow-sm border-l-4 border-l-amber-600">
-              <h4 className="text-xs font-extrabold text-amber-600 dark:text-amber-500 uppercase tracking-widest flex items-center gap-1.5">
+            <div className="premium-card-amber p-5 space-y-3 border-l-4 border-l-amber-500">
+              <h4 className="text-xs font-extrabold text-amber-500 uppercase tracking-widest flex items-center gap-1.5">
                 <ShieldAlert className="w-4 h-4" /> Medical Disclaimer
               </h4>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal">
+              <p className="text-[10px] text-slate-400 leading-normal">
                 DermaScan AI is an AI-assisted informational screener tool. It is not an FDA-approved diagnostic method. It does not replace professional medical evaluations, diagnoses, physical exams, or treatments. All diagnostic results are preliminary indicators only. Please consult certified dermatologists for skin health concerns.
               </p>
             </div>
@@ -1599,10 +1574,10 @@ export default function App() {
 
       {/* Booking Overlay Form */}
       {showBookingOverlay && selectedHospital && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-6 text-center animate-fade-in text-left">
-          <div className="bg-white dark:bg-slate-900 border border-stone-200/60 dark:border-slate-850 p-6 rounded-3xl max-w-sm w-full shadow-2xl space-y-4">
-            <h3 className="font-serif font-bold text-slate-900 dark:text-white">Book Consultation Appointment</h3>
-            <p className="text-xs text-slate-500 leading-relaxed">
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-6 text-center animate-fade-in text-left">
+          <div className="premium-card-purple p-6 max-w-sm w-full shadow-2xl space-y-4 animate-scale-in">
+            <h3 className="font-serif font-bold text-slate-100">Book Consultation Appointment</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
               Schedule a simulated appointment at **{selectedHospital.name}**.
             </p>
 
@@ -1613,7 +1588,7 @@ export default function App() {
                   type="date" 
                   value={bookingDate} 
                   onChange={(e) => setBookingDate(e.target.value)}
-                  className="w-full border border-stone-200 dark:border-slate-850 rounded-xl p-2.5 outline-none bg-stone-50 dark:bg-slate-950 font-bold"
+                  className="w-full border border-slate-800 rounded-xl p-2.5 outline-none bg-slate-950 font-bold text-slate-100"
                 />
               </div>
               <div className="space-y-1">
@@ -1622,7 +1597,7 @@ export default function App() {
                   type="time" 
                   value={bookingTime} 
                   onChange={(e) => setBookingTime(e.target.value)}
-                  className="w-full border border-stone-200 dark:border-slate-850 rounded-xl p-2.5 outline-none bg-stone-50 dark:bg-slate-950 font-bold"
+                  className="w-full border border-slate-800 rounded-xl p-2.5 outline-none bg-slate-950 font-bold text-slate-100"
                 />
               </div>
             </div>
@@ -1630,13 +1605,13 @@ export default function App() {
             <div className="flex gap-2.5 pt-3">
               <button 
                 onClick={saveAppointment} 
-                className="flex-grow py-3 bg-purple-600 text-white font-bold text-xs rounded-xl shadow-sm"
+                className="flex-grow py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-sm"
               >
                 Schedule Appointment
               </button>
               <button 
                 onClick={() => setShowBookingOverlay(false)} 
-                className="py-3 px-4 bg-stone-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl"
+                className="py-3 px-4 bg-slate-800 text-slate-300 font-bold text-xs rounded-xl"
               >
                 Cancel
               </button>
@@ -1645,31 +1620,31 @@ export default function App() {
         </div>
       )}
 
-      {/* PREMIUM STICKY BOTTOM NAVIGATION BAR */}
-      <footer className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-t border-stone-200/50 dark:border-slate-800/60 py-2.5 px-6 shadow-lg shadow-black/10">
+      {/* PREMIUM BOTTOM NAVIGATION BAR WITH COLOR INDICATORS */}
+      <footer className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 dark:bg-slate-950/90 backdrop-blur-lg border-t border-slate-200/50 dark:border-slate-800/60 py-3.5 px-6 shadow-xl">
         <div className="max-w-md mx-auto flex justify-between items-center">
           {[
-            { id: 'home', label: 'Home', icon: <Home className="w-5 h-5" /> },
-            { id: 'analyze', label: 'Analyze', icon: <Camera className="w-5 h-5" /> },
-            { id: 'diary', label: 'Diary', icon: <ClipboardCheck className="w-5 h-5" /> },
-            { id: 'progress', label: 'Progress', icon: <SlidersHorizontal className="w-5 h-5" /> },
-            { id: 'profile', label: 'Profile', icon: <User className="w-5 h-5" /> }
+            { id: 'home', label: 'Home', icon: <Home className="w-5 h-5" />, color: 'text-teal-500' },
+            { id: 'analyze', label: 'Analyze', icon: <Camera className="w-5 h-5" />, color: 'text-amber-500' },
+            { id: 'diary', label: 'Diary', icon: <ClipboardCheck className="w-5 h-5" />, color: 'text-emerald-500' },
+            { id: 'progress', label: 'Progress', icon: <SlidersHorizontal className="w-5 h-5" />, color: 'text-blue-500' },
+            { id: 'profile', label: 'Profile', icon: <User className="w-5 h-5" />, color: 'text-purple-500' }
           ].map(tab => {
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => { setActiveTab(tab.id); setError(null); }}
-                className={`flex flex-col items-center gap-1.5 transition-all duration-150 relative ${
+                className={`flex flex-col items-center gap-1 transition-all duration-150 relative ${
                   isActive 
-                    ? 'text-amber-600 dark:text-amber-500 scale-105' 
+                    ? `${tab.color} scale-110` 
                     : 'text-slate-400 hover:text-slate-600 dark:hover:text-stone-300'
                 }`}
               >
                 {tab.icon}
-                <span className="text-[9px] font-bold tracking-wider">{tab.label}</span>
+                <span className="text-[9px] font-extrabold uppercase tracking-wider">{tab.label}</span>
                 {isActive && (
-                  <span className="absolute -bottom-1.5 w-1 h-1 rounded-full bg-amber-600 dark:bg-amber-500"></span>
+                  <span className="absolute -bottom-1.5 w-1 h-1 rounded-full bg-current"></span>
                 )}
               </button>
             );
