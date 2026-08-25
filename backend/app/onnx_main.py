@@ -151,6 +151,65 @@ def get_model_metrics():
         return data
     raise HTTPException(status_code=404, detail="Model metrics not found.")
 
+def detect_lesion_features(pil_img: Image.Image):
+    import cv2
+    import numpy as np
+    
+    cv_img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+    gray = cv2.cvtColor(cv_img, cv2.COLOR_BGR2GRAY)
+    hsv = cv2.cvtColor(cv_img, cv2.COLOR_BGR2HSV)
+    
+    # 1. Skin masking via YCrCb
+    ycrcb = cv2.cvtColor(cv_img, cv2.COLOR_BGR2YCrCb)
+    Cr = ycrcb[:, :, 1]
+    Cb = ycrcb[:, :, 2]
+    skin_mask = (Cr >= 133) & (Cr <= 173) & (Cb >= 77) & (Cb <= 127)
+    skin_mask_uint8 = np.uint8(skin_mask * 255)
+    
+    # 2. Pimple Detection (Thresholding red hues)
+    lower_red1 = np.array([0, 40, 40])
+    upper_red1 = np.array([10, 255, 255])
+    lower_red2 = np.array([170, 40, 40])
+    upper_red2 = np.array([180, 255, 255])
+    mask1 = cv2.inRange(hsv, lower_red1, upper_red1)
+    mask2 = cv2.inRange(hsv, lower_red2, upper_red2)
+    red_mask = cv2.bitwise_or(mask1, mask2)
+    red_mask = cv2.bitwise_and(red_mask, skin_mask_uint8)
+    
+    pimple_contours, _ = cv2.findContours(red_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    pimple_coords = []
+    for c in pimple_contours:
+        area = cv2.contourArea(c)
+        if 4 <= area <= 250:
+            M = cv2.moments(c)
+            if M["m00"] > 0:
+                cx = int(M["m10"] / M["m00"])
+                cy = int(M["m01"] / M["m00"])
+                pimple_coords.append({"x": cx, "y": cy})
+                
+    # 3. Dark Spot Detection (hyperpigmented regions relative to local blur)
+    blurred = cv2.GaussianBlur(gray, (21, 21), 0)
+    dark_mask = cv2.compare(blurred, gray + 15, cv2.CMP_GT)
+    dark_mask = cv2.bitwise_and(dark_mask, skin_mask_uint8)
+    
+    dark_contours, _ = cv2.findContours(dark_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    dark_coords = []
+    for c in dark_contours:
+        area = cv2.contourArea(c)
+        if 6 <= area <= 300:
+            M = cv2.moments(c)
+            if M["m00"] > 0:
+                cx = int(M["m10"] / M["m00"])
+                cy = int(M["m01"] / M["m00"])
+                dark_coords.append({"x": cx, "y": cy})
+                
+    return {
+        "pimple_count": len(pimple_coords),
+        "pimple_coords": pimple_coords,
+        "dark_spot_count": len(dark_coords),
+        "dark_spot_coords": dark_coords
+    }
+
 @app.post("/api/predict")
 async def predict_skin_disease(
     image: UploadFile = File(...),
@@ -257,6 +316,7 @@ async def predict_skin_disease(
             city = city or "Bengaluru"
             
         hospitals = find_nearby_dermatologists(current_lat, current_lon, city)
+        lesion_analysis = detect_lesion_features(pil_img)
         
         # Cleanup
         try:
@@ -279,7 +339,8 @@ async def predict_skin_disease(
             "hospitals": hospitals,
             "location": {"lat": current_lat, "lon": current_lon, "city": city},
             "top_predictions": top_predictions,
-            "image_quality": validation_res
+            "image_quality": validation_res,
+            "lesion_analysis": lesion_analysis
         })
     except HTTPException as he:
         raise he
