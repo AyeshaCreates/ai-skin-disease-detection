@@ -98,8 +98,8 @@ def generate_pdf_report(
     story = []
     
     # Title & Header
-    story.append(Paragraph("AI SKIN DISEASE DETECTION SYSTEM", title_style))
-    story.append(Paragraph("Clinical Analysis Report — Multi-Modal Artificial Intelligence", subtitle_style))
+    story.append(Paragraph("DERMASCAN AI SKIN ANALYSIS PLATFORM", title_style))
+    story.append(Paragraph("AI-Assisted Assessment Report — Multi-Modal Intelligent Analysis", subtitle_style))
     story.append(Spacer(1, 10))
     
     # Metadata Block

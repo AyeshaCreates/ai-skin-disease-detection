@@ -171,7 +171,7 @@ async def predict_skin_disease(
         if not validation_res["valid"]:
             if os.path.exists(orig_img_path):
                 os.remove(orig_img_path)
-            raise HTTPException(status_code=400, detail=validation_res["message"])
+            raise HTTPException(status_code=400, detail=validation_res)
             
         # 1. Run CNN
         logits, conv_out = cnn_model.run(pil_img)
@@ -272,7 +272,8 @@ async def predict_skin_disease(
             "recommendations": recommendations,
             "hospitals": hospitals,
             "location": {"lat": current_lat, "lon": current_lon, "city": city},
-            "top_predictions": top_predictions
+            "top_predictions": top_predictions,
+            "image_quality": validation_res
         })
     except HTTPException as he:
         raise he

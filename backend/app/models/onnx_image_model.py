@@ -91,14 +91,24 @@ def overlay_heatmap(original_img: Image.Image, heatmap: np.ndarray, alpha=0.5):
     return original_pil, heatmap_pil, overlay_pil
 
 def validate_skin_image(image: Image.Image) -> dict:
-    """Validates skin presence, brightness, blur, and abnormalities."""
+    """Validates skin presence, brightness, blur, and abnormalities, returning a quality score and metrics."""
     np_img = np.array(image.convert("RGB"))
     h, w, c = np_img.shape
     if h < 64 or w < 64:
         return {
             "valid": False,
             "reason": "quality",
-            "message": "Image size too small. Please upload a higher resolution image."
+            "message": "Image size too small. Please upload a higher resolution image.",
+            "quality_score": 20,
+            "metrics": {
+                "clear_focus": False,
+                "good_lighting": False,
+                "skin_detected": False,
+                "lesion_detected": False,
+                "blur_value": 0.0,
+                "brightness": 0.0,
+                "skin_percentage": 0.0
+            }
         }
         
     ycrcb = cv2.cvtColor(np_img, cv2.COLOR_RGB2YCrCb)
@@ -106,50 +116,90 @@ def validate_skin_image(image: Image.Image) -> dict:
     Cb = ycrcb[:, :, 2]
     
     skin_mask = (Cr >= 133) & (Cr <= 173) & (Cb >= 77) & (Cb <= 127)
-    skin_percentage = np.sum(skin_mask) / skin_mask.size
+    skin_percentage = float(np.sum(skin_mask) / skin_mask.size)
+    
+    gray = cv2.cvtColor(np_img, cv2.COLOR_RGB2GRAY)
+    mean_brightness = float(np.mean(gray))
+    blur_value = float(cv2.Laplacian(gray, cv2.CV_64F).var())
+    
+    skin_gray = gray[skin_mask]
+    std_val = float(np.std(skin_gray)) if skin_gray.size > 0 else 0.0
+    
+    # Calculate quality metrics scores
+    blur_score = min(100.0, (blur_value / 40.0) * 100.0) if blur_value >= 4.0 else (blur_value / 4.0) * 50.0
+    
+    brightness_dev = abs(mean_brightness - 128.0)
+    if 30.0 <= mean_brightness <= 240.0:
+        brightness_score = 100.0 - (brightness_dev / 128.0) * 50.0
+    else:
+        brightness_score = (mean_brightness / 30.0) * 50.0 if mean_brightness < 30.0 else ((255.0 - mean_brightness) / 15.0) * 50.0
+        
+    if skin_percentage >= 0.15:
+        skin_score = min(100.0, 50.0 + (skin_percentage - 0.15) / 0.35 * 50.0)
+    else:
+        skin_score = (skin_percentage / 0.15) * 50.0
+        
+    quality_score = int(np.clip((blur_score * 0.4 + brightness_score * 0.3 + skin_score * 0.3), 10, 100))
+    
+    metrics = {
+        "clear_focus": blur_value >= 4.0,
+        "good_lighting": 30.0 <= mean_brightness <= 240.0,
+        "skin_detected": skin_percentage >= 0.15,
+        "lesion_detected": 5.0 <= std_val <= 52.0,
+        "blur_value": round(blur_value, 2),
+        "brightness": round(mean_brightness, 2),
+        "skin_percentage": round(skin_percentage * 100, 2)
+    }
     
     if skin_percentage < 0.15:
         return {
             "valid": False,
             "reason": "unrelated",
-            "message": "Invalid Image\nPlease upload a clear image of a suspected skin condition or skin lesion."
+            "message": "Invalid Image: The uploaded image does not appear to contain a skin region.",
+            "quality_score": min(quality_score, 45),
+            "metrics": metrics
         }
         
-    gray = cv2.cvtColor(np_img, cv2.COLOR_RGB2GRAY)
-    mean_brightness = np.mean(gray)
     if mean_brightness < 30.0 or mean_brightness > 240.0:
         return {
             "valid": False,
             "reason": "quality",
-            "message": "Image Quality Too Low\nPlease upload a clear, well-lit image of the affected skin area."
+            "message": "Image Quality Too Low: Poor lighting detected.",
+            "quality_score": min(quality_score, 45),
+            "metrics": metrics
         }
         
-    blur_value = cv2.Laplacian(gray, cv2.CV_64F).var()
     if blur_value < 4.0:
         return {
             "valid": False,
             "reason": "quality",
-            "message": "Image Quality Too Low\nPlease upload a clear, well-lit image of the affected skin area."
+            "message": "Image Quality Too Low: Image is too blurry or out of focus.",
+            "quality_score": min(quality_score, 45),
+            "metrics": metrics
         }
         
-    skin_gray = gray[skin_mask]
-    if skin_gray.size > 0:
-        std_val = np.std(skin_gray)
-        if std_val < 5.0:
-            return {
-                "valid": False,
-                "reason": "healthy",
-                "message": "No Skin Abnormality Detected\nThe uploaded image does not appear to contain a visible skin condition. Please upload an image showing the affected area."
-            }
-        if std_val > 52.0:
-            return {
-                "valid": False,
-                "reason": "unrelated",
-                "message": "Invalid Image\nPlease upload a clear image of a suspected skin condition or skin lesion."
-            }
-            
+    if std_val < 5.0:
+        return {
+            "valid": False,
+            "reason": "healthy",
+            "message": "No Skin Abnormality Detected: The skin region appears uniform and healthy.",
+            "quality_score": quality_score,
+            "metrics": metrics
+        }
+        
+    if std_val > 52.0:
+        return {
+            "valid": False,
+            "reason": "unrelated",
+            "message": "Invalid Image: High contrast clutter or background detected in skin region.",
+            "quality_score": min(quality_score, 45),
+            "metrics": metrics
+        }
+        
     return {
         "valid": True,
         "reason": "ok",
-        "message": "Image validated successfully."
+        "message": "Image validated successfully.",
+        "quality_score": quality_score,
+        "metrics": metrics
     }
