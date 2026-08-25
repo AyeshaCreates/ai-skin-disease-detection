@@ -45,17 +45,17 @@ import SpeechRecorder from './components/SpeechRecorder';
 import { API_BASE } from './config';
 
 export default function App() {
-  // Navigation tabs (HOME, ANALYZE, LOCATION)
+  // Navigation tabs (Only 3 Primary Sections: 'home', 'analyze', 'location')
   const [activeTab, setActiveTab] = useState('home');
   const [theme, setTheme] = useState(() => localStorage.getItem('dermascan_theme') || 'light');
   const [language, setLanguage] = useState('en');
   
-  // Modals & Overlays toggles
+  // Modal Overlays
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showDiaryModal, setShowDiaryModal] = useState(false);
   const [showVoiceAssistant, setShowVoiceAssistant] = useState(false);
   
-  // Analyze states
+  // Analyze Workflow states
   const [symptoms, setSymptoms] = useState('');
   const [selectedSymptoms, setSelectedSymptoms] = useState([]);
   const [image, setImage] = useState(null);
@@ -68,11 +68,11 @@ export default function App() {
   const [error, setError] = useState(null);
   const [sliderPosition, setSliderPosition] = useState(50);
   
-  // Image Quality OOD results
+  // Quality & OOD check state
   const [qualityCheckResult, setQualityCheckResult] = useState(null);
   const [showQualityModal, setShowQualityModal] = useState(false);
 
-  // History / Local DB Logs
+  // Local storage cache history
   const [history, setHistory] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('dermascan_history')) || [];
@@ -81,7 +81,7 @@ export default function App() {
     }
   });
 
-  // Diary Logs
+  // Diary entries
   const [diary, setDiary] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('dermascan_diary')) || [];
@@ -90,7 +90,7 @@ export default function App() {
     }
   });
 
-  // Diary values
+  // Diary form states
   const [itching, setItching] = useState(0);
   const [pain, setPain] = useState(0);
   const [burning, setBurning] = useState(0);
@@ -103,7 +103,7 @@ export default function App() {
   const [diaryNotes, setDiaryNotes] = useState('');
   const [streak, setStreak] = useState(() => parseInt(localStorage.getItem('dermascan_streak')) || 0);
 
-  // Location / Booking
+  // Care Connect Location / Appointments
   const [city, setCity] = useState('');
   const [lat, setLat] = useState(null);
   const [lon, setLon] = useState(null);
@@ -121,13 +121,13 @@ export default function App() {
   const [bookingDate, setBookingDate] = useState('');
   const [bookingTime, setBookingTime] = useState('');
 
-  // Voice command assistant
+  // Voice command states
   const [voiceFeedback, setVoiceFeedback] = useState('How can I help check your skin today?');
   const [isListening, setIsListening] = useState(false);
   const [voiceTranscript, setVoiceTranscript] = useState('');
   const recognitionRef = useRef(null);
 
-  // Profile data
+  // Profile management
   const [profileName, setProfileName] = useState(() => localStorage.getItem('dermascan_profile_name') || 'Amelia Luna');
   const [profileEmail, setProfileEmail] = useState(() => localStorage.getItem('dermascan_profile_email') || 'amelia.luna@dermascan.ai');
   const [isLogged, setIsLogged] = useState(() => !!localStorage.getItem('dermascan_profile_email'));
@@ -141,7 +141,7 @@ export default function App() {
   const symptomList = [
     "Itching", "Redness", "Pain", "Burning", "Dryness", "Scaling", 
     "Swelling", "Rash", "Blisters", "Crusting", "Discoloration", 
-    "Pus", "Bleeding", "Skin thickening", "Hair loss", "None"
+    "Pus", "Bleeding", "Skin thickening", "Hair loss"
   ];
 
   // Theme Sync
@@ -209,7 +209,7 @@ export default function App() {
 
     window.L.marker(mapCenter, {
       icon: window.L.divIcon({
-        className: 'bg-teal-500 w-4 h-4 rounded-full border-2 border-white shadow-lg animate-pulse',
+        className: 'bg-pink-500 w-4 h-4 rounded-full border-2 border-white shadow-lg animate-pulse',
         iconSize: [16, 16]
       })
     }).addTo(map).bindPopup("Your Location").openPopup();
@@ -318,8 +318,9 @@ export default function App() {
         }
       });
       setQualityCheckResult({
-        valid: true,
+        valid: resp.data.image_quality?.valid ?? true,
         quality_score: resp.data.image_quality?.quality_score || 95,
+        message: resp.data.image_quality?.message || "",
         metrics: resp.data.image_quality?.metrics || {
           clear_focus: true,
           good_lighting: true,
@@ -354,26 +355,28 @@ export default function App() {
 
   const proceedToResults = () => {
     setShowQualityModal(false);
-    const displayConfidence = Math.max(90, Math.min(100, Math.round(90 + (result.confidence * 10))));
     
-    const newRecord = {
-      id: Date.now().toString(),
-      date: new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }),
-      disease: result.disease,
-      confidence: displayConfidence / 100,
-      severity: result.severity,
-      image: result.original_image,
-      heatmap: result.heatmap_image,
-      overlay: result.overlay_image,
-      explanation: result.explanation,
-      recommendations: result.recommendations,
-      hospitals: result.hospitals,
-      location: result.location,
-      top_predictions: result.top_predictions || [],
-      quality_score: result.image_quality?.quality_score || 90,
-      lesion_analysis: result.lesion_analysis || { pimple_count: 0, dark_spot_count: 0, pimple_coords: [], dark_spot_coords: [] }
-    };
-    setHistory(prev => [newRecord, ...prev]);
+    // Save to historical logs only if it's high confidence (>=90%)
+    if (result && result.confidence >= 0.90) {
+      const newRecord = {
+        id: Date.now().toString(),
+        date: new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }),
+        disease: result.disease,
+        confidence: result.confidence,
+        severity: result.severity,
+        image: result.original_image,
+        heatmap: result.heatmap_image,
+        overlay: result.overlay_image,
+        explanation: result.explanation,
+        recommendations: result.recommendations,
+        hospitals: result.hospitals,
+        location: result.location,
+        top_predictions: result.top_predictions || [],
+        quality_score: result.image_quality?.quality_score || 90,
+        lesion_analysis: result.lesion_analysis || { pimple_count: 0, dark_spot_count: 0, pimple_coords: [], dark_spot_coords: [] }
+      };
+      setHistory(prev => [newRecord, ...prev]);
+    }
   };
 
   const saveDiaryEntry = () => {
@@ -905,7 +908,7 @@ export default function App() {
                   </div>
                   <span className="text-xs font-bold text-slate-350">Upload affected skin area image</span>
                   <div className="mt-4 flex gap-2.5">
-                    <label className="px-4 py-2 bg-slate-900 border border-slate-800 hover:bg-slate-850 rounded-xl text-[11px] font-bold shadow-sm cursor-pointer text-slate-200">
+                    <label className="px-4 py-2 bg-slate-900 border border-slate-800 hover:bg-slate-855 rounded-xl text-[11px] font-bold shadow-sm cursor-pointer text-slate-200">
                       Browse Files
                       <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
                     </label>
@@ -918,10 +921,10 @@ export default function App() {
               <canvas ref={canvasRef} className="hidden"></canvas>
             </div>
 
-            {/* Language & Symptoms select (Optional toggle) */}
+            {/* Language & Symptoms select (Optional block below the image/camera section) */}
             <div className="mock-card p-5 flex flex-col gap-4">
               <div className="flex justify-between items-center">
-                <label className="text-[10px] font-extrabold uppercase tracking-widest text-pink-500">2. Input Language & Symptoms (Optional)</label>
+                <label className="text-[10px] font-extrabold uppercase tracking-widest text-pink-500">Symptoms (Optional)</label>
                 <select 
                   value={language}
                   onChange={(e) => setLanguage(e.target.value)}
@@ -941,16 +944,11 @@ export default function App() {
                       key={idx}
                       type="button"
                       onClick={() => {
-                        if (symp === 'None') {
-                          setSelectedSymptoms(['None']);
-                          setSymptoms('No noticeable symptoms');
-                        } else {
-                          const updated = isSelected 
-                            ? selectedSymptoms.filter(x => x !== symp)
-                            : [...selectedSymptoms.filter(x => x !== 'None'), symp];
-                          setSelectedSymptoms(updated);
-                          setSymptoms(updated.join(', '));
-                        }
+                        const updated = isSelected 
+                          ? selectedSymptoms.filter(x => x !== symp)
+                          : [...selectedSymptoms, symp];
+                        setSelectedSymptoms(updated);
+                        setSymptoms(updated.join(', '));
                       }}
                       className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${
                         isSelected 
@@ -968,7 +966,7 @@ export default function App() {
                 rows={3}
                 value={symptoms}
                 onChange={(e) => setSymptoms(e.target.value)}
-                placeholder="Describe symptoms in detail or check chips above..."
+                placeholder="Describe anything else (optional text field)..."
                 className="w-full border border-slate-800 rounded-xl p-3 text-xs bg-slate-950 text-slate-100 outline-none focus:border-pink-500"
               ></textarea>
 
@@ -989,12 +987,12 @@ export default function App() {
           </form>
         )}
 
-        {/* STRICT OOD IMAGE VALIDATION MODAL CHECK */}
+        {/* STRICT OOD IMAGE VALIDATION OVERLAY MODAL */}
         {showQualityModal && qualityCheckResult && (
           <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-6 text-center animate-fade-in text-left">
             <div className="mock-card p-6 max-w-sm w-full shadow-2xl space-y-5 animate-scale-in">
               <div className="flex justify-between items-center">
-                <h3 className="font-serif font-bold text-slate-800 dark:text-slate-100">Image Quality Check</h3>
+                <h3 className="font-serif font-bold text-slate-850 dark:text-slate-100">Image Quality Check</h3>
                 <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded ${
                   qualityCheckResult.valid ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'
                 }`}>
@@ -1026,7 +1024,7 @@ export default function App() {
               {qualityCheckResult.valid ? (
                 <div className="space-y-4">
                   <p className="text-xs text-slate-500 leading-relaxed">
-                    ✓ **Optimal Frame Properties**. The input passes resolution, contrast, focus, and illumination thresholds and is fully suitable for AI inference.
+                    ✓ **Optimal Frame Properties**. The input passes resolution, contrast, focus, and skin tone boundaries, and is fully suitable for AI disease prediction.
                   </p>
                   <button 
                     onClick={proceedToResults} 
@@ -1038,7 +1036,7 @@ export default function App() {
               ) : (
                 <div className="space-y-4">
                   <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl font-bold">
-                    ⚠️ {qualityCheckResult.message}
+                    ⚠️ Invalid Image: {qualityCheckResult.message || "Please upload a clear image of the affected skin area."}
                   </div>
                   <div className="flex gap-2">
                     <button 
@@ -1060,7 +1058,7 @@ export default function App() {
           </div>
         )}
 
-        {/* PAGE 2.1: SLIDE-UP RESULTS SHEET (Matches Mockup Screen 3) */}
+        {/* PAGE 2.1: RESULTS VIEW RENDERED ON THE SAME ANALYZE PAGE */}
         {activeTab === 'analyze' && result && (
           <div className="space-y-6 animate-fade-in text-left">
             
@@ -1093,123 +1091,205 @@ export default function App() {
               ))}
             </div>
 
-            {/* Mockup Slide-Up Bottom Sheet Card */}
-            <div className="mock-card slide-up-sheet space-y-5">
-              
-              <div className="flex justify-between items-center border-b border-pink-100/10 pb-3">
-                <div>
-                  <span className="text-[10px] text-pink-500 uppercase font-black tracking-widest block">Skin Age: 36</span>
-                  <h3 className="text-sm font-extrabold text-slate-800 dark:text-slate-100 uppercase tracking-wider">{result.disease}</h3>
+            {/* STRICT RELIABILITY GATING (90% CONFIDENCE check) */}
+            {result.confidence < 0.90 ? (
+              <div className="mock-card p-6 border-l-4 border-l-amber-500 space-y-4">
+                <div className="flex items-center gap-2 text-amber-500">
+                  <AlertTriangle className="w-6 h-6" />
+                  <h3 className="font-serif font-bold text-slate-800 dark:text-slate-100">Low-confidence analysis</h3>
                 </div>
-                <button 
-                  onClick={downloadReport}
-                  className="p-2.5 rounded-full bg-slate-100 dark:bg-slate-950 text-pink-500"
-                  title="Export clinical report PDF"
-                >
-                  <Download className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Health Score Progress track */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs font-bold text-slate-500">
-                  <span>Your Skin Health</span>
-                  <span className="text-slate-800 dark:text-slate-100">{userConfidence}%</span>
-                </div>
-                <div className="w-full bg-slate-100 dark:bg-slate-900 h-2.5 rounded-full overflow-hidden">
-                  <div className="bg-emerald-500 h-full rounded-full transition-all duration-700" style={{ width: `${userConfidence}%` }}></div>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  The image does not provide enough evidence for a reliable AI-assisted assessment. Prediction confidence was **{(result.confidence * 100).toFixed(1)}%** which is below the 90% accuracy gate.
+                </p>
+                <div className="flex gap-2.5 pt-2">
+                  <button 
+                    onClick={() => { setResult(null); setImage(null); setImagePreview(null); startCamera(); }}
+                    className="flex-grow py-3 bg-pink-600 hover:bg-pink-700 text-white font-bold text-xs rounded-xl"
+                  >
+                    Retake Image
+                  </button>
+                  <button 
+                    onClick={() => { setResult(null); setImage(null); setImagePreview(null); }}
+                    className="flex-grow py-3 bg-slate-900 border border-slate-800 text-slate-350 font-bold text-xs rounded-xl"
+                  >
+                    Try Another Image
+                  </button>
                 </div>
               </div>
-
-              {/* Three circular progress indicators from mockup */}
-              <div className="grid grid-cols-3 gap-3 py-2 text-center">
-                <div className="flex flex-col items-center gap-1.5">
-                  <div className="relative w-16 h-16 flex items-center justify-center">
-                    <svg className="w-full h-full transform -rotate-90">
-                      <circle cx="32" cy="32" r="26" stroke="rgba(239, 68, 68, 0.1)" strokeWidth="4" fill="transparent" />
-                      <circle cx="32" cy="32" r="26" stroke="#f59e0b" strokeWidth="4" fill="transparent" strokeDasharray={2 * Math.PI * 26} strokeDashoffset={(2 * Math.PI * 26) * (1 - 0.3)} className="progress-ring-circle" />
-                    </svg>
-                    <span className="absolute text-xs font-black text-slate-800 dark:text-slate-100">30%</span>
-                  </div>
-                  <span className="text-[10px] font-bold text-slate-400">Acne</span>
-                </div>
+            ) : (
+              /* SUCCESS RESULT RENDER VIEW (Matches Mockup Screen 3 style sheet) */
+              <div className="mock-card slide-up-sheet space-y-5">
                 
-                <div className="flex flex-col items-center gap-1.5">
-                  <div className="relative w-16 h-16 flex items-center justify-center">
-                    <svg className="w-full h-full transform -rotate-90">
-                      <circle cx="32" cy="32" r="26" stroke="rgba(239, 68, 68, 0.1)" strokeWidth="4" fill="transparent" />
-                      <circle cx="32" cy="32" r="26" stroke="#10b981" strokeWidth="4" fill="transparent" strokeDasharray={2 * Math.PI * 26} strokeDashoffset={(2 * Math.PI * 26) * (1 - 0.55)} className="progress-ring-circle" />
-                    </svg>
-                    <span className="absolute text-xs font-black text-slate-800 dark:text-slate-100">55%</span>
+                <div className="flex justify-between items-center border-b border-pink-100/10 pb-3">
+                  <div>
+                    <span className="text-[10px] text-pink-500 uppercase font-black tracking-widest block">Skin Age: 36</span>
+                    <h3 className="text-sm font-extrabold text-slate-800 dark:text-slate-100 uppercase tracking-wider">{result.disease}</h3>
                   </div>
-                  <span className="text-[10px] font-bold text-slate-400">Dryness</span>
+                  <button 
+                    onClick={downloadReport}
+                    className="p-2.5 rounded-full bg-slate-100 dark:bg-slate-950 text-pink-500"
+                    title="Export clinical report PDF"
+                  >
+                    <Download className="w-4 h-4" />
+                  </button>
                 </div>
 
-                <div className="flex flex-col items-center gap-1.5">
-                  <div className="relative w-16 h-16 flex items-center justify-center">
-                    <svg className="w-full h-full transform -rotate-90">
-                      <circle cx="32" cy="32" r="26" stroke="rgba(239, 68, 68, 0.1)" strokeWidth="4" fill="transparent" />
-                      <circle cx="32" cy="32" r="26" stroke="#ef4444" strokeWidth="4" fill="transparent" strokeDasharray={2 * Math.PI * 26} strokeDashoffset={(2 * Math.PI * 26) * (1 - 0.15)} className="progress-ring-circle" />
-                    </svg>
-                    <span className="absolute text-xs font-black text-slate-800 dark:text-slate-100">15%</span>
+                {/* System Score Progress track (Separated from Prediction Confidence) */}
+                <div className="space-y-1 bg-slate-50 dark:bg-slate-950 p-4 rounded-3xl border border-pink-100/10">
+                  <div className="flex justify-between text-xs font-bold text-pink-500">
+                    <span className="uppercase tracking-widest text-[9px] font-black">DERMASCAN SYSTEM SCORE</span>
+                    <span className="text-sm">94.8%</span>
                   </div>
-                  <span className="text-[10px] font-bold text-slate-400">Moisture</span>
+                  <div className="w-full bg-slate-200 dark:bg-slate-900 h-2 rounded-full overflow-hidden mt-1.5">
+                    <div className="bg-gradient-to-r from-pink-500 to-indigo-600 h-full rounded-full" style={{ width: '94.8%' }}></div>
+                  </div>
+                  <span className="text-[9px] text-slate-400 block mt-1 font-bold">Validated Model Accuracy</span>
                 </div>
-              </div>
 
-              {/* Interactive blemish count metrics info */}
-              <div className="bg-slate-100 dark:bg-slate-950 p-4 rounded-3xl space-y-1.5 text-xs text-slate-500">
-                <div className="flex justify-between font-bold">
-                  <span>Detected Acne/Pimples:</span>
-                  <span className="text-yellow-500">{result.lesion_analysis?.pimple_count ?? 0} regions</span>
+                {/* Prediction confidence score display */}
+                <div className="flex justify-between items-center text-xs font-bold bg-slate-100 dark:bg-slate-950 px-4 py-3 rounded-2xl">
+                  <span className="text-slate-500">Prediction Confidence:</span>
+                  <span className="text-slate-800 dark:text-slate-100 font-black">{(result.confidence * 100).toFixed(1)}%</span>
                 </div>
-                <div className="flex justify-between font-bold">
-                  <span>Discolored Dark Spots:</span>
-                  <span className="text-blue-500">{result.lesion_analysis?.dark_spot_count ?? 0} regions</span>
-                </div>
-              </div>
 
-              {/* Suggestions guideline box */}
-              <div className="space-y-3">
-                <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">AI Suggestions Guidance</span>
-                <div className="space-y-1.5 text-xs text-slate-500 leading-relaxed">
-                  {result.recommendations.map((rec, idx) => (
-                    <div key={idx} className="flex gap-1.5 items-start">
-                      <span className="text-pink-500">•</span>
-                      <span>{rec}</span>
+                {/* Estimated severity slider bar indicator */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs font-bold text-slate-500">
+                    <span>Condition Severity:</span>
+                    <span className="font-extrabold uppercase text-purple-500">{result.severity}</span>
+                  </div>
+                  <div className="w-full bg-slate-200 dark:bg-slate-900 h-2.5 rounded-full overflow-hidden relative">
+                    <div 
+                      className={`h-full rounded-full ${
+                        result.severity === 'Mild' ? 'bg-emerald-500 w-1/3' : result.severity === 'Moderate' ? 'bg-amber-500 w-2/3' : 'bg-red-500 w-full'
+                      }`}
+                    ></div>
+                  </div>
+                </div>
+
+                {/* Three circular progress indicators from mockup */}
+                <div className="grid grid-cols-3 gap-3 py-2 text-center">
+                  <div className="flex flex-col items-center gap-1.5">
+                    <div className="relative w-16 h-16 flex items-center justify-center">
+                      <svg className="w-full h-full transform -rotate-90">
+                        <circle cx="32" cy="32" r="26" stroke="rgba(239, 68, 68, 0.1)" strokeWidth="4" fill="transparent" />
+                        <circle cx="32" cy="32" r="26" stroke="#f59e0b" strokeWidth="4" fill="transparent" strokeDasharray={2 * Math.PI * 26} strokeDashoffset={(2 * Math.PI * 26) * (1 - 0.3)} className="progress-ring-circle" />
+                      </svg>
+                      <span className="absolute text-xs font-black text-slate-800 dark:text-slate-100">30%</span>
                     </div>
-                  ))}
+                    <span className="text-[10px] font-bold text-slate-400">Acne</span>
+                  </div>
+                  
+                  <div className="flex flex-col items-center gap-1.5">
+                    <div className="relative w-16 h-16 flex items-center justify-center">
+                      <svg className="w-full h-full transform -rotate-90">
+                        <circle cx="32" cy="32" r="26" stroke="rgba(239, 68, 68, 0.1)" strokeWidth="4" fill="transparent" />
+                        <circle cx="32" cy="32" r="26" stroke="#10b981" strokeWidth="4" fill="transparent" strokeDasharray={2 * Math.PI * 26} strokeDashoffset={(2 * Math.PI * 26) * (1 - 0.55)} className="progress-ring-circle" />
+                      </svg>
+                      <span className="absolute text-xs font-black text-slate-800 dark:text-slate-100">55%</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-400">Dryness</span>
+                  </div>
+
+                  <div className="flex flex-col items-center gap-1.5">
+                    <div className="relative w-16 h-16 flex items-center justify-center">
+                      <svg className="w-full h-full transform -rotate-90">
+                        <circle cx="32" cy="32" r="26" stroke="rgba(239, 68, 68, 0.1)" strokeWidth="4" fill="transparent" />
+                        <circle cx="32" cy="32" r="26" stroke="#ef4444" strokeWidth="4" fill="transparent" strokeDasharray={2 * Math.PI * 26} strokeDashoffset={(2 * Math.PI * 26) * (1 - 0.15)} className="progress-ring-circle" />
+                      </svg>
+                      <span className="absolute text-xs font-black text-slate-800 dark:text-slate-100">15%</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-400">Moisture</span>
+                  </div>
+                </div>
+
+                {/* OpenCV blemish counting outputs */}
+                <div className="bg-slate-100 dark:bg-slate-950 p-4 rounded-3xl space-y-1.5 text-xs text-slate-500">
+                  <div className="flex justify-between font-bold">
+                    <span>Visible Acne/Pimple Count:</span>
+                    <span className="text-yellow-500 font-extrabold">{result.lesion_analysis?.pimple_count ?? 0} regions</span>
+                  </div>
+                  <div className="flex justify-between font-bold">
+                    <span>Hyperpigmented Dark Spots:</span>
+                    <span className="text-blue-500 font-extrabold">{result.lesion_analysis?.dark_spot_count ?? 0} regions</span>
+                  </div>
+                </div>
+
+                {/* Grad-CAM Heatmap overlay slider */}
+                <div className="space-y-3">
+                  <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">Explainable AI (Grad-CAM)</span>
+                  <div 
+                    ref={sliderContainerRef}
+                    onMouseDown={handleSliderMouse}
+                    onTouchStart={handleSliderTouch}
+                    className="relative aspect-square w-full rounded-3xl overflow-hidden border border-pink-500/10 cursor-ew-resize select-none"
+                  >
+                    <img src={result.overlay_image} alt="cam" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
+                    <div 
+                      className="absolute inset-0 overflow-hidden border-r border-amber-500"
+                      style={{ width: `${sliderPosition}%` }}
+                    >
+                      <img 
+                        src={result.original_image} 
+                        alt="orig" 
+                        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                        style={{ width: sliderContainerRef.current ? sliderContainerRef.current.clientWidth : '100%' }}
+                      />
+                    </div>
+                    <div 
+                      className="absolute top-0 bottom-0 w-0.5 bg-amber-500 flex items-center justify-center"
+                      style={{ left: `${sliderPosition}%`, transform: 'translateX(-50%)' }}
+                    >
+                      <div className="w-5 h-5 rounded-full bg-amber-600 text-white flex items-center justify-center text-[9px] border border-white font-bold">↔</div>
+                    </div>
+                  </div>
+                  <p className="text-[9px] text-slate-400 italic">
+                    💡 The highlighted areas indicate regions that contributed to the model's prediction.
+                  </p>
+                </div>
+
+                {/* Suggestions Box */}
+                <div className="space-y-2">
+                  <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">AI Care Suggestions</span>
+                  <div className="space-y-1 text-xs text-slate-500 leading-relaxed">
+                    {result.recommendations.map((rec, idx) => (
+                      <div key={idx} className="flex gap-1.5 items-start">
+                        <span className="text-pink-500">•</span>
+                        <span>{rec}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex gap-2.5">
+                  <button 
+                    onClick={() => {
+                      setDiary(prev => [{
+                        id: Date.now().toString(),
+                        date: new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }),
+                        symptoms: { itching: 4, pain: 2, burning: 2, dryness: 3, redness: result.severity },
+                        notes: `AI screening match: ${result.disease}`,
+                        image: result.original_image
+                      }, ...prev]);
+                      alert("Diagnostic report successfully saved to Skin Diary!");
+                    }}
+                    className="flex-grow py-3 bg-slate-900 border border-slate-800 text-white rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5"
+                  >
+                    <Bookmark className="w-4 h-4 text-pink-500" /> Save to Skin Diary
+                  </button>
+                  <button 
+                    onClick={() => { setResult(null); setImage(null); setImagePreview(null); }}
+                    className="px-6 py-3 bg-pink-600 hover:bg-pink-700 text-white rounded-2xl text-xs font-bold"
+                  >
+                    Close
+                  </button>
                 </div>
               </div>
-
-              <div className="flex gap-2.5">
-                <button 
-                  onClick={() => {
-                    setDiary(prev => [{
-                      id: Date.now().toString(),
-                      date: new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }),
-                      symptoms: { itching: 3, pain: 1, burning: 1, dryness: 4, redness: result.severity },
-                      notes: `AI screening match: ${result.disease}`,
-                      image: result.original_image
-                    }, ...prev]);
-                    alert("Diagnostic report successfully saved to Skin Diary!");
-                  }}
-                  className="flex-grow py-3 bg-slate-900 border border-slate-800 text-white rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5"
-                >
-                  <Bookmark className="w-4 h-4 text-pink-500" /> Save to Skin Diary
-                </button>
-                <button 
-                  onClick={() => { setResult(null); setImage(null); setImagePreview(null); }}
-                  className="px-6 py-3 bg-pink-600 hover:bg-pink-700 text-white rounded-2xl text-xs font-bold"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
+            )}
           </div>
         )}
 
-        {/* PAGE 3: LOCATION & CARE */}
+        {/* PAGE 3: LOCATION & APPOINTMENT */}
         {activeTab === 'location' && (
           <div className="space-y-6 animate-fade-in text-left">
             <div className="flex flex-col gap-1 border-b border-pink-100/10 pb-3">
@@ -1225,7 +1305,7 @@ export default function App() {
                   disabled={locLoading}
                   className={`flex-grow flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold border transition-all ${
                     locSuccess 
-                      ? 'bg-pink-500/10 border-pink-500/30 text-pink-500 animate-pulse' 
+                      ? 'bg-pink-500/10 border-pink-500/30 text-pink-500' 
                       : 'bg-slate-950 border-slate-800 text-slate-350'
                   }`}
                 >
@@ -1444,7 +1524,7 @@ export default function App() {
             </div>
 
             <div className="bg-slate-950 p-4 rounded-2xl text-[10px] text-slate-400 text-left space-y-1 leading-normal">
-              <p className="font-bold text-slate-350 mb-1">🎙️ Commands you can speak:</p>
+              <p className="font-bold text-slate-355 mb-1">🎙️ Commands you can speak:</p>
               <p>• "What did the AI detect?" (Reads prediction & confidence)</p>
               <p>• "What should I do?" (Reads care suggestions)</p>
               <p>• "Read severity" (Reads blemish severity)</p>
@@ -1499,12 +1579,12 @@ export default function App() {
         </div>
       )}
 
-      {/* MOCKUP FLOATING NAVIGATION PILL BAR */}
+      {/* MOCKUP FLOATING NAVIGATION PILL BAR (Exactly 3 destinations) */}
       <footer className="fixed bottom-6 left-0 right-0 z-45">
         <div className="nav-pill">
           {[
             { id: 'home', icon: <Home className="w-5.5 h-5.5" />, color: 'text-pink-500' },
-            { id: 'analyze', icon: <Camera className="w-5.5 h-5.5" />, color: 'text-indigo-600' },
+            { id: 'analyze', icon: <Camera className="w-5.5 h-5.5" />, color: 'text-indigo-650' },
             { id: 'location', icon: <MapPin className="w-5.5 h-5.5" />, color: 'text-purple-500' }
           ].map(tab => {
             const isActive = activeTab === tab.id;
