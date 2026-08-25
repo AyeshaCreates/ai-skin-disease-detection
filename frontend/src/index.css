@@ -134,3 +134,14 @@
 .custom-scrollbar::-webkit-scrollbar-thumb {
   @apply bg-pink-300 rounded-full;
 }
+
+/* Voice Waveform keyframes */
+.voice-wave-bar {
+  animation: voice-pulse 1.2s infinite ease-in-out;
+  transform-origin: bottom;
+}
+@keyframes voice-pulse {
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1.4); }
+}
+

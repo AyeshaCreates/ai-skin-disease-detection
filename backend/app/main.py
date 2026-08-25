@@ -196,7 +196,46 @@ async def predict_skin_disease(
             # Delete temporary file
             if os.path.exists(orig_img_path):
                 os.remove(orig_img_path)
-            raise HTTPException(status_code=400, detail=validation_res["message"])
+            raise HTTPException(status_code=400, detail=validation_res)
+            
+        if validation_res.get("healthy", False):
+            original_b64 = pil_to_base64(pil_img)
+            if os.path.exists(orig_img_path):
+                os.remove(orig_img_path)
+            return JSONResponse(content={
+                "disease": "Normal Skin",
+                "confidence": 1.0,
+                "severity": "None",
+                "original_image": f"data:image/jpeg;base64,{original_b64}",
+                "heatmap_image": f"data:image/jpeg;base64,{original_b64}",
+                "overlay_image": f"data:image/jpeg;base64,{original_b64}",
+                "explanation": "No visible abnormality detected in the analyzed skin area.",
+                "recommendations": [
+                    "No visible abnormality detected in the analyzed skin area.",
+                    "Maintain your regular skin hygiene and moisturizer routine.",
+                    "Protect skin from UV radiation with sunscreen.",
+                    "Consult a qualified dermatologist if new spots or symptoms arise."
+                ],
+                "hospitals": find_nearby_dermatologists(lat, lon, city),
+                "location": {"lat": lat, "lon": lon, "city": city},
+                "top_predictions": [{"disease": "Normal Skin", "confidence": 1.0}],
+                "image_quality": {
+                    "valid": True,
+                    "quality_score": 100,
+                    "metrics": {
+                        "clear_focus": True,
+                        "good_lighting": True,
+                        "skin_detected": True,
+                        "lesion_detected": False
+                    }
+                },
+                "lesion_analysis": {
+                    "pimple_count": 0,
+                    "dark_spot_count": 0,
+                    "pimple_coords": [],
+                    "dark_spot_coords": []
+                }
+            })
             
         img_transform = get_image_transforms(train=False)
         img_tensor = img_transform(pil_img).unsqueeze(0).to(device)
