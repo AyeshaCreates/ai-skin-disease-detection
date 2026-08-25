@@ -1093,14 +1093,61 @@ export default function App() {
 
             {/* STRICT RELIABILITY GATING (90% CONFIDENCE check) */}
             {result.confidence < 0.90 ? (
-              <div className="mock-card p-6 border-l-4 border-l-amber-500 space-y-4">
+              <div className="mock-card p-6 border-l-4 border-l-amber-500 space-y-5">
                 <div className="flex items-center gap-2 text-amber-500">
                   <AlertTriangle className="w-6 h-6" />
                   <h3 className="font-serif font-bold text-slate-800 dark:text-slate-100">Low-confidence analysis</h3>
                 </div>
+                
                 <p className="text-xs text-slate-500 leading-relaxed">
-                  The image does not provide enough evidence for a reliable AI-assisted assessment. Prediction confidence was **{(result.confidence * 100).toFixed(1)}%** which is below the 90% accuracy gate.
+                  The image does not provide enough evidence for a reliable AI-assisted assessment. Prediction confidence was **{(result.confidence * 100).toFixed(1)}%**, which is below the 90% accuracy gate.
                 </p>
+
+                {/* PRELIMINARY MATCH INDICATOR (Saying what the AI felt) */}
+                <div className="bg-amber-500/5 border border-amber-500/10 p-4 rounded-3xl space-y-2">
+                  <span className="text-[10px] text-amber-500 uppercase font-black tracking-widest block">Preliminary Match (Low-Confidence)</span>
+                  <div className="flex justify-between items-center text-xs font-bold">
+                    <span className="text-slate-800 dark:text-slate-150">{result.disease}</span>
+                    <span className="text-amber-500">{(result.confidence * 100).toFixed(1)}%</span>
+                  </div>
+                  <p className="text-[10px] text-slate-400 leading-normal">
+                    The model flagged potential characteristics of **{result.disease}** but requires a higher quality image or symptom details to confirm.
+                  </p>
+                </div>
+
+                {/* Grad-CAM Heatmap overlay slider */}
+                <div className="space-y-3">
+                  <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">Attention Heatmap (What the AI Felt)</span>
+                  <div 
+                    ref={sliderContainerRef}
+                    onMouseDown={handleSliderMouse}
+                    onTouchStart={handleSliderTouch}
+                    className="relative aspect-square w-full rounded-3xl overflow-hidden border border-pink-500/10 cursor-ew-resize select-none"
+                  >
+                    <img src={result.overlay_image} alt="cam" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
+                    <div 
+                      className="absolute inset-0 overflow-hidden border-r border-amber-500"
+                      style={{ width: `${sliderPosition}%` }}
+                    >
+                      <img 
+                        src={result.original_image} 
+                        alt="orig" 
+                        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                        style={{ width: sliderContainerRef.current ? sliderContainerRef.current.clientWidth : '100%' }}
+                      />
+                    </div>
+                    <div 
+                      className="absolute top-0 bottom-0 w-0.5 bg-amber-500 flex items-center justify-center"
+                      style={{ left: `${sliderPosition}%`, transform: 'translateX(-50%)' }}
+                    >
+                      <div className="w-5 h-5 rounded-full bg-amber-600 text-white flex items-center justify-center text-[9px] border border-white font-bold">↔</div>
+                    </div>
+                  </div>
+                  <p className="text-[9px] text-slate-400 italic">
+                    💡 Swipe to see which skin features caused the AI to suspect this condition.
+                  </p>
+                </div>
+
                 <div className="flex gap-2.5 pt-2">
                   <button 
                     onClick={() => { setResult(null); setImage(null); setImagePreview(null); startCamera(); }}
