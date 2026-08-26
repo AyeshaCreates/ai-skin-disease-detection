@@ -73,6 +73,14 @@ def find_nearby_dermatologists(lat: float, lon: float, city_hint: str = None):
     Finds nearby dermatology clinics/hospitals using OpenStreetMap Overpass API.
     Falls back to mock list if offline or API error.
     """
+    if lat is None or lon is None:
+        if city_hint:
+            resolved = get_coordinates_from_city(city_hint)
+            if resolved:
+                lat, lon = resolved
+        if lat is None or lon is None:
+            lat, lon = 12.9716, 77.5946
+
     # 1. Check if the city hint matches our mock database
     if city_hint:
         city_key = city_hint.strip().lower()

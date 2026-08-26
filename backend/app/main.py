@@ -177,7 +177,7 @@ async def predict_skin_disease(
     Uses Multi-Modal Fusion network to predict disease and severity.
     Includes Grad-CAM explanation and local hospital recommendations.
     """
-    if not image.content_type.startswith("image/"):
+    if not image.content_type or not image.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Invalid file type. Please upload an image.")
         
     try:
@@ -256,10 +256,9 @@ async def predict_skin_disease(
         with torch.no_grad():
             disease_logits, severity_logits = fusion_model(img_features, text_tensor)
             
-            # Apply Temperature Scaling Calibration (T = 0.30)
-            # Divides logits by T to align softmax probabilities with empirical accuracy
-            calibrated_disease_logits = disease_logits / 0.30
-            calibrated_severity_logits = severity_logits / 0.30
+            # Apply Temperature Scaling Calibration (T = 1.0)
+            calibrated_disease_logits = disease_logits
+            calibrated_severity_logits = severity_logits
             
             disease_probs = torch.softmax(calibrated_disease_logits, dim=1)[0]
             severity_probs = torch.softmax(calibrated_severity_logits, dim=1)[0]

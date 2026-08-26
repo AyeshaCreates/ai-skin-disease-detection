@@ -220,16 +220,16 @@ def validate_skin_image(image: Image.Image) -> dict:
         }
         
     # 4. Abnormality / Healthy skin check
-    skin_gray = gray[skin_mask]
-    if skin_gray.size > 0:
-        std_val = np.std(skin_gray)
+    std_val = np.std(gray)
+    if True:
         if std_val < 5.0:
             return {
-                "valid": False,
+                "valid": True,
                 "reason": "healthy",
-                "message": "No Skin Abnormality Detected\nThe uploaded image does not appear to contain a visible skin condition. Please upload an image showing the affected area."
+                "healthy": True,
+                "message": "Normal skin detected. No visible abnormalities found."
             }
-        if std_val > 52.0:
+        if std_val > 75.0:
             return {
                 "valid": False,
                 "reason": "unrelated",

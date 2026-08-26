@@ -122,8 +122,7 @@ def validate_skin_image(image: Image.Image) -> dict:
     mean_brightness = float(np.mean(gray))
     blur_value = float(cv2.Laplacian(gray, cv2.CV_64F).var())
     
-    skin_gray = gray[skin_mask]
-    std_val = float(np.std(skin_gray)) if skin_gray.size > 0 else 0.0
+    std_val = float(np.std(gray))
     
     # Calculate quality metrics scores
     blur_score = min(100.0, (blur_value / 40.0) * 100.0) if blur_value >= 4.0 else (blur_value / 4.0) * 50.0
@@ -180,14 +179,15 @@ def validate_skin_image(image: Image.Image) -> dict:
         
     if std_val < 5.0:
         return {
-            "valid": False,
+            "valid": True,
             "reason": "healthy",
-            "message": "No Skin Abnormality Detected: The skin region appears uniform and healthy.",
+            "healthy": True,
+            "message": "Normal skin detected. No visible abnormalities found.",
             "quality_score": quality_score,
             "metrics": metrics
         }
         
-    if std_val > 52.0:
+    if std_val > 75.0:
         return {
             "valid": False,
             "reason": "unrelated",
