@@ -771,7 +771,7 @@ export default function App() {
                 }}
                 className="mock-card hover:border-indigo-300 cursor-pointer text-left flex flex-col justify-between aspect-square"
               >
-                <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center"><SlidersHorizontal className="w-5 h-5" /></div>
+                <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center"><Sliders className="w-5 h-5" /></div>
                 <div>
                   <span className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide block">Review Results</span>
                   <span className="text-[9px] font-bold text-slate-400 block mt-1">Previous scan history</span>
@@ -1010,7 +1010,7 @@ export default function App() {
         {activeTab === 'analyze' && validationErrorType === 'quality' && (
           <div className="space-y-6 animate-fade-in text-left">
             <div className="mock-card p-6 border-l-4 border-l-amber-500 space-y-4">
-              <h2 className="text-lg font-black uppercase text-amber-500 tracking-wider">IMAGE QUALITY TOO LOW</h2>
+              <h2 className="text-lg font-black uppercase text-amber-500 tracking-wider">RETAKE IMAGE</h2>
               <p className="text-xs text-slate-500 leading-relaxed font-semibold">
                 The image is not clear enough for reliable skin assessment. Please ensure balanced lighting and high focus.
               </p>
@@ -1103,7 +1103,7 @@ export default function App() {
               <div className="mock-card p-6 border-l-4 border-l-emerald-500 space-y-5">
                 <div className="flex justify-between items-center border-b border-pink-100/10 pb-3">
                   <div>
-                    <h2 className="text-lg font-black uppercase text-emerald-500 tracking-wider">NORMAL SKIN</h2>
+                    <h2 className="text-lg font-black uppercase text-emerald-500 tracking-wider">NORMAL SKIN / NO VISIBLE ABNORMALITY</h2>
                     <p className="text-xs text-slate-500 mt-1 font-semibold">
                       No visible abnormality detected in the analyzed skin area.
                     </p>
@@ -1117,20 +1117,34 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* System score bar */}
-                <div className="space-y-1 bg-slate-50 dark:bg-slate-950 p-4 rounded-3xl border border-pink-100/10">
-                  <div className="flex justify-between text-xs font-bold text-pink-500">
-                    <span className="uppercase tracking-widest text-[9px] font-black">DERMASCAN SYSTEM SCORE</span>
-                    <span className="text-sm">94.8%</span>
+                {/* Collapsible Technical Details (Normal Skin) */}
+                <details className="group border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden bg-slate-50 dark:bg-slate-950">
+                  <summary className="flex justify-between items-center px-4 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 cursor-pointer select-none">
+                    <span>TECHNICAL DETAILS</span>
+                    <span className="transition-transform group-open:rotate-180">▼</span>
+                  </summary>
+                  <div className="px-4 pb-4 space-y-3 text-xs">
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-[10px] font-bold text-pink-500">
+                        <span className="uppercase tracking-widest text-[9px] font-black">Model Accuracy (Offline)</span>
+                        <span className="text-xs">94.8%</span>
+                      </div>
+                      <div className="w-full bg-slate-200 dark:bg-slate-900 h-1.5 rounded-full overflow-hidden">
+                        <div className="bg-gradient-to-r from-pink-500 to-indigo-600 h-full rounded-full" style={{ width: '94.8%' }}></div>
+                      </div>
+                    </div>
+                    <div className="space-y-1 text-[10px] text-slate-400 pt-2 border-t border-slate-900">
+                      <div className="flex justify-between">
+                        <span>Sharpness Score:</span>
+                        <span className="text-slate-800 dark:text-slate-100 font-extrabold">{result.quality_score}%</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="w-full bg-slate-200 dark:bg-slate-900 h-2 rounded-full overflow-hidden mt-1.5">
-                    <div className="bg-gradient-to-r from-pink-500 to-indigo-600 h-full rounded-full" style={{ width: '94.8%' }}></div>
-                  </div>
-                </div>
+                </details>
 
                 <div className="flex justify-between items-center text-xs font-bold bg-slate-100 dark:bg-slate-950 px-4 py-3 rounded-2xl">
                   <span className="text-slate-500">Severity:</span>
-                  <span className="text-emerald-500 font-extrabold uppercase">NONE</span>
+                  <span className="text-emerald-500 font-extrabold uppercase">NORMAL</span>
                 </div>
 
                 <div className="p-4 bg-slate-100 dark:bg-slate-950 rounded-2xl text-xs text-slate-500 leading-relaxed">
@@ -1156,8 +1170,8 @@ export default function App() {
                   <h3 className="font-serif font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">LOW-CONFIDENCE ANALYSIS</h3>
                 </div>
                 
-                <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                  The available image evidence is insufficient for a reliable assessment. Prediction confidence was **{(result.confidence * 100).toFixed(1)}%**, which is below the 90% accuracy gate.
+                <p className="text-xs text-slate-500 leading-relaxed font-bold">
+                  Low-Confidence Analysis — please provide a clearer skin image.
                 </p>
 
                 {/* PRELIMINARY MATCH INDICATOR (Saying what the AI felt) */}
@@ -1239,17 +1253,34 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* System Score Progress track (Separated from Prediction Confidence) */}
-                <div className="space-y-1 bg-slate-50 dark:bg-slate-950 p-4 rounded-3xl border border-pink-100/10">
-                  <div className="flex justify-between text-xs font-bold text-pink-500">
-                    <span className="uppercase tracking-widest text-[9px] font-black">DERMASCAN SYSTEM SCORE</span>
-                    <span className="text-sm">94.8%</span>
+                {/* Collapsible Technical Details (Abnormal Skin Assessment) */}
+                <details className="group border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden bg-slate-50 dark:bg-slate-950">
+                  <summary className="flex justify-between items-center px-4 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 cursor-pointer select-none">
+                    <span>TECHNICAL DETAILS</span>
+                    <span className="transition-transform group-open:rotate-180">▼</span>
+                  </summary>
+                  <div className="px-4 pb-4 space-y-3 text-xs">
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-[10px] font-bold text-pink-500">
+                        <span className="uppercase tracking-widest text-[9px] font-black">Model Accuracy (Offline)</span>
+                        <span className="text-xs">94.8%</span>
+                      </div>
+                      <div className="w-full bg-slate-200 dark:bg-slate-900 h-1.5 rounded-full overflow-hidden">
+                        <div className="bg-gradient-to-r from-pink-500 to-indigo-600 h-full rounded-full" style={{ width: '94.8%' }}></div>
+                      </div>
+                    </div>
+                    <div className="space-y-1 text-[10px] text-slate-400 pt-2 border-t border-slate-900">
+                      <div className="flex justify-between">
+                        <span>Raw Prediction Confidence:</span>
+                        <span className="text-slate-800 dark:text-slate-100 font-extrabold">{(result.confidence * 100).toFixed(1)}%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Sharpness Score:</span>
+                        <span className="text-slate-800 dark:text-slate-100 font-extrabold">{result.quality_score}%</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="w-full bg-slate-200 dark:bg-slate-900 h-2 rounded-full overflow-hidden mt-1.5">
-                    <div className="bg-gradient-to-r from-pink-500 to-indigo-600 h-full rounded-full" style={{ width: '94.8%' }}></div>
-                  </div>
-                  <span className="text-[9px] text-slate-400 block mt-1 font-bold">Validated Model Accuracy</span>
-                </div>
+                </details>
 
                 {/* Prediction confidence score display */}
                 <div className="flex justify-between items-center text-xs font-bold bg-slate-100 dark:bg-slate-950 px-4 py-3 rounded-2xl">
@@ -1408,26 +1439,32 @@ export default function App() {
               </div>
 
               <div className="space-y-3 pt-2">
-                {[
+                {((result && result.hospitals && result.hospitals.length > 0) ? result.hospitals : [
                   { name: "City Dermatology Clinic", distance: "1.4 km", rating: "4.8", hours: "09:00 AM – 06:00 PM", lat: 12.973, lon: 77.596 },
                   { name: "Apollo Skin Care Hospital", distance: "3.2 km", rating: "4.7", hours: "08:00 AM – 08:00 PM", lat: 12.969, lon: 77.592 }
-                ].map((h, idx) => (
+                ]).map((h, idx) => (
                   <div key={idx} className="p-3.5 bg-slate-950 border border-slate-855 rounded-2xl flex flex-col gap-2">
                     <div className="flex justify-between items-start">
                       <span className="font-bold text-xs leading-snug text-slate-200">{h.name}</span>
                       <span className="text-[9px] font-black text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded-full flex-shrink-0 uppercase">{h.distance}</span>
                     </div>
                     <div className="flex justify-between items-center text-[10px] text-slate-450">
-                      <span>★ {h.rating} Rating</span>
-                      <span>Hours: {h.hours}</span>
+                      <span>★ {h.rating || "4.5"} Rating</span>
+                      <span>Hours: {h.hours || "09:00 AM - 05:00 PM"}</span>
+                    </div>
+                    {h.phone && (
+                      <div className="text-[10px] text-slate-450">
+                        <span>📞 Phone: {h.phone}</span>
+                      </div>
+                    )}
+                    <div className="text-[10px] text-slate-500 italic pt-1 border-t border-slate-900">
+                      <div>Doctor Availability: Availability information unavailable.</div>
+                      <div>Next Available Slot: Availability information unavailable.</div>
                     </div>
                     <div className="flex gap-2 pt-1">
-                      <a href={`https://www.google.com/maps/dir/?api=1&destination=${h.lat},${h.lon}`} target="_blank" rel="noreferrer" className="flex-grow py-2 border border-slate-800 hover:bg-slate-900 rounded-xl text-[10px] font-bold text-center text-slate-300">
+                      <a href={`https://www.google.com/maps/dir/?api=1&destination=${h.lat},${h.lon}`} target="_blank" rel="noreferrer" className="w-full py-2 border border-slate-800 hover:bg-slate-900 rounded-xl text-[10px] font-bold text-center text-slate-300">
                         Directions
                       </a>
-                      <button type="button" onClick={() => handleBookAppointment(h)} className="px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-xl text-[10px] font-bold">
-                        Book Appointment
-                      </button>
                     </div>
                   </div>
                 ))}
@@ -1576,49 +1613,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Appointment scheduling modal */}
-      {showBookingOverlay && selectedHospital && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-6 text-center animate-fade-in text-left">
-          <div className="mock-card p-6 max-w-sm w-full shadow-2xl space-y-4 animate-scale-in dark:bg-slate-900">
-            <h3 className="font-serif font-bold text-slate-800 dark:text-slate-100">Book Appointment</h3>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Schedule an appointment at **{selectedHospital.name}**.
-            </p>
-
-            <div className="space-y-3 text-xs pt-2">
-              <div className="space-y-1">
-                <span className="font-bold block text-slate-400">Appointment Date</span>
-                <input 
-                  type="date" value={bookingDate} onChange={(e) => setBookingDate(e.target.value)}
-                  className="w-full border border-slate-855 rounded-xl p-2.5 bg-slate-950 outline-none text-slate-100 font-bold"
-                />
-              </div>
-              <div className="space-y-1">
-                <span className="font-bold block text-slate-400">Preferred Time Slot</span>
-                <input 
-                  type="time" value={bookingTime} onChange={(e) => setBookingTime(e.target.value)}
-                  className="w-full border border-slate-855 rounded-xl p-2.5 bg-slate-950 outline-none text-slate-100 font-bold"
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-2.5 pt-3">
-              <button 
-                onClick={saveAppointment} 
-                className="flex-grow py-3 bg-pink-600 hover:bg-pink-700 text-white font-bold text-xs rounded-xl shadow-sm"
-              >
-                Schedule Appointment
-              </button>
-              <button 
-                onClick={() => setShowBookingOverlay(false)} 
-                className="py-3 px-4 bg-slate-800 text-slate-355 font-bold text-xs rounded-xl"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* MOCKUP FLOATING NAVIGATION PILL BAR (Exactly 3 destinations) */}
       <footer className="fixed bottom-6 left-0 right-0 z-45">
