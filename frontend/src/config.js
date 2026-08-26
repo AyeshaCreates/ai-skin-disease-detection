@@ -1,8 +1,9 @@
 // API base URL configured via Vite environment variables for static hosting (Vercel)
 // or falling back to local port 8000 when running in local development mode.
 const getApiBase = () => {
-  if (import.meta.env.VITE_API_BASE) {
-    return import.meta.env.VITE_API_BASE;
+  // If running on Vercel deployment, prioritize the Vercel injected environment variable
+  if (window.location.hostname.endsWith('.vercel.app')) {
+    return import.meta.env.VITE_API_BASE || window.location.origin;
   }
   // If running inside Capacitor native Android container
   if (window.Capacitor || window.location.protocol === 'capacitor:') {

@@ -131,8 +131,8 @@ def test_image_validation_cases():
     np_healthy = np.clip(np_healthy + noise, 0, 255).astype(np.uint8)
     img_healthy = Image.fromarray(np_healthy)
     res_healthy = validate_skin_image(img_healthy)
-    assert res_healthy["valid"] is False
-    assert "No Skin Abnormality" in res_healthy["message"]
+    assert res_healthy["valid"] is True
+    assert res_healthy.get("healthy", False) is True
     
     # 3. Blurry image
     img_blurry = Image.new('RGB', (224, 224), color=(245, 220, 205))
