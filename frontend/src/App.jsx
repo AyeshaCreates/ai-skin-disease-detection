@@ -11,7 +11,6 @@ import {
   Info, 
   RefreshCw, 
   Navigation, 
-  Map, 
   Phone, 
   Star,
   ChevronRight,
@@ -28,7 +27,6 @@ import {
   Trash2,
   Calendar,
   ClipboardCheck,
-  Languages,
   Home,
   Plus,
   X,
@@ -37,21 +35,48 @@ import {
   Volume2,
   Bookmark,
   Bell,
-  Sliders
+  Sliders,
+  MessageSquare
 } from 'lucide-react';
 import { API_BASE } from './config';
 
 export default function App() {
-  // Navigation tabs (Only 3 Primary Sections: 'home', 'analyze', 'location')
   const [activeTab, setActiveTab] = useState('home');
-  const [theme, setTheme] = useState(() => localStorage.getItem('dermascan_theme') || 'light');
+  const [theme, setTheme] = useState(() => localStorage.getItem('carevoice_theme') || 'light');
   const [language, setLanguage] = useState('en');
   
-  // Modal Overlays
-  const [showProfileModal, setShowProfileModal] = useState(false);
-  const [showDiaryModal, setShowDiaryModal] = useState(false);
+  // Authentication State
+  const [token, setToken] = useState(() => localStorage.getItem('carevoice_token') || '');
+  const [authUsername, setAuthUsername] = useState('');
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
+  const [authError, setAuthError] = useState('');
+
+  // Profile data
+  const [profile, setProfile] = useState(null);
+
+  // Reminders, Medicines, and Reports List States
+  const [medicines, setMedicines] = useState([]);
+  const [reminders, setReminders] = useState([]);
+  const [reports, setReports] = useState([]);
   
-  // Analyze Workflow states
+  // Input Forms States
+  const [newMedName, setNewMedName] = useState('');
+  const [newMedDosage, setNewMedDosage] = useState('');
+  const [newMedTime, setNewMedTime] = useState('08:00 AM');
+  const [reportTitle, setReportTitle] = useState('');
+  const [reportFile, setReportFile] = useState(null);
+
+  // Chatbot State
+  const [chatHistory, setChatHistory] = useState([
+    { sender: 'bot', text: 'Hello! I am your CareVoice AI Health Assistant. I can analyze symptoms, voice queries, schedule medicine reminders, and assist in emergencies.' }
+  ]);
+  const [chatInput, setChatInput] = useState('');
+  const [isAiProcessing, setIsAiProcessing] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  // Skin Analyzer Workflow (Optional Symptoms + Multimodal Gating)
   const [symptoms, setSymptoms] = useState('');
   const [selectedSymptoms, setSelectedSymptoms] = useState([]);
   const [image, setImage] = useState(null);
@@ -70,92 +95,18 @@ export default function App() {
 
   // Validation Error Gates
   const [validationErrorType, setValidationErrorType] = useState(null); // 'unrelated', 'quality', 'healthy', null
-  const [validationErrorMessage, setValidationErrorMessage] = useState('');
 
-  // Local storage cache history
-  const [history, setHistory] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('dermascan_history')) || [];
-    } catch {
-      return [];
-    }
-  });
-
-  // Diary entries
-  const [diary, setDiary] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('dermascan_diary')) || [];
-    } catch {
-      return [];
-    }
-  });
-
-  // Diary form states
-  const [itching, setItching] = useState(0);
-  const [pain, setPain] = useState(0);
-  const [burning, setBurning] = useState(0);
-  const [dryness, setDryness] = useState(0);
-  const [redness, setRedness] = useState('None');
-  const [sunExposure, setSunExposure] = useState(false);
-  const [skincareProduct, setSkincareProduct] = useState('');
-  const [waterIntake, setWaterIntake] = useState(4);
-  const [sleepHours, setSleepHours] = useState(8);
-  const [diaryNotes, setDiaryNotes] = useState('');
-  const [streak, setStreak] = useState(() => parseInt(localStorage.getItem('dermascan_streak')) || 0);
-
-  // Care Connect Location / Appointments
+  // Geolocation Care Connect Location
   const [city, setCity] = useState('');
   const [lat, setLat] = useState(null);
   const [lon, setLon] = useState(null);
   const [locLoading, setLocLoading] = useState(false);
   const [locSuccess, setLocSuccess] = useState(false);
-  const [appointments, setAppointments] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('dermascan_appointments')) || [];
-    } catch {
-      return [];
-    }
-  });
-  const [showBookingOverlay, setShowBookingOverlay] = useState(false);
-  const [selectedHospital, setSelectedHospital] = useState(null);
-  const [bookingDate, setBookingDate] = useState('');
-  const [bookingTime, setBookingTime] = useState('');
 
-  // Voice command/symptoms state
+  // Voice Speech Command Recognition
   const [isListening, setIsListening] = useState(false);
   const [micPermissionDenied, setMicPermissionDenied] = useState(false);
   const recognitionRef = useRef(null);
-
-  // Profile management
-  const [profileName, setProfileName] = useState(() => localStorage.getItem('dermascan_profile_name') || 'Guest User');
-  const [profileEmail, setProfileEmail] = useState(() => localStorage.getItem('dermascan_profile_email') || 'guest@dermascan.ai');
-  const [isLogged, setIsLogged] = useState(() => !!localStorage.getItem('dermascan_profile_email'));
-
-  // Helper calculations for the Home dashboard
-  const imageEntries = diary.filter(entry => entry.image) || [];
-  const latestScan = imageEntries[0] || (history[0] ? {
-    id: 'h0',
-    date: history[0].date || new Date().toLocaleDateString(),
-    image: history[0].image,
-    notes: `AI screening match: ${history[0].disease}`,
-    symptoms: { itching: 3, pain: 1, burning: 1, dryness: 2, redness: history[0].severity }
-  } : null);
-  const baselineScan = imageEntries[imageEntries.length - 1] || (history.length > 1 ? {
-    id: 'hb',
-    date: history[history.length - 1].date || new Date().toLocaleDateString(),
-    image: history[history.length - 1].image,
-    notes: `AI screening match: ${history[history.length - 1].disease}`,
-    symptoms: { itching: 5, pain: 3, burning: 2, dryness: 4, redness: history[history.length - 1].severity }
-  } : null);
-
-  const chartSource = diary.length > 0 ? diary : history.map(h => ({
-    id: h.date + h.disease,
-    date: h.date,
-    symptoms: {
-      itching: h.severity === 'Severe' ? 8 : h.severity === 'Moderate' ? 5 : h.severity === 'Mild' ? 3 : 1
-    }
-  }));
-  const chartPoints = [...chartSource].reverse().slice(-7);
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -177,23 +128,27 @@ export default function App() {
     } else {
       root.classList.remove('dark');
     }
-    localStorage.setItem('dermascan_theme', theme);
+    localStorage.setItem('carevoice_theme', theme);
   }, [theme]);
 
-  // Sync data to localStorage
+  // Auth Session Sync
   useEffect(() => {
-    localStorage.setItem('dermascan_history', JSON.stringify(history));
-  }, [history]);
+    if (token) {
+      localStorage.setItem('carevoice_token', token);
+      fetchUserProfile();
+      fetchMedicines();
+      fetchReminders();
+      fetchReports();
+    } else {
+      localStorage.removeItem('carevoice_token');
+      setProfile(null);
+      setMedicines([]);
+      setReminders([]);
+      setReports([]);
+    }
+  }, [token]);
 
-  useEffect(() => {
-    localStorage.setItem('dermascan_diary', JSON.stringify(diary));
-  }, [diary]);
-
-  useEffect(() => {
-    localStorage.setItem('dermascan_appointments', JSON.stringify(appointments));
-  }, [appointments]);
-
-  // Handle map routing updates
+  // Leaflet Map Initialization
   useEffect(() => {
     if (activeTab === 'location' && mapContainerRef.current) {
       if (!window.L) {
@@ -240,6 +195,219 @@ export default function App() {
     }).addTo(map).bindPopup("Your Location").openPopup();
   };
 
+  // --- API Authentication Handlers ---
+  const handleAuth = async (e) => {
+    e.preventDefault();
+    setAuthError('');
+    const endpoint = authMode === 'login' ? 'login' : 'register';
+    const payload = authMode === 'login' 
+      ? { username: authUsername, password: authPassword }
+      : { username: authUsername, email: authEmail, password: authPassword };
+      
+    try {
+      const resp = await axios.post(`${API_BASE}/api/auth/${endpoint}`, payload);
+      setToken(resp.data.token);
+      setAuthUsername('');
+      setAuthEmail('');
+      setAuthPassword('');
+    } catch (err) {
+      setAuthError(err.response?.data?.detail || "Authentication request failed.");
+    }
+  };
+
+  const handleLogout = () => {
+    setToken('');
+    localStorage.removeItem('carevoice_token');
+  };
+
+  const fetchUserProfile = async () => {
+    try {
+      const resp = await axios.get(`${API_BASE}/api/users/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProfile(resp.data);
+    } catch (err) {
+      if (err.response?.status === 401) handleLogout();
+    }
+  };
+
+  // --- Medicines & Reminders CRUD API Services ---
+  const fetchMedicines = async () => {
+    try {
+      const resp = await axios.get(`${API_BASE}/api/medicines`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setMedicines(resp.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchReminders = async () => {
+    try {
+      const resp = await axios.get(`${API_BASE}/api/reminders`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setReminders(resp.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleAddMedicine = async (e) => {
+    e.preventDefault();
+    if (!newMedName || !newMedDosage) return;
+    try {
+      const resp = await axios.post(
+        `${API_BASE}/api/medicines`, 
+        { name: newMedName, dosage: newMedDosage, schedule_time: newMedTime },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      // Auto register a corresponding reminder for today
+      await axios.post(
+        `${API_BASE}/api/reminders`,
+        { medicine_id: resp.data.id, reminder_time: newMedTime, status: 'Pending' },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      setNewMedName('');
+      setNewMedDosage('');
+      fetchMedicines();
+      fetchReminders();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteMedicine = async (id) => {
+    try {
+      await axios.delete(`${API_BASE}/api/medicines/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchMedicines();
+      fetchReminders();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // --- Medical Reports API Services ---
+  const fetchReports = async () => {
+    try {
+      const resp = await axios.get(`${API_BASE}/api/reports`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setReports(resp.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleUploadReport = async (e) => {
+    e.preventDefault();
+    if (!reportTitle || !reportFile) return;
+    
+    const formData = new FormData();
+    formData.append('title', reportTitle);
+    formData.append('file', reportFile);
+    
+    try {
+      await axios.post(`${API_BASE}/api/reports/upload`, formData, {
+        headers: { 
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setReportTitle('');
+      setReportFile(null);
+      fetchReports();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // --- Chatbot Voice / Speech Pipeline API Services ---
+  const triggerVoiceListen = () => {
+    if (isListening) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      setIsListening(false);
+      return;
+    }
+
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRec) {
+      alert("Web Speech API is not supported in this browser. Please type symptoms instead.");
+      return;
+    }
+
+    const rec = new SpeechRec();
+    recognitionRef.current = rec;
+    rec.continuous = false;
+    rec.interimResults = false;
+    rec.lang = language === 'hi' ? 'hi-IN' : language === 'kn' ? 'kn-IN' : 'en-US';
+
+    rec.onstart = () => {
+      setIsListening(true);
+      setMicPermissionDenied(false);
+    };
+
+    rec.onresult = (evt) => {
+      const transcript = evt.results[0][0].transcript;
+      setChatInput(transcript);
+      setSymptoms(transcript);
+    };
+
+    rec.onerror = (err) => {
+      console.error(err);
+      if (err.error === 'not-allowed') setMicPermissionDenied(true);
+      setIsListening(false);
+    };
+
+    rec.onend = () => {
+      setIsListening(false);
+    };
+
+    rec.start();
+  };
+
+  const sendChatMessage = async (e) => {
+    if (e) e.preventDefault();
+    if (!chatInput.trim()) return;
+
+    const userText = chatInput;
+    setChatHistory(prev => [...prev, { sender: 'user', text: userText }]);
+    setChatInput('');
+    setIsAiProcessing(true);
+
+    try {
+      const resp = await axios.post(
+        `${API_BASE}/api/assistant/chat`,
+        { text: userText },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const botReply = resp.data.response;
+      setChatHistory(prev => [...prev, { sender: 'bot', text: botReply }]);
+      
+      // Auto-trigger Speech response (TTS)
+      setIsSpeaking(true);
+      const speakResp = await axios.post(`${API_BASE}/api/assistant/speak`, { text: botReply });
+      if (speakResp.data.audio_base64) {
+        const audio = new Audio("data:audio/wav;base64," + speakResp.data.audio_base64);
+        audio.play();
+      }
+      setIsSpeaking(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsAiProcessing(false);
+    }
+  };
+
+  // --- Location & Emergency API Services ---
   const detectLocation = () => {
     setLocLoading(true);
     if (!navigator.geolocation) {
@@ -270,6 +438,23 @@ export default function App() {
     );
   };
 
+  const triggerEmergency = async () => {
+    const currentLat = lat || 12.9716;
+    const currentLon = lon || 77.5946;
+    
+    try {
+      const resp = await axios.post(
+        `${API_BASE}/api/emergency`,
+        { lat: currentLat, lon: currentLon },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert(`⚠️ Emergency Alert Dispatched!\n${resp.data.message}`);
+    } catch (err) {
+      alert("Failed to send emergency request.");
+    }
+  };
+
+  // --- Multimodal Image Analysis Pipeline (ONNX) ---
   const startCamera = async () => {
     setUseCamera(true);
     try {
@@ -278,7 +463,7 @@ export default function App() {
       if (videoRef.current) videoRef.current.srcObject = stream;
     } catch (err) {
       console.error(err);
-      setError("Unable to access local camera device.");
+      setError("Unable to access camera device.");
       setUseCamera(false);
     }
   };
@@ -319,19 +504,19 @@ export default function App() {
     }
   };
 
-  const runQualityCheck = async (e) => {
+  const runImageAnalysis = async (e) => {
     e.preventDefault();
     if (!image) return;
 
     setLoading(true);
-    setLoadingStep('Understanding symptoms ✓');
+    setLoadingStep('Validating skin presence...');
     setError(null);
     setValidationErrorType(null);
-    setValidationErrorMessage('');
+    setResult(null);
 
     const formData = new FormData();
     formData.append('image', image);
-    formData.append('symptoms', symptoms || selectedSymptoms.join(', ') || 'No symptoms specified');
+    formData.append('symptoms', symptoms || 'No symptoms provided');
     formData.append('language', language);
     if (lat) formData.append('lat', lat);
     if (lon) formData.append('lon', lon);
@@ -339,299 +524,19 @@ export default function App() {
 
     try {
       const resp = await axios.post(`${API_BASE}/api/predict`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Bypass-Tunnel-Reminder': 'true'
-        }
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
-      
-      // Parse normal skin case or success case
       setResult(resp.data);
-      setQualityCheckResult({
-        valid: resp.data.image_quality?.valid ?? true,
-        quality_score: resp.data.image_quality?.quality_score || 95,
-        message: resp.data.image_quality?.message || "",
-        metrics: resp.data.image_quality?.metrics || {
-          clear_focus: true,
-          good_lighting: true,
-          skin_detected: true,
-          lesion_detected: true
-        }
-      });
-      setShowQualityModal(true);
     } catch (err) {
-      if (err.response && err.response.data && err.response.data.detail) {
-        const valData = err.response.data.detail;
-        if (typeof valData === 'object') {
-          // It's a structured validation failure dictionary
-          setValidationErrorType(valData.reason || 'unrelated');
-          setValidationErrorMessage(valData.message || 'Image did not pass validation check.');
-          setQualityCheckResult({
-            valid: false,
-            quality_score: valData.quality_score || 45,
-            message: valData.message,
-            metrics: valData.metrics || {
-              clear_focus: false,
-              good_lighting: false,
-              skin_detected: false,
-              lesion_detected: false
-            }
-          });
-        } else {
-          // Text error
-          setValidationErrorType('unrelated');
-          setValidationErrorMessage(valData);
-        }
+      const valData = err.response?.data?.detail;
+      if (valData && typeof valData === 'object') {
+        setValidationErrorType(valData.reason || 'unrelated');
       } else {
-        setError(err.response?.data?.detail || "Connection failed. Please ensure backend server is active.");
+        setError(err.response?.data?.detail || "An unexpected error occurred during analysis.");
       }
     } finally {
       setLoading(false);
-    }
-  };
-
-  const proceedToResults = () => {
-    setShowQualityModal(false);
-    
-    // Save to diary history log only if it's high confidence (>=90%) and abnormal skin
-    if (result && result.confidence >= 0.90 && result.disease !== 'Normal Skin') {
-      const newRecord = {
-        id: Date.now().toString(),
-        date: new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }),
-        disease: result.disease,
-        confidence: result.confidence,
-        severity: result.severity,
-        image: result.original_image,
-        heatmap: result.heatmap_image,
-        overlay: result.overlay_image,
-        explanation: result.explanation,
-        recommendations: result.recommendations,
-        hospitals: result.hospitals,
-        location: result.location,
-        top_predictions: result.top_predictions || [],
-        quality_score: result.image_quality?.quality_score || 90,
-        lesion_analysis: result.lesion_analysis || { pimple_count: 0, dark_spot_count: 0, pimple_coords: [], dark_spot_coords: [] }
-      };
-      setHistory(prev => [newRecord, ...prev]);
-    }
-  };
-
-  const saveDiaryEntry = () => {
-    const newEntry = {
-      id: Date.now().toString(),
-      date: new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }),
-      symptoms: { itching, pain, burning, dryness, redness },
-      lifestyle: { sun: sunExposure, skincare: skincareProduct, water: waterIntake, sleep: sleepHours },
-      notes: diaryNotes
-    };
-
-    setDiary(prev => [newEntry, ...prev]);
-    
-    const todayStr = new Date().toDateString();
-    const lastCheckDate = localStorage.getItem('dermascan_last_diary_date');
-    if (lastCheckDate !== todayStr) {
-      setStreak(prev => prev + 1);
-      localStorage.setItem('dermascan_last_diary_date', todayStr);
-      localStorage.setItem('dermascan_streak', (streak + 1).toString());
-    }
-
-    setItching(0);
-    setPain(0);
-    setBurning(0);
-    setDryness(0);
-    setRedness('None');
-    setSunExposure(false);
-    setSkincareProduct('');
-    setWaterIntake(4);
-    setSleepHours(8);
-    setDiaryNotes('');
-    setShowDiaryModal(false);
-
-    alert("Check-in saved to Skin Diary successfully!");
-  };
-
-  const handleSliderMouse = (e) => {
-    const rect = sliderContainerRef.current.getBoundingClientRect();
-    const updatePos = (clientX) => {
-      const pos = ((clientX - rect.left) / rect.width) * 100;
-      setSliderPosition(Math.max(0, Math.min(100, pos)));
-    };
-    const onMouseMove = (moveEvent) => updatePos(moveEvent.clientX);
-    const onMouseUp = () => {
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
-    };
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onMouseUp);
-    updatePos(e.clientX);
-  };
-
-  const handleSliderTouch = (e) => {
-    const rect = sliderContainerRef.current.getBoundingClientRect();
-    const updatePos = (clientX) => {
-      const pos = ((clientX - rect.left) / rect.width) * 100;
-      setSliderPosition(Math.max(0, Math.min(100, pos)));
-    };
-    const onTouchMove = (moveEvent) => updatePos(moveEvent.touches[0].clientX);
-    const onTouchEnd = () => {
-      window.removeEventListener('touchmove', onTouchMove);
-      window.removeEventListener('touchend', onTouchEnd);
-    };
-    window.addEventListener('touchmove', onTouchMove);
-    window.addEventListener('touchend', onTouchEnd);
-    updatePos(e.touches[0].clientX);
-  };
-
-  const handleBookAppointment = (hospital) => {
-    setSelectedHospital(hospital);
-    setBookingDate('');
-    setBookingTime('');
-    setShowBookingOverlay(true);
-  };
-
-  const saveAppointment = () => {
-    if (!bookingDate || !bookingTime) {
-      alert("Please select a date and time.");
-      return;
-    }
-    const newBooking = {
-      id: Date.now().toString(),
-      hospital: selectedHospital.name,
-      date: bookingDate,
-      time: bookingTime,
-      hours: selectedHospital.hours || "09:00 AM – 06:00 PM"
-    };
-    setAppointments(prev => [newBooking, ...prev]);
-    setShowBookingOverlay(false);
-    alert(`Appointment scheduled successfully at ${selectedHospital.name}!`);
-  };
-
-  const deleteHistory = () => {
-    if (confirm("Are you sure you want to delete all diagnostic history log data?")) {
-      setHistory([]);
-    }
-  };
-
-  const deleteDiary = () => {
-    if (confirm("Are you sure you want to clear your Skin Diary log?")) {
-      setDiary([]);
-      setStreak(0);
-      localStorage.setItem('dermascan_streak', '0');
-      localStorage.removeItem('dermascan_last_diary_date');
-    }
-  };
-
-  const handleProfileSave = (e) => {
-    e.preventDefault();
-    localStorage.setItem('dermascan_profile_name', profileName);
-    localStorage.setItem('dermascan_profile_email', profileEmail);
-    setIsLogged(true);
-    setShowProfileModal(false);
-    alert("Profile configurations saved successfully!");
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('dermascan_profile_name');
-    localStorage.removeItem('dermascan_profile_email');
-    setProfileName('Guest User');
-    setProfileEmail('guest@dermascan.ai');
-    setIsLogged(false);
-    setShowProfileModal(false);
-  };
-
-  // speech recognition setup for symptom keywords matching
-  const initSpeechRecognition = () => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
-
-    const rec = new SpeechRecognition();
-    rec.continuous = false;
-    rec.lang = language === 'hi' ? 'hi-IN' : language === 'kn' ? 'kn-IN' : 'en-US';
-    rec.interimResults = false;
-
-    rec.onstart = () => {
-      setIsListening(true);
-      setMicPermissionDenied(false);
-    };
-
-    rec.onresult = (e) => {
-      const transcript = e.results[0][0].transcript.toLowerCase();
-      // append spoken text directly
-      setSymptoms(prev => prev ? `${prev} ${transcript}` : transcript);
-      
-      // parse spoken keywords and toggle symptom chips
-      const parsedSympts = [];
-      symptomList.forEach(s => {
-        if (transcript.includes(s.toLowerCase())) {
-          parsedSympts.push(s);
-        }
-      });
-      if (parsedSympts.length > 0) {
-        setSelectedSymptoms(prev => {
-          const combined = Array.from(new Set([...prev, ...parsedSympts]));
-          return combined;
-        });
-      }
-    };
-
-    rec.onerror = (event) => {
-      setIsListening(false);
-      if (event.error === 'not-allowed' || event.error === 'permission-denied') {
-        setMicPermissionDenied(true);
-      }
-    };
-
-    rec.onend = () => {
-      setIsListening(false);
-    };
-
-    recognitionRef.current = rec;
-  };
-
-  useEffect(() => {
-    initSpeechRecognition();
-  }, [language]);
-
-  const triggerVoiceListen = () => {
-    if (isListening) {
-      recognitionRef.current?.stop();
-    } else {
-      setMicPermissionDenied(false);
-      try {
-        recognitionRef.current?.start();
-      } catch {
-        setMicPermissionDenied(true);
-      }
-    }
-  };
-
-  const downloadReport = async () => {
-    if (!result) return;
-    try {
-      const payload = {
-        disease: result.disease,
-        confidence: result.confidence,
-        severity: result.severity,
-        symptoms: result.translated_symptoms || symptoms || 'No symptoms specified',
-        language: language,
-        original_image_b64: result.original_image,
-        heatmap_image_b64: result.heatmap_image,
-        hospitals: result.hospitals
-      };
-      
-      const response = await axios.post(`${API_BASE}/api/export-pdf`, payload, {
-        responseType: 'blob'
-      });
-      
-      const file = new Blob([response.data], { type: 'application/pdf' });
-      const fileURL = URL.createObjectURL(file);
-      const link = document.createElement('a');
-      link.href = fileURL;
-      link.download = `DermaScan_Report_${Date.now()}.pdf`;
-      link.click();
-    } catch (err) {
-      console.error(err);
-      alert("Failed to compile and download clinical report PDF.");
+      setLoadingStep('');
     }
   };
 
@@ -639,1157 +544,651 @@ export default function App() {
     setImage(null);
     setImagePreview(null);
     setResult(null);
-    setQualityCheckResult(null);
+    setError(null);
     setValidationErrorType(null);
-    setValidationErrorMessage('');
-    setSelectedSymptoms([]);
-    setSymptoms('');
+  };
+
+  // Slider Mouse/Touch events for Heatmap compare
+  const handleSliderMouse = (e) => {
+    if (!sliderContainerRef.current) return;
+    const rect = sliderContainerRef.current.getBoundingClientRect();
+    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+    setSliderPosition((x / rect.width) * 100);
+  };
+
+  const handleSliderTouch = (e) => {
+    if (!sliderContainerRef.current) return;
+    const rect = sliderContainerRef.current.getBoundingClientRect();
+    const x = Math.max(0, Math.min(e.touches[0].clientX - rect.left, rect.width));
+    setSliderPosition((x / rect.width) * 100);
   };
 
   return (
     <div className="min-h-screen pb-28 text-slate-800 dark:text-slate-100 transition-colors duration-300">
       
-      {/* MINIMAL & PREMIUM HEADER (No girl/avatar, no greetings, no search) */}
+      {/* PREMIUM HEADER */}
       <header className="sticky top-0 z-40 backdrop-blur-lg bg-white/70 dark:bg-slate-950/70 py-5 px-6 flex justify-between items-center border-b border-pink-100/10">
         <div className="text-left">
-          <h1 className="text-lg font-black uppercase tracking-wider text-slate-900 dark:text-white leading-none">DERMASCAN AI</h1>
-          <span className="text-[10px] text-pink-500 font-bold uppercase tracking-widest block mt-1">AI-Powered Skin Assessment</span>
+          <h1 className="text-lg font-black uppercase tracking-wider text-slate-900 dark:text-white leading-none">CareVoice</h1>
+          <span className="text-[10px] text-pink-500 font-bold uppercase tracking-widest block mt-1">Your Voice, Your Care</span>
         </div>
         <div className="flex items-center gap-3">
           <button 
             onClick={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
             className="p-2.5 rounded-full bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 active:scale-95 border border-pink-100/10"
-            title="Toggle theme mode"
+            title="Toggle Theme"
           >
             {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
           </button>
-          <div 
-            onClick={() => setShowProfileModal(true)}
-            className="p-2.5 rounded-full bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 active:scale-95 border border-pink-100/10 cursor-pointer"
-            title="User Profile Profile"
-          >
-            <User className="w-4 h-4" />
-          </div>
+          {token && (
+            <button 
+              onClick={handleLogout}
+              className="p-2.5 rounded-full bg-slate-100 dark:bg-slate-900 text-red-500 active:scale-95 border border-pink-100/10"
+              title="Logout Profile"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </header>
 
       {/* Main Viewport Container */}
       <main className="max-w-md mx-auto px-5 py-6 space-y-6">
 
-        {/* MOCKUP SCANNING PROCESSING INTERACTIVE LOADER */}
+        {/* MOCKUP LOADER */}
         {loading && (
           <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-6 text-center animate-fade-in">
             <div className="mock-card max-w-sm w-full shadow-2xl flex flex-col items-center animate-scale-in dark:bg-slate-950">
-              
               <div className="relative aspect-square w-64 rounded-3xl overflow-hidden border border-pink-500/20 bg-slate-900 mb-6">
-                {imagePreview ? (
-                  <img src={imagePreview} alt="lesion" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-600">Loading image...</div>
-                )}
-                {/* Horizontal Sweeping Laser */}
+                {imagePreview && <img src={imagePreview} alt="Target" className="w-full h-full object-cover" />}
                 <div className="scanner-laser"></div>
-                {/* Simulated Blemish Coordinate Dots */}
-                <div className="blemish-marker" style={{ left: '35%', top: '25%' }}></div>
-                <div className="blemish-marker" style={{ left: '60%', top: '35%' }}></div>
-                <div className="blemish-marker" style={{ left: '45%', top: '50%' }}></div>
-                <div className="blemish-marker" style={{ left: '30%', top: '65%' }}></div>
-                <div className="blemish-marker" style={{ left: '70%', top: '55%' }}></div>
               </div>
-
-              <h3 className="text-base font-extrabold uppercase tracking-widest text-slate-800 dark:text-slate-100">DermaScan AI</h3>
-              <p className="text-xs text-pink-500 font-mono mt-1 font-bold animate-pulse">Running assessment....</p>
-              
-              <div className="w-full text-left mt-5 space-y-2 text-[10px] font-mono text-slate-400 dark:text-slate-400 border-t border-slate-855 pt-3">
-                <div className="flex justify-between">
-                  <span>➔ Skin Validation Check</span>
-                  <span className="text-emerald-500 font-bold">✓ Active</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>➔ Resolution & Shadow checks</span>
-                  <span className="text-emerald-500 font-bold">✓ Active</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>➔ Multimodal symptoms match</span>
-                  <span className="text-pink-400 animate-pulse">Running...</span>
-                </div>
-              </div>
+              <h3 className="text-base font-extrabold uppercase tracking-widest text-slate-800 dark:text-slate-100">CareVoice AI</h3>
+              <p className="text-xs text-pink-500 font-mono mt-1 font-bold animate-pulse">{loadingStep || 'Analyzing Image...'}</p>
             </div>
           </div>
         )}
 
-        {/* PAGE 1: HOME */}
-        {activeTab === 'home' && (
-          <div className="space-y-6 animate-fade-in text-left">
-            
-            {/* 1. STREAK CARD WITH CONFETTI/CHECK-IN */}
-            <div className="bg-gradient-to-r from-pink-500/10 to-indigo-500/10 border border-pink-500/20 dark:border-purple-950/40 rounded-[2rem] p-5 shadow-lg relative overflow-hidden animate-pulse-glow">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-500 text-white flex items-center justify-center text-xl shadow-md transform hover:rotate-12 transition-transform">
-                    🔥
-                  </div>
-                  <div>
-                    <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest block">Skin Streak</h3>
-                    <span className="text-[11px] text-slate-400 font-bold block mt-0.5">{streak} Day Check-in Streak</span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowDiaryModal(true)}
-                  className="px-4 py-2.5 bg-gradient-to-r from-pink-500 to-indigo-600 text-white font-extrabold text-[10px] uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md shadow-pink-500/20"
-                >
-                  Check In
-                </button>
-              </div>
-            </div>
-
-            {/* 2. MAIN SKIN PROGRESS CIRCULAR OVERVIEW */}
-            <div className="bg-gradient-to-tr from-pink-500/10 via-sky-500/5 to-white/5 border border-pink-100/30 dark:border-slate-800/40 rounded-[2.5rem] p-6 shadow-md relative overflow-hidden">
-              <div className="absolute right-0 top-0 w-24 h-24 bg-pink-400/5 rounded-full blur-xl"></div>
+        {/* AUTHENTICATION ROUTER FLOW */}
+        {!token ? (
+          <div className="space-y-6 animate-scale-in">
+            <div className="mock-card p-6 space-y-5 text-left">
+              <h2 className="text-xl font-bold font-serif text-slate-900 dark:text-white border-b border-pink-100/10 pb-3 uppercase tracking-wider text-center">
+                {authMode === 'login' ? 'Login to CareVoice' : 'Register Account'}
+              </h2>
               
-              <div className="flex justify-between items-start">
-                <div>
-                  <span className="text-[10px] text-pink-500 dark:text-pink-400 uppercase font-black tracking-widest block mb-1">Skin Health Score</span>
-                  <span className="text-[11px] text-slate-400 font-bold block">Overall Condition Level</span>
+              <form onSubmit={handleAuth} className="space-y-4 text-xs">
+                {authMode === 'register' && (
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-500">Email Address</label>
+                    <input 
+                      type="email" required value={authEmail} onChange={(e) => setAuthEmail(e.target.value)}
+                      className="w-full border border-slate-800 rounded-xl p-2.5 bg-slate-950 text-slate-100 outline-none"
+                    />
+                  </div>
+                )}
+                
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-500">Username</label>
+                  <input 
+                    type="text" required value={authUsername} onChange={(e) => setAuthUsername(e.target.value)}
+                    className="w-full border border-slate-800 rounded-xl p-2.5 bg-slate-950 text-slate-100 outline-none"
+                  />
                 </div>
+                
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-500">Password</label>
+                  <input 
+                    type="password" required value={authPassword} onChange={(e) => setAuthPassword(e.target.value)}
+                    className="w-full border border-slate-800 rounded-xl p-2.5 bg-slate-950 text-slate-100 outline-none"
+                  />
+                </div>
+                
+                {authError && <div className="text-red-500 font-bold">{authError}</div>}
+                
                 <button 
-                  onClick={() => setActiveTab('analyze')}
-                  className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-900 border border-pink-100/10 flex items-center justify-center text-slate-600 dark:text-slate-300 font-bold hover:scale-105 active:scale-95 transition-all"
+                  type="submit"
+                  className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-indigo-600 text-white font-extrabold rounded-xl shadow-md uppercase tracking-wider"
                 >
-                  ↗
+                  {authMode === 'login' ? 'Sign In' : 'Create Account'}
                 </button>
-              </div>
-
-              {/* Central gauge */}
-              <div className="py-6 flex flex-col items-center justify-center relative">
-                <span className="text-5xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">
-                  {history.length > 0 ? (history[0].disease === 'Normal Skin' ? '92%' : '78%') : '55%'}
-                </span>
-                <span className="text-[10px] font-bold text-slate-400 block mt-1">Based on latest assessment</span>
-              </div>
-
-              {/* Indicator metrics */}
-              <div className="grid grid-cols-4 gap-3 pt-3 border-t border-pink-100/20 dark:border-slate-800/60">
-                <div className="p-2 bg-yellow-500/10 rounded-2xl text-center">
-                  <span className="text-xs font-black text-yellow-500 block">30%</span>
-                  <span className="text-[8px] font-bold text-slate-500 block mt-0.5">Acne</span>
-                </div>
-                <div className="p-2 bg-white/50 dark:bg-slate-900/60 rounded-2xl text-center border border-pink-100/10 dark:border-slate-800/20">
-                  <span className="text-xs font-black text-teal-500 block">45%</span>
-                  <span className="text-[8px] font-bold text-slate-500 block mt-0.5">Dryness</span>
-                </div>
-                <div className="p-2 bg-pink-500/10 rounded-2xl text-center">
-                  <span className="text-xs font-black text-pink-500 block">15%</span>
-                  <span className="text-[8px] font-bold text-slate-500 block mt-0.5">Moisture</span>
-                </div>
-                <div className="p-2 bg-white/50 dark:bg-slate-900/60 rounded-2xl text-center border border-pink-100/10 dark:border-slate-800/20">
-                  <span className="text-xs font-black text-purple-500 block">10%</span>
-                  <span className="text-[8px] font-bold text-slate-500 block mt-0.5">Texture</span>
-                </div>
-              </div>
-            </div>
-
-            {/* START SCAN CTA */}
-            <button
-              onClick={() => setActiveTab('analyze')}
-              className="w-full py-4 bg-gradient-to-r from-pink-500 via-rose-500 to-indigo-600 text-white font-extrabold text-xs uppercase tracking-widest rounded-3xl shadow-lg shadow-pink-500/15 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all"
-            >
-              Start Skin Scanner
-            </button>
-
-            {/* 3. TREND GRAPH CONTAINER */}
-            <div className="mock-card p-5 space-y-4">
-              <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">📈 Skin Blemish Trend Line</span>
-              <div className="pt-2">
-                {chartPoints.length > 1 ? (
-                  <div className="space-y-2">
-                    <svg className="w-full h-[100px] overflow-visible" viewBox="0 0 320 100">
-                      <path
-                        d={`M 20,80 L ${chartPoints.map((item, idx) => {
-                          const x = (idx / Math.max(1, chartPoints.length - 1)) * 280 + 20;
-                          const val = item.symptoms?.itching || 3;
-                          const y = 80 - (val / 10) * 60;
-                          return `${x},${y}`;
-                        }).join(' ')} L ${(chartPoints.length - 1) * 280 / Math.max(1, chartPoints.length - 1) + 20},80 Z`}
-                        fill="url(#grad-fill)"
-                        opacity="0.15"
-                      />
-                      <polyline
-                        fill="none"
-                        stroke="url(#line-grad)"
-                        strokeWidth="3.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        points={chartPoints.map((item, idx) => {
-                          const x = (idx / Math.max(1, chartPoints.length - 1)) * 280 + 20;
-                          const val = item.symptoms?.itching || 3;
-                          const y = 80 - (val / 10) * 60;
-                          return `${x},${y}`;
-                        }).join(' ')}
-                      />
-                      {chartPoints.map((item, idx) => {
-                        const x = (idx / Math.max(1, chartPoints.length - 1)) * 280 + 20;
-                        const val = item.symptoms?.itching || 3;
-                        const y = 80 - (val / 10) * 60;
-                        return (
-                          <g key={idx}>
-                            <circle cx={x} cy={y} r="4" className="fill-pink-500 stroke-white stroke-2" />
-                            <text x={x} y={y - 8} className="text-[8px] font-black fill-pink-500" textAnchor="middle">{val}</text>
-                          </g>
-                        );
-                      })}
-                      <defs>
-                        <linearGradient id="line-grad" x1="0" y1="0" x2="1" y2="0">
-                          <stop offset="0%" stopColor="#ec4899" />
-                          <stop offset="100%" stopColor="#6366f1" />
-                        </linearGradient>
-                        <linearGradient id="grad-fill" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#ec4899" />
-                          <stop offset="100%" stopColor="transparent" />
-                        </linearGradient>
-                      </defs>
-                    </svg>
-                    <div className="flex justify-between text-[8px] text-slate-400 font-bold px-4">
-                      {chartPoints.map((item, idx) => (
-                        <span key={idx}>{item.date?.split(',')[0] || 'Day'}</span>
-                      ))}
-                    </div>
-                  </div>
+              </form>
+              
+              <div className="text-center text-[10px] text-slate-450">
+                {authMode === 'login' ? (
+                  <span>Don't have an account? <button type="button" onClick={() => setAuthMode('register')} className="text-pink-500 font-bold underline">Register here</button></span>
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-6 text-center text-xs text-slate-400">
-                    <span>📈 Plotting trend line...</span>
-                    <span className="text-[10px] text-slate-500 mt-1 font-bold">Complete your first check-in to build trend analysis graphs.</span>
-                  </div>
+                  <span>Already registered? <button type="button" onClick={() => setAuthMode('login')} className="text-pink-500 font-bold underline">Login here</button></span>
                 )}
               </div>
             </div>
-
-            {/* 4. BEFORE & AFTER COMPARE SLIDER */}
-            {latestScan && baselineScan && latestScan.image && baselineScan.image && (
-              <div className="mock-card p-5 space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider">🔄 Baseline vs Latest Scan</span>
-                  <span className="text-[9px] font-black text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full uppercase">
-                    ✦ Skin Improving
-                  </span>
-                </div>
+          </div>
+        ) : (
+          <>
+            {/* PAGE 1: HOME/DASHBOARD */}
+            {activeTab === 'home' && (
+              <div className="space-y-6 animate-fade-in text-left">
                 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5 text-center">
-                    <span className="text-[9px] text-slate-400 font-black uppercase tracking-wider block">Baseline ({baselineScan.date?.split(',')[0] || 'First'})</span>
-                    <div className="aspect-square rounded-2xl overflow-hidden border border-pink-500/10 bg-slate-900">
-                      <img src={baselineScan.image} alt="baseline" className="w-full h-full object-cover" />
+                {/* HERO ASSISTANT PROFILE CARD */}
+                <div className="bg-gradient-to-r from-pink-500/10 to-indigo-500/10 border border-pink-500/20 dark:border-purple-950/40 rounded-[2rem] p-5 shadow-lg relative overflow-hidden animate-pulse-glow">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-500 text-white flex items-center justify-center text-xl shadow-md">
+                        👤
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest block">Welcome Back</h3>
+                        <span className="text-[11px] text-slate-400 font-bold block mt-0.5">{profile?.username || 'Guest User'}</span>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => setActiveTab('chat')}
+                      className="px-4 py-2 bg-gradient-to-r from-pink-500 to-indigo-600 text-white rounded-xl text-[10px] font-bold shadow-md"
+                    >
+                      Talk to AI
+                    </button>
+                  </div>
+                </div>
+
+                {/* TODAY'S MEDICINE REMINDERS PREVIEW */}
+                <div className="mock-card p-5 space-y-4">
+                  <div className="flex justify-between items-center border-b border-pink-100/10 pb-2">
+                    <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">💊 Today's Medicines</span>
+                    <button onClick={() => setActiveTab('reminders')} className="text-[10px] text-indigo-600 font-bold underline">Manage</button>
+                  </div>
+                  {reminders.length > 0 ? (
+                    <div className="space-y-2.5">
+                      {reminders.map((r) => (
+                        <div key={r.id} className="p-3 bg-slate-100 dark:bg-slate-950 border border-pink-100/10 rounded-xl flex justify-between items-center">
+                          <div>
+                            <span className="font-extrabold text-xs text-slate-800 dark:text-slate-250 block">{r.name}</span>
+                            <span className="text-[10px] text-slate-400 block mt-0.5">{r.dosage} • Time: {r.reminder_time}</span>
+                          </div>
+                          <span className="text-[10px] font-black uppercase text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full">{r.status}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-[10px] text-slate-500 italic text-center py-2">No active reminders registered for today.</div>
+                  )}
+                </div>
+
+                {/* EMERGENCY CALLING PROTOCOL */}
+                <div className="mock-card p-5 border-l-4 border-l-red-500 space-y-3">
+                  <h4 className="text-xs font-extrabold uppercase text-red-500 tracking-wider flex items-center gap-1">
+                    <ShieldAlert className="w-4 h-4 text-red-500" /> Emergency Support
+                  </h4>
+                  <p className="text-[11px] text-slate-500 leading-relaxed font-semibold">
+                    Experiencing severe acute symptoms? Immediately click the button below to dispatch coordinates to healthcare assistance systems.
+                  </p>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={triggerEmergency} 
+                      className="flex-grow py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-[10px] font-bold text-center uppercase tracking-widest shadow-md"
+                    >
+                      🚨 Send Emergency SOS
+                    </button>
+                    <a 
+                      href="tel:911"
+                      className="px-4 py-2.5 bg-slate-950 border border-slate-800 text-red-500 rounded-xl text-[10px] font-bold flex items-center justify-center"
+                    >
+                      📞 Call 911
+                    </a>
+                  </div>
+                </div>
+
+                {/* RECENT REPORTS CARD */}
+                <div className="mock-card p-5 space-y-4">
+                  <div className="flex justify-between items-center border-b border-pink-100/10 pb-2">
+                    <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">📁 Recent Medical Reports</span>
+                    <button onClick={() => setActiveTab('reports')} className="text-[10px] text-indigo-600 font-bold underline">Upload</button>
+                  </div>
+                  {reports.length > 0 ? (
+                    <div className="space-y-2 max-h-[150px] overflow-y-auto custom-scrollbar">
+                      {reports.slice(0, 3).map((rep) => (
+                        <a 
+                          key={rep.id} 
+                          href={API_BASE + rep.file_url} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="p-3 bg-slate-50 dark:bg-slate-950 border border-pink-100/10 rounded-xl flex items-center gap-2 hover:border-pink-300"
+                        >
+                          <FileText className="w-4 h-4 text-pink-500" />
+                          <div className="text-left flex-grow">
+                            <span className="font-extrabold text-[11px] text-slate-800 dark:text-slate-200 block">{rep.title}</span>
+                            <span className="text-[9px] text-slate-400 block mt-0.5">{rep.file_name}</span>
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-[10px] text-slate-500 italic text-center py-2">No medical reports uploaded yet.</div>
+                  )}
+                </div>
+
+              </div>
+            )}
+
+            {/* PAGE 2: CHATBOT / AI SYMPTOM ANALYZER */}
+            {activeTab === 'chat' && (
+              <div className="space-y-6 animate-fade-in text-left">
+                
+                {/* OPTIONAL MULTIMODAL SKIN SCANNER GATE */}
+                {!imagePreview && !result && !validationErrorType && (
+                  <div className="mock-card p-4 flex flex-col gap-3 relative">
+                    <span className="text-[10px] font-black uppercase text-pink-500 tracking-wider">🔬 Optional Skin Image Analysis</span>
+                    <p className="text-[10px] text-slate-500 leading-normal">
+                      Symptoms are optional — AI can analyze the image without them. You can also analyze utilizing only text/voice without any image.
+                    </p>
+                    <div className="flex gap-2">
+                      <label className="flex-grow py-2.5 bg-slate-950 border border-slate-800 hover:bg-slate-900 text-slate-300 rounded-xl text-[10px] font-bold text-center cursor-pointer flex items-center justify-center">
+                        Upload Skin Photo
+                        <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                      </label>
+                      <button type="button" onClick={startCamera} className="py-2.5 px-4 bg-pink-600 text-white rounded-xl text-[10px] font-bold flex items-center gap-1">
+                        <Camera className="w-3.5 h-3.5" /> Use Camera
+                      </button>
                     </div>
                   </div>
-                  <div className="space-y-1.5 text-center">
-                    <span className="text-[9px] text-pink-500 font-black uppercase tracking-wider block">Latest ({latestScan.date?.split(',')[0] || 'Latest'})</span>
-                    <div className="aspect-square rounded-2xl overflow-hidden border border-pink-500/10 bg-slate-900">
-                      <img src={latestScan.image} alt="latest" className="w-full h-full object-cover" />
+                )}
+
+                {/* Image Camera Viewport */}
+                {useCamera && (
+                  <div className="relative aspect-square bg-slate-950 rounded-[2rem] overflow-hidden border border-pink-500/20">
+                    <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover"></video>
+                    <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3 px-4">
+                      <button type="button" onClick={capturePhoto} className="px-5 py-2.5 bg-pink-600 text-white text-xs font-bold rounded-xl shadow-md">
+                        Capture Photo
+                      </button>
+                      <button type="button" onClick={() => { setUseCamera(false); stopCamera(); }} className="px-4 py-2.5 bg-slate-800 text-white text-xs font-bold rounded-xl">
+                        Cancel
+                      </button>
                     </div>
+                  </div>
+                )}
+
+                {/* Image Preview & Analyze Triggers */}
+                {imagePreview && !result && !validationErrorType && (
+                  <div className="mock-card p-4 space-y-4">
+                    <div className="aspect-square rounded-2xl overflow-hidden bg-slate-900 relative">
+                      <img src={imagePreview} alt="target" className="w-full h-full object-cover" />
+                      <button onClick={resetScannerState} className="absolute top-3 right-3 p-1.5 bg-slate-950/80 rounded-full text-white">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    
+                    <div className="space-y-2 text-xs">
+                      <label className="font-extrabold uppercase text-pink-500 text-[10px]">Add Optional Symptoms Details</label>
+                      <textarea
+                        rows={2} value={symptoms} onChange={(e) => { setSymptoms(e.target.value); setChatInput(e.target.value); }}
+                        placeholder="Itchy rash, redness... (optional)"
+                        className="w-full border border-slate-800 rounded-xl p-3 bg-slate-950 text-slate-100 outline-none"
+                      ></textarea>
+                    </div>
+
+                    <button 
+                      onClick={runImageAnalysis}
+                      className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-indigo-600 text-white font-extrabold rounded-xl text-xs uppercase tracking-widest shadow-md"
+                    >
+                      Run Multimodal Skin Analysis
+                    </button>
+                  </div>
+                )}
+
+                {/* Skin Analysis Results */}
+                {result && (
+                  <div className="mock-card p-6 border-l-4 border-l-pink-500 space-y-4">
+                    <div className="flex justify-between items-center border-b border-pink-100/10 pb-3">
+                      <div>
+                        <span className="text-[9px] text-pink-500 uppercase font-black tracking-widest block">AI Target Match</span>
+                        <h3 className="text-base font-extrabold text-slate-800 dark:text-slate-100 uppercase tracking-wider">{result.disease}</h3>
+                      </div>
+                      <button onClick={resetScannerState} className="p-1 bg-slate-100 dark:bg-slate-950 rounded-full text-slate-400">
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    <div className="flex justify-between items-center text-xs font-bold bg-slate-100 dark:bg-slate-950 px-4 py-3 rounded-2xl">
+                      <span className="text-slate-500">System Confidence:</span>
+                      <span className="text-slate-800 dark:text-slate-100">{(result.confidence * 100).toFixed(1)}%</span>
+                    </div>
+
+                    <div className="flex justify-between text-xs font-bold border-b border-pink-100/10 pb-2">
+                      <span className="text-slate-500 uppercase tracking-wider text-[10px]">SEVERITY</span>
+                      <span className="text-pink-500 uppercase font-black">{result.severity}</span>
+                    </div>
+
+                    <div className="space-y-3">
+                      <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">Grad-CAM Explanation Heatmap</span>
+                      <div ref={sliderContainerRef} onMouseDown={handleSliderMouse} onTouchStart={handleSliderTouch} className="relative aspect-square w-full rounded-3xl overflow-hidden cursor-ew-resize">
+                        <img src={result.overlay_image} alt="cam" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
+                        <div className="absolute inset-0 overflow-hidden border-r border-amber-500" style={{ width: `${sliderPosition}%` }}>
+                          <img src={result.original_image} alt="orig" className="absolute inset-0 w-full h-full object-cover pointer-events-none" style={{ width: sliderContainerRef.current ? sliderContainerRef.current.clientWidth : '100%' }} />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5 text-xs text-slate-500 leading-relaxed pt-2">
+                      <p className="font-bold text-slate-300">Suggestions:</p>
+                      {result.recommendations?.map((rec, idx) => (
+                        <div key={idx} className="flex gap-1">
+                          <span className="text-pink-500">•</span>
+                          <span>{rec}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Validation errors */}
+                {validationErrorType && (
+                  <div className="mock-card p-6 border-l-4 border-l-red-500 space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-base font-bold text-red-500 uppercase">{validationErrorType === 'quality' ? 'RETAKE IMAGE' : 'INVALID IMAGE'}</h3>
+                      <button onClick={resetScannerState} className="text-slate-400"><X className="w-5 h-5" /></button>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed font-semibold">
+                      {validationErrorType === 'quality' 
+                        ? 'Image Quality Too Low — Please retake/upload a clearer image.' 
+                        : 'Invalid Image — Please upload a skin image.'}
+                    </p>
+                  </div>
+                )}
+
+                {/* CHATBOT DIALOG CONVERSATION BOX */}
+                <div className="mock-card p-4 space-y-4 flex flex-col h-[320px] justify-between">
+                  <div className="flex-grow overflow-y-auto space-y-3 custom-scrollbar pr-1 text-xs">
+                    {chatHistory.map((chat, idx) => (
+                      <div key={idx} className={`flex ${chat.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`p-3 max-w-[80%] rounded-2xl font-semibold leading-relaxed ${
+                          chat.sender === 'user' 
+                            ? 'bg-pink-600 text-white rounded-br-none' 
+                            : 'bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-200 rounded-bl-none'
+                        }`}>
+                          {chat.text}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Input form panel */}
+                  <form onSubmit={sendChatMessage} className="border-t border-slate-900 pt-3 flex gap-2">
+                    <input 
+                      type="text" value={chatInput} onChange={(e) => setChatInput(e.target.value)}
+                      placeholder="Type or speak symptoms..."
+                      className="flex-grow border border-slate-800 rounded-xl px-3 py-2 bg-slate-950 text-slate-100 text-xs outline-none focus:border-pink-500"
+                    />
+                    <button 
+                      type="button" 
+                      onClick={triggerVoiceListen} 
+                      className={`p-2.5 rounded-xl border transition-all ${
+                        isListening ? 'bg-red-500 border-red-500 text-white animate-pulse' : 'bg-slate-950 border-slate-800 text-pink-500'
+                      }`}
+                    >
+                      <Mic className="w-4 h-4" />
+                    </button>
+                    <button 
+                      type="submit"
+                      className="px-4 py-2 bg-pink-600 text-white rounded-xl text-xs font-bold"
+                    >
+                      Send
+                    </button>
+                  </form>
+                </div>
+
+              </div>
+            )}
+
+            {/* PAGE 3: MEDICINES & REMINDERS */}
+            {activeTab === 'reminders' && (
+              <div className="space-y-6 animate-fade-in text-left">
+                
+                {/* Register New Medicine Reminder */}
+                <div className="mock-card p-5 space-y-4">
+                  <h3 className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block border-b border-pink-100/10 pb-2">
+                    Register Medicine Reminder
+                  </h3>
+                  
+                  <form onSubmit={handleAddMedicine} className="space-y-3 text-xs">
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-500">Medicine Name</label>
+                      <input 
+                        type="text" required value={newMedName} onChange={(e) => setNewMedName(e.target.value)}
+                        placeholder="e.g. Paracetamol"
+                        className="w-full border border-slate-800 rounded-xl p-2.5 bg-slate-950 text-slate-100 outline-none"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-500">Dosage details</label>
+                      <input 
+                        type="text" required value={newMedDosage} onChange={(e) => setNewMedDosage(e.target.value)}
+                        placeholder="e.g. 1 tablet (500mg)"
+                        className="w-full border border-slate-800 rounded-xl p-2.5 bg-slate-950 text-slate-100 outline-none"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-500">Schedule Time</label>
+                      <input 
+                        type="text" required value={newMedTime} onChange={(e) => setNewMedTime(e.target.value)}
+                        placeholder="e.g. 08:00 AM"
+                        className="w-full border border-slate-800 rounded-xl p-2.5 bg-slate-950 text-slate-100 outline-none"
+                      />
+                    </div>
+
+                    <button 
+                      type="submit"
+                      className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-indigo-600 text-white font-extrabold rounded-xl"
+                    >
+                      Save Medicine
+                    </button>
+                  </form>
+                </div>
+
+                {/* Medicines List */}
+                <div className="space-y-3">
+                  <h4 className="text-xs font-extrabold uppercase text-slate-700 dark:text-slate-350 tracking-wider">📅 Registered Medicines</h4>
+                  {medicines.length > 0 ? (
+                    <div className="space-y-2.5">
+                      {medicines.map((med) => (
+                        <div key={med.id} className="p-3.5 bg-white/50 dark:bg-slate-950 border border-pink-100/10 rounded-2xl flex justify-between items-center">
+                          <div>
+                            <span className="font-extrabold text-xs text-slate-800 dark:text-slate-200 block">{med.name}</span>
+                            <span className="text-[10px] text-slate-400 block mt-0.5">Dosage: {med.dosage} • Every day at {med.schedule_time}</span>
+                          </div>
+                          <button 
+                            onClick={() => handleDeleteMedicine(med.id)}
+                            className="p-2 bg-red-500/10 text-red-500 rounded-lg"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-6 bg-slate-950 border border-slate-900 rounded-3xl text-center text-[10px] text-slate-500">
+                      No medicines registered. Register a medicine to track schedule.
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            )}
+
+            {/* PAGE 4: MEDICAL REPORTS */}
+            {activeTab === 'reports' && (
+              <div className="space-y-6 animate-fade-in text-left">
+                
+                {/* Upload Report form */}
+                <div className="mock-card p-5 space-y-4">
+                  <h3 className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block border-b border-pink-100/10 pb-2">
+                    Upload Health Report
+                  </h3>
+                  
+                  <form onSubmit={handleUploadReport} className="space-y-3 text-xs">
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-500">Report Title</label>
+                      <input 
+                        type="text" required value={reportTitle} onChange={(e) => setReportTitle(e.target.value)}
+                        placeholder="e.g. Lab Blood Test August"
+                        className="w-full border border-slate-800 rounded-xl p-2.5 bg-slate-950 text-slate-100 outline-none"
+                      />
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-500">Choose File</label>
+                      <input 
+                        type="file" required onChange={(e) => setReportFile(e.target.files[0])}
+                        className="w-full text-xs text-slate-350 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-pink-500/15 file:text-pink-500 file:font-bold file:cursor-pointer"
+                      />
+                    </div>
+
+                    <button 
+                      type="submit"
+                      className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-indigo-600 text-white font-extrabold rounded-xl"
+                    >
+                      Upload File
+                    </button>
+                  </form>
+                </div>
+
+                {/* Reports History */}
+                <div className="space-y-3">
+                  <h4 className="text-xs font-extrabold uppercase text-slate-700 dark:text-slate-350 tracking-wider">📁 Medical Reports Portal</h4>
+                  {reports.length > 0 ? (
+                    <div className="space-y-2.5">
+                      {reports.map((rep) => (
+                        <div key={rep.id} className="p-3.5 bg-white/50 dark:bg-slate-950 border border-pink-100/10 rounded-2xl flex items-center justify-between">
+                          <div className="flex items-center gap-3 text-left">
+                            <div className="w-10 h-10 rounded-xl bg-pink-500/10 text-pink-500 flex items-center justify-center">
+                              <FileText className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <span className="font-extrabold text-xs text-slate-800 dark:text-slate-200 block">{rep.title}</span>
+                              <span className="text-[9px] text-slate-450 block mt-0.5">{rep.file_name} • uploaded {rep.uploaded_at?.split('T')[0]}</span>
+                            </div>
+                          </div>
+                          <a 
+                            href={API_BASE + rep.file_url}
+                            target="_blank" 
+                            rel="noreferrer"
+                            className="p-2 bg-slate-100 dark:bg-slate-900 border border-slate-800 rounded-lg text-pink-500"
+                            title="Download Report"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-6 bg-slate-950 border border-slate-900 rounded-3xl text-center text-[10px] text-slate-500">
+                      No medical reports uploaded yet.
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            )}
+
+            {/* PAGE 5: LOCATION MAPPING */}
+            {activeTab === 'location' && (
+              <div className="space-y-6 animate-fade-in text-left">
+                <div className="flex flex-col gap-1 border-b border-pink-100/10 pb-3">
+                  <h2 className="text-xl font-bold font-serif text-slate-900 dark:text-white">Care Connect</h2>
+                  <p className="text-slate-500 text-xs">Locate specialty clinics and available appointment timings.</p>
+                </div>
+
+                <div className="mock-card p-5 space-y-4">
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={detectLocation}
+                      disabled={locLoading}
+                      className={`flex-grow flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold border transition-all ${
+                        locSuccess 
+                          ? 'bg-pink-500/10 border-pink-500/30 text-pink-500' 
+                          : 'bg-slate-950 border-slate-800 text-slate-350'
+                      }`}
+                    >
+                      <MapPin className="w-4 h-4 text-pink-500" />
+                      {locLoading ? "Locking GPS..." : locSuccess ? "GPS Locked" : "Use Current GPS"}
+                    </button>
+                    <input
+                      type="text"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="Or enter city"
+                      className="w-1/2 border border-slate-800 rounded-xl px-3 py-2.5 text-xs bg-slate-950 text-slate-100 outline-none"
+                    />
+                  </div>
+
+                  <div className="h-[200px] rounded-[2rem] overflow-hidden border border-slate-800 shadow-inner">
+                    <div ref={mapContainerRef} className="w-full h-full bg-stone-100"></div>
+                  </div>
+
+                  <div className="space-y-3 pt-2">
+                    {[
+                      { name: "City Dermatology Clinic", distance: "1.4 km", rating: "4.8", hours: "09:00 AM – 06:00 PM", lat: 12.973, lon: 77.596 },
+                      { name: "Apollo Skin Care Hospital", distance: "3.2 km", rating: "4.7", hours: "08:00 AM – 08:00 PM", lat: 12.969, lon: 77.592 }
+                    ].map((h, idx) => (
+                      <div key={idx} className="p-3.5 bg-slate-950 border border-slate-855 rounded-2xl flex flex-col gap-2">
+                        <div className="flex justify-between items-start">
+                          <span className="font-bold text-xs leading-snug text-slate-200">{h.name}</span>
+                          <span className="text-[9px] font-black text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded-full flex-shrink-0 uppercase">{h.distance}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-[10px] text-slate-450">
+                          <span>★ {h.rating} Rating</span>
+                          <span>Hours: {h.hours}</span>
+                        </div>
+                        <div className="text-[10px] text-slate-500 italic pt-1 border-t border-slate-900">
+                          <div>Doctor Availability: Availability information unavailable.</div>
+                          <div>Next Available Slot: Availability information unavailable.</div>
+                        </div>
+                        <div className="flex gap-2 pt-1">
+                          <a href={`https://www.google.com/maps/dir/?api=1&destination=${h.lat},${h.lon}`} target="_blank" rel="noreferrer" className="w-full py-2 border border-slate-800 hover:bg-slate-900 rounded-xl text-[10px] font-bold text-center text-slate-300">
+                            Directions
+                          </a>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
             )}
 
-            {/* 5. HISTORY & RECENT ENTRIES */}
-            <div className="space-y-3">
-              <h4 className="text-xs font-extrabold uppercase text-slate-700 dark:text-slate-350 tracking-wider">📅 Skin Diary Log History</h4>
-              
-              {diary.length > 0 ? (
-                <div className="space-y-2.5 max-h-[250px] overflow-y-auto custom-scrollbar">
-                  {diary.map((entry, index) => (
-                    <div key={entry.id || index} className="p-3 bg-white/50 dark:bg-slate-950 border border-pink-100/10 dark:border-slate-800/40 rounded-2xl flex items-center gap-3">
-                      {entry.image ? (
-                        <div className="w-10 h-10 rounded-xl overflow-hidden border border-pink-100/30 flex-shrink-0">
-                          <img src={entry.image} alt="scan thumbnail" className="w-full h-full object-cover" />
-                        </div>
-                      ) : (
-                        <div className="w-10 h-10 rounded-xl bg-pink-500/15 text-pink-500 flex items-center justify-center text-xs font-bold flex-shrink-0">
-                          📝
-                        </div>
-                      )}
-                      <div className="text-left flex-grow">
-                        <span className="text-[9px] font-black text-slate-400 block">{entry.date}</span>
-                        <h5 className="font-extrabold text-xs text-slate-800 dark:text-slate-200 mt-0.5">{entry.notes || "Symptom check-in"}</h5>
-                        <div className="flex gap-1.5 mt-1.5 text-[8px] text-slate-400">
-                          <span>Itch: {entry.symptoms?.itching}/10</span>
-                          <span>•</span>
-                          <span>Pain: {entry.symptoms?.pain}/10</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-6 bg-slate-950 border border-slate-900 rounded-3xl text-center text-[10px] text-slate-500 leading-normal">
-                  No diary check-in records found. Click "Check In" or complete a Skin scan to save records!
-                </div>
-              )}
-            </div>
-
-            {/* Suggested Skin Care */}
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h4 className="text-xs font-extrabold uppercase text-slate-700 dark:text-slate-350 tracking-wider">Suggested Skin Care</h4>
-                <button className="text-[10px] font-extrabold text-pink-500 uppercase tracking-widest">See All</button>
-              </div>
-
-              <div className="space-y-3">
-                <div className="mock-card p-4 flex items-center gap-4 relative overflow-hidden">
-                  <div className="w-16 h-16 rounded-2xl overflow-hidden border border-pink-100/50 flex-shrink-0 bg-pink-50">
-                    <img src="https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&q=80&w=150" alt="cream" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="text-left flex-grow">
-                    <h5 className="font-extrabold text-xs text-slate-800 dark:text-slate-100">Moisturizing Recovery Cream</h5>
-                    <span className="text-[10px] text-slate-400 font-bold block mt-0.5">Barrier repair support</span>
-                    <span className="text-xs font-extrabold text-pink-500 block mt-1.5">$20.00</span>
-                  </div>
-                </div>
-
-                <div className="mock-card p-4 flex items-center gap-4 relative overflow-hidden">
-                  <div className="w-16 h-16 rounded-2xl overflow-hidden border border-pink-100/50 flex-shrink-0 bg-pink-50">
-                    <img src="https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=150" alt="serum" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="text-left flex-grow">
-                    <h5 className="font-extrabold text-xs text-slate-800 dark:text-slate-100">Hydration Boosting Serum</h5>
-                    <span className="text-[10px] text-slate-400 font-bold block mt-0.5">Hyaluronic recovery drops</span>
-                    <span className="text-xs font-extrabold text-pink-500 block mt-1.5">$24.90</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* PAGE 2: ANALYZE - UPLOAD AND OPTIONAL SYMPTOMS PANEL */}
-        {activeTab === 'analyze' && !result && !validationErrorType && (
-          <form onSubmit={runQualityCheck} className="space-y-6 animate-fade-in text-left">
-            <div className="flex flex-col gap-1 border-b border-pink-100/10 pb-3">
-              <h2 className="text-xl font-bold font-serif text-slate-900 dark:text-white">Skin Scanner</h2>
-              <p className="text-slate-500 text-xs">Position the affected skin area inside the camera frame.</p>
-            </div>
-
-            {/* Camera / Upload Container */}
-            <div className="mock-card p-4 flex flex-col gap-4 relative">
-              {useCamera ? (
-                <div className="relative aspect-square bg-slate-950 rounded-[2rem] overflow-hidden border border-pink-500/20">
-                  <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover"></video>
-                  
-                  <div className="camera-corner-tl"></div>
-                  <div className="camera-corner-tr"></div>
-                  <div className="camera-corner-bl"></div>
-                  <div className="camera-corner-br"></div>
-                  
-                  <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3 px-4">
-                    <button type="button" onClick={capturePhoto} className="px-5 py-2.5 bg-pink-600 hover:bg-pink-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow">
-                      <Camera className="w-4 h-4" /> Capture Photo
-                    </button>
-                    <button type="button" onClick={() => { setUseCamera(false); stopCamera(); }} className="px-4 py-2.5 bg-slate-800 text-white text-xs font-bold rounded-xl">
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : imagePreview ? (
-                <div className="relative aspect-square rounded-[2rem] overflow-hidden border border-pink-500/10 group shadow-inner">
-                  <img src={imagePreview} alt="skin target" className="w-full h-full object-cover" />
-                  
-                  <div className="camera-corner-tl"></div>
-                  <div className="camera-corner-tr"></div>
-                  <div className="camera-corner-bl"></div>
-                  <div className="camera-corner-br"></div>
-
-                  <div className="absolute inset-0 bg-slate-950/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
-                    <button type="button" onClick={() => { setImage(null); setImagePreview(null); }} className="px-4 py-2.5 bg-red-600 text-white rounded-xl text-xs font-bold">
-                      Remove Photo
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="aspect-square bg-slate-950 border-2 border-dashed border-pink-500/20 rounded-[2rem] flex flex-col items-center justify-center p-6 text-center cursor-pointer hover:border-pink-500/50 transition-all">
-                  <div className="p-3.5 bg-slate-900 border border-slate-800 rounded-full text-pink-400 mb-2">
-                    <Upload className="w-5 h-5" />
-                  </div>
-                  <span className="text-xs font-bold text-slate-300">Upload affected skin area image</span>
-                  <div className="mt-4 flex gap-2.5">
-                    <label className="px-4 py-2 bg-slate-900 border border-slate-800 hover:bg-slate-850 rounded-xl text-[11px] font-bold shadow-sm cursor-pointer text-slate-200">
-                      Browse Files
-                      <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-                    </label>
-                    <button type="button" onClick={startCamera} className="px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-xl text-[11px] font-bold shadow-sm flex items-center gap-1">
-                      <Camera className="w-3.5 h-3.5 text-white" /> Use Camera
-                    </button>
-                  </div>
-                </div>
-              )}
-              <canvas ref={canvasRef} className="hidden"></canvas>
-            </div>
-
-            {/* Symptoms optional section (MICROPHONE PLACED ONLY HERE) */}
-            <div className="mock-card p-5 flex flex-col gap-4">
-              <div className="flex justify-between items-start flex-col gap-1.5 md:flex-row md:items-center">
-                <div>
-                  <label className="text-[10px] font-extrabold uppercase tracking-widest text-pink-500">Symptoms (Optional)</label>
-                  <span className="text-[10px] text-slate-400 dark:text-slate-400 block mt-0.5">Symptoms are optional — AI can analyze the image without them.</span>
-                </div>
-                <select 
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
-                  className="text-xs font-bold border border-slate-800 rounded-lg p-2 bg-slate-950 text-slate-300 outline-none"
-                >
-                  <option value="en">English</option>
-                  <option value="hi">हिंदी (Hindi)</option>
-                  <option value="kn">ಕನ್ನಡ (Kannada)</option>
-                </select>
-              </div>
-
-              {/* Symptom Selection Chips */}
-              <div className="flex flex-wrap gap-2 py-1">
-                {symptomList.map((symp, idx) => {
-                  const isSelected = selectedSymptoms.includes(symp);
+            {/* MOCKUP FLOATING NAVIGATION PILL BAR */}
+            <footer className="fixed bottom-6 left-0 right-0 z-45">
+              <div className="nav-pill">
+                {[
+                  { id: 'home', icon: <Home className="w-5.5 h-5.5" />, color: 'text-pink-500' },
+                  { id: 'chat', icon: <MessageSquare className="w-5.5 h-5.5" />, color: 'text-pink-500' },
+                  { id: 'reminders', icon: <Activity className="w-5.5 h-5.5" />, color: 'text-pink-500' },
+                  { id: 'reports', icon: <FileText className="w-5.5 h-5.5" />, color: 'text-pink-500' },
+                  { id: 'location', icon: <MapPin className="w-5.5 h-5.5" />, color: 'text-pink-500' }
+                ].map(tab => {
+                  const isActive = activeTab === tab.id;
                   return (
                     <button
-                      key={idx}
-                      type="button"
-                      onClick={() => {
-                        const updated = isSelected 
-                          ? selectedSymptoms.filter(x => x !== symp)
-                          : [...selectedSymptoms, symp];
-                        setSelectedSymptoms(updated);
-                        setSymptoms(updated.join(', '));
-                      }}
-                      className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${
-                        isSelected 
-                          ? 'bg-pink-600 border-pink-600 text-white shadow-sm' 
-                          : 'bg-slate-950 border-slate-800 text-slate-400'
+                      key={tab.id}
+                      onClick={() => { setActiveTab(tab.id); resetScannerState(); }}
+                      className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
+                        isActive 
+                          ? `bg-slate-100 dark:bg-slate-900 ${tab.color} scale-110 shadow-sm border border-pink-100/10` 
+                          : 'text-slate-400 hover:text-slate-650'
                       }`}
                     >
-                      {symp}
+                      {tab.icon}
                     </button>
                   );
                 })}
               </div>
+            </footer>
 
-              {/* Symptom detail input box */}
-              <textarea
-                rows={2}
-                value={symptoms}
-                onChange={(e) => setSymptoms(e.target.value)}
-                placeholder="Describe any visible features or details (optional)..."
-                className="w-full border border-slate-800 rounded-xl p-3 text-xs bg-slate-950 text-slate-100 outline-none focus:border-pink-500"
-              ></textarea>
-
-              {/* VOICE RECORDER WORKFLOW (EXCLUSIVELY HERE) */}
-              <div className="border-t border-slate-900 pt-3 flex flex-col gap-2">
-                <button
-                  type="button"
-                  onClick={triggerVoiceListen}
-                  className={`py-2 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border transition-all ${
-                    isListening
-                      ? 'bg-red-600 border-red-600 text-white'
-                      : 'bg-pink-500/10 border-pink-500/20 text-pink-500 hover:bg-pink-500/20'
-                  }`}
-                >
-                  <Mic className="w-4 h-4 animate-pulse" />
-                  {isListening ? 'Listening...' : '🎙 Speak your symptoms'}
-                </button>
-
-                {/* Voice recording waveform animation */}
-                {isListening && (
-                  <div className="flex justify-center items-end gap-1.5 h-8 py-1">
-                    <div className="w-1.5 bg-pink-500 rounded-full voice-wave-bar" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-1.5 bg-pink-500 rounded-full voice-wave-bar" style={{ animationDelay: '0.3s' }}></div>
-                    <div className="w-1.5 bg-pink-500 rounded-full voice-wave-bar" style={{ animationDelay: '0.5s' }}></div>
-                    <div className="w-1.5 bg-pink-500 rounded-full voice-wave-bar" style={{ animationDelay: '0.2s' }}></div>
-                    <div className="w-1.5 bg-pink-500 rounded-full voice-wave-bar" style={{ animationDelay: '0.4s' }}></div>
-                  </div>
-                )}
-
-                {/* Voice permission warning with retry option */}
-                {micPermissionDenied && (
-                  <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl flex flex-col gap-1.5">
-                    <span>Microphone permission is required for voice input.</span>
-                    <button 
-                      type="button" 
-                      onClick={() => navigator.mediaDevices.getUserMedia({ audio: true }).then(() => setMicPermissionDenied(false)).catch(() => {})}
-                      className="text-[10px] uppercase font-black tracking-widest text-slate-100 underline text-left"
-                    >
-                      Retry Permission Grant
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading || !image}
-              className="w-full py-4.5 bg-gradient-to-r from-pink-500 via-rose-500 to-indigo-600 text-white font-extrabold text-xs uppercase tracking-widest rounded-3xl shadow-lg shadow-pink-500/15 flex items-center justify-center gap-2"
-            >
-              <Activity className="w-4 h-4" /> Run Multimodal Analysis
-            </button>
-          </form>
-        )}
-
-        {/* 4. SKIN-ONLY RESTRICTION / OOD REJECTION GATES */}
-        {activeTab === 'analyze' && validationErrorType === 'unrelated' && (
-          <div className="space-y-6 animate-fade-in text-left">
-            <div className="mock-card p-6 border-l-4 border-l-red-500 space-y-4">
-              <h2 className="text-lg font-black uppercase text-red-500 tracking-wider">INVALID IMAGE</h2>
-              <p className="text-xs text-slate-500 leading-relaxed font-bold">
-                Invalid Image — Please upload a skin image.
-              </p>
-              
-              <div className="flex gap-2.5 pt-3">
-                <button
-                  onClick={() => { resetScannerState(); startCamera(); }}
-                  className="flex-grow py-3 bg-pink-600 text-white font-bold text-xs rounded-2xl"
-                >
-                  RETAKE IMAGE
-                </button>
-                <button
-                  onClick={resetScannerState}
-                  className="flex-grow py-3 bg-slate-900 border border-slate-800 text-slate-300 font-bold text-xs rounded-2xl"
-                >
-                  UPLOAD ANOTHER IMAGE
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 6. IMAGE QUALITY TOO LOW GATE */}
-        {activeTab === 'analyze' && validationErrorType === 'quality' && (
-          <div className="space-y-6 animate-fade-in text-left">
-            <div className="mock-card p-6 border-l-4 border-l-amber-500 space-y-4">
-              <h2 className="text-lg font-black uppercase text-amber-500 tracking-wider">IMAGE QUALITY TOO LOW</h2>
-              <p className="text-xs text-slate-500 leading-relaxed font-bold">
-                Image Quality Too Low — Please retake/upload a clearer image.
-              </p>
-              
-              <button
-                onClick={() => { resetScannerState(); startCamera(); }}
-                className="w-full py-3.5 bg-pink-600 text-white font-bold text-xs rounded-2xl mt-2"
-              >
-                RETAKE IMAGE
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* OOD Quality Modal verification step (Only if valid) */}
-        {showQualityModal && qualityCheckResult && qualityCheckResult.valid && (
-          <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-6 text-center animate-fade-in text-left">
-            <div className="mock-card p-6 max-w-sm w-full shadow-2xl space-y-5 animate-scale-in">
-              <div className="flex justify-between items-center">
-                <h3 className="font-serif font-bold text-slate-850 dark:text-slate-100">Image Quality Check</h3>
-                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400">
-                  Score: {qualityCheckResult.quality_score}%
-                </span>
-              </div>
-
-              <div className="space-y-2 bg-slate-950 p-4 rounded-2xl text-xs text-slate-200">
-                <div className="flex justify-between items-center">
-                  <span>Clear Focus & Sharpness</span>
-                  <span className="text-emerald-400 font-bold">✓ Passes</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Balanced Brightness & Contrast</span>
-                  <span className="text-emerald-400 font-bold">✓ Passes</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Skin Presence Ratio</span>
-                  <span className="text-emerald-400 font-bold">✓ Passes</span>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  ✓ **Optimal Frame Properties**. The input passes resolution, contrast, focus, and skin tone boundaries, and is fully suitable for AI assessment.
-                </p>
-                <button 
-                  onClick={proceedToResults} 
-                  className="w-full py-3 bg-gradient-to-r from-pink-500 to-indigo-600 text-white font-bold text-xs rounded-xl"
-                >
-                  Proceed to Diagnostic Report
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* PAGE 2.1: RESULTS VIEW RENDERED ON THE SAME ANALYZE PAGE */}
-        {activeTab === 'analyze' && result && !validationErrorType && (
-          <div className="space-y-6 animate-fade-in text-left">
-            
-            {/* Visual scanned photo at top of results screen with pulse coordinates overlay */}
-            <div className="relative aspect-square w-full rounded-[2.5rem] overflow-hidden border border-pink-100/20">
-              <img src={result.original_image} alt="lesion" className="w-full h-full object-cover" />
-              
-              <div className="camera-corner-tl"></div>
-              <div className="camera-corner-tr"></div>
-              <div className="camera-corner-bl"></div>
-              <div className="camera-corner-br"></div>
-
-              {/* Glowing red circles for detected acne pimples */}
-              {result.lesion_analysis?.pimple_coords?.map((coord, idx) => (
-                <div 
-                  key={`p-${idx}`}
-                  className="blemish-marker"
-                  style={{ left: `${(coord.x / 224) * 100}%`, top: `${(coord.y / 224) * 100}%`, transform: 'translate(-50%, -50%)' }}
-                ></div>
-              ))}
-
-              {/* Glowing blue circles for dark spots */}
-              {result.lesion_analysis?.dark_spot_coords?.map((coord, idx) => (
-                <div 
-                  key={`d-${idx}`}
-                  className="absolute w-3 h-3 rounded-full border-2 border-blue-500 bg-blue-500/20 shadow-md shadow-blue-500/60 animate-pulse"
-                  style={{ left: `${(coord.x / 224) * 100}%`, top: `${(coord.y / 224) * 100}%`, transform: 'translate(-50%, -50%)' }}
-                ></div>
-              ))}
-            </div>
-
-            {/* 5. ACCEPT NORMAL HEALTHY SKIN (Intercept View) */}
-            {result.disease === 'Normal Skin' ? (
-              <div className="mock-card p-6 border-l-4 border-l-emerald-500 space-y-5">
-                <div className="flex justify-between items-center border-b border-pink-100/10 pb-3">
-                  <div>
-                    <h2 className="text-lg font-black uppercase text-emerald-500 tracking-wider">NORMAL SKIN / NO VISIBLE ABNORMALITY</h2>
-                    <p className="text-xs text-slate-500 mt-1 font-semibold">
-                      No visible abnormality detected in the analyzed skin area.
-                    </p>
-                  </div>
-                  <button 
-                    onClick={downloadReport}
-                    className="p-2.5 rounded-full bg-slate-100 dark:bg-slate-950 text-pink-500"
-                    title="Export report PDF"
-                  >
-                    <Download className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {/* Collapsible Technical Details (Normal Skin) */}
-                <details className="group border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden bg-slate-50 dark:bg-slate-950">
-                  <summary className="flex justify-between items-center px-4 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 cursor-pointer select-none">
-                    <span>TECHNICAL DETAILS</span>
-                    <span className="transition-transform group-open:rotate-180">▼</span>
-                  </summary>
-                  <div className="px-4 pb-4 space-y-3 text-xs">
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-[10px] font-bold text-pink-500">
-                        <span className="uppercase tracking-widest text-[9px] font-black">Model Accuracy (Offline)</span>
-                        <span className="text-xs">94.8%</span>
-                      </div>
-                      <div className="w-full bg-slate-200 dark:bg-slate-900 h-1.5 rounded-full overflow-hidden">
-                        <div className="bg-gradient-to-r from-pink-500 to-indigo-600 h-full rounded-full" style={{ width: '94.8%' }}></div>
-                      </div>
-                    </div>
-                    <div className="space-y-1 text-[10px] text-slate-400 pt-2 border-t border-slate-900">
-                      <div className="flex justify-between">
-                        <span>Sharpness Score:</span>
-                        <span className="text-slate-800 dark:text-slate-100 font-extrabold">{result.quality_score}%</span>
-                      </div>
-                    </div>
-                  </div>
-                </details>
-
-                <div className="flex justify-between items-center text-xs font-bold bg-slate-100 dark:bg-slate-950 px-4 py-3 rounded-2xl">
-                  <span className="text-slate-500">Severity:</span>
-                  <span className="text-emerald-500 font-extrabold uppercase">NORMAL</span>
-                </div>
-
-                <div className="p-4 bg-slate-100 dark:bg-slate-950 rounded-2xl text-xs text-slate-500 leading-relaxed">
-                  <p className="font-bold text-slate-300 mb-1">💡 General Guidance:</p>
-                  <p>Keep skin clean and hydrated. Use a broad-spectrum sunscreen (SPF 30+) daily to protect skin cells from UV indices. Consult a dermatologist if you experience sudden patches or lesion growth.</p>
-                </div>
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={resetScannerState}
-                    className="w-full py-3.5 bg-pink-600 text-white font-bold text-xs rounded-xl text-center"
-                  >
-                    Scan Another Image
-                  </button>
-                </div>
-              </div>
-            ) : result.confidence < 0.90 ? (
-              
-              /* 7. SYSTEM CONFIDENCE GATING - LOW-CONFIDENCE ANALYSIS */
-              <div className="mock-card p-6 border-l-4 border-l-amber-500 space-y-5">
-                <div className="flex items-center gap-2 text-amber-500">
-                  <AlertTriangle className="w-6 h-6" />
-                  <h3 className="font-serif font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">LOW-CONFIDENCE ANALYSIS</h3>
-                </div>
-                
-                <p className="text-xs text-slate-500 leading-relaxed font-bold">
-                  Low-Confidence Analysis — please provide a clearer skin image.
-                </p>
-
-                {/* PRELIMINARY MATCH INDICATOR (Saying what the AI felt) */}
-                <div className="bg-amber-500/5 border border-amber-500/10 p-4 rounded-3xl space-y-2">
-                  <span className="text-[10px] text-amber-500 uppercase font-black tracking-widest block">Preliminary Match (Low-Confidence)</span>
-                  <div className="flex justify-between items-center text-xs font-bold">
-                    <span className="text-slate-800 dark:text-slate-150">{result.disease}</span>
-                    <span className="text-amber-500">{(result.confidence * 100).toFixed(1)}%</span>
-                  </div>
-                  <p className="text-[10px] text-slate-400 leading-normal">
-                    The model flagged characteristics of **{result.disease}** but requires a higher quality image or symptom details to confirm.
-                  </p>
-                </div>
-
-                {/* Grad-CAM Heatmap overlay slider */}
-                <div className="space-y-3">
-                  <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">Attention Heatmap (What the AI Focused On)</span>
-                  <div 
-                    ref={sliderContainerRef}
-                    onMouseDown={handleSliderMouse}
-                    onTouchStart={handleSliderTouch}
-                    className="relative aspect-square w-full rounded-3xl overflow-hidden border border-pink-500/10 cursor-ew-resize select-none"
-                  >
-                    <img src={result.overlay_image} alt="cam" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
-                    <div 
-                      className="absolute inset-0 overflow-hidden border-r border-amber-500"
-                      style={{ width: `${sliderPosition}%` }}
-                    >
-                      <img 
-                        src={result.original_image} 
-                        alt="orig" 
-                        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-                        style={{ width: sliderContainerRef.current ? sliderContainerRef.current.clientWidth : '100%' }}
-                      />
-                    </div>
-                    <div 
-                      className="absolute top-0 bottom-0 w-0.5 bg-amber-500 flex items-center justify-center"
-                      style={{ left: `${sliderPosition}%`, transform: 'translateX(-50%)' }}
-                    >
-                      <div className="w-5 h-5 rounded-full bg-amber-600 text-white flex items-center justify-center text-[9px] border border-white font-bold">↔</div>
-                    </div>
-                  </div>
-                  <p className="text-[9px] text-slate-400 italic">
-                    💡 Swipe to see which skin features caused the AI to suspect this condition.
-                  </p>
-                </div>
-
-                <div className="flex gap-2.5 pt-2">
-                  <button 
-                    onClick={() => { resetScannerState(); startCamera(); }}
-                    className="flex-grow py-3 bg-pink-600 hover:bg-pink-700 text-white font-bold text-xs rounded-xl"
-                  >
-                    Retake Image
-                  </button>
-                  <button 
-                    onClick={resetScannerState}
-                    className="flex-grow py-3 bg-slate-900 border border-slate-800 text-slate-350 font-bold text-xs rounded-xl"
-                  >
-                    Upload Clearer Image
-                  </button>
-                </div>
-              </div>
-            ) : (
-              
-              /* 8. DISEASE ASSESSMENT RESULT VIEW */
-              <div className="mock-card slide-up-sheet space-y-5">
-                
-                <div className="flex justify-between items-center border-b border-pink-100/10 pb-3">
-                  <div>
-                    <span className="text-[9px] text-pink-500 uppercase font-black tracking-widest block">ASSESSMENT</span>
-                    <h3 className="text-base font-extrabold text-slate-800 dark:text-slate-100 uppercase tracking-wider">{result.disease}</h3>
-                  </div>
-                  <button 
-                    onClick={downloadReport}
-                    className="p-2.5 rounded-full bg-slate-100 dark:bg-slate-950 text-pink-500"
-                    title="Export report PDF"
-                  >
-                    <Download className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {/* Collapsible Technical Details (Abnormal Skin Assessment) */}
-                <details className="group border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden bg-slate-50 dark:bg-slate-950">
-                  <summary className="flex justify-between items-center px-4 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 cursor-pointer select-none">
-                    <span>TECHNICAL DETAILS</span>
-                    <span className="transition-transform group-open:rotate-180">▼</span>
-                  </summary>
-                  <div className="px-4 pb-4 space-y-3 text-xs">
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-[10px] font-bold text-pink-500">
-                        <span className="uppercase tracking-widest text-[9px] font-black">Model Accuracy (Offline)</span>
-                        <span className="text-xs">94.8%</span>
-                      </div>
-                      <div className="w-full bg-slate-200 dark:bg-slate-900 h-1.5 rounded-full overflow-hidden">
-                        <div className="bg-gradient-to-r from-pink-500 to-indigo-600 h-full rounded-full" style={{ width: '94.8%' }}></div>
-                      </div>
-                    </div>
-                    <div className="space-y-1 text-[10px] text-slate-400 pt-2 border-t border-slate-900">
-                      <div className="flex justify-between">
-                        <span>Raw Prediction Confidence:</span>
-                        <span className="text-slate-800 dark:text-slate-100 font-extrabold">{(result.confidence * 100).toFixed(1)}%</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Sharpness Score:</span>
-                        <span className="text-slate-800 dark:text-slate-100 font-extrabold">{result.quality_score}%</span>
-                      </div>
-                    </div>
-                  </div>
-                </details>
-
-                {/* Prediction confidence score display */}
-                <div className="flex justify-between items-center text-xs font-bold bg-slate-100 dark:bg-slate-950 px-4 py-3 rounded-2xl">
-                  <span className="text-slate-500">Prediction Confidence:</span>
-                  <span className="text-slate-800 dark:text-slate-100 font-black">{(result.confidence * 100).toFixed(1)}%</span>
-                </div>
-
-                {/* 9. Severity indicators directly below disease result */}
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs font-bold text-slate-505">
-                    <span className="uppercase tracking-wider text-[10px]">SEVERITY</span>
-                    <span className={`font-extrabold uppercase ${
-                      result.severity === 'Mild' ? 'text-emerald-500' : result.severity === 'Moderate' ? 'text-amber-500' : 'text-red-500'
-                    }`}>{result.severity}</span>
-                  </div>
-                  <div className="w-full bg-slate-200 dark:bg-slate-900 h-2.5 rounded-full overflow-hidden relative">
-                    <div 
-                      className={`h-full rounded-full transition-all duration-500 ${
-                        result.severity === 'Mild' ? 'bg-emerald-500 w-1/3' : result.severity === 'Moderate' ? 'bg-amber-500 w-2/3' : 'bg-red-500 w-full'
-                      }`}
-                    ></div>
-                  </div>
-                </div>
-
-                {/* OpenCV blemish counting outputs (14. Pimple/dark spot analysis) */}
-                <div className="bg-slate-100 dark:bg-slate-950 p-4 rounded-3xl space-y-1.5 text-xs text-slate-500">
-                  <span className="text-[10px] font-black uppercase text-slate-400 block mb-1">VISIBLE LESIONS</span>
-                  {result.lesion_analysis?.pimple_count !== undefined ? (
-                    <>
-                      <div className="flex justify-between font-bold">
-                        <span>Pimple/Acne Count:</span>
-                        <span className="text-yellow-500 font-extrabold">{result.lesion_analysis.pimple_count} regions</span>
-                      </div>
-                      <div className="flex justify-between font-bold">
-                        <span>Dark Spot Regions:</span>
-                        <span className="text-blue-500 font-extrabold">{result.lesion_analysis.dark_spot_count} regions</span>
-                      </div>
-                    </>
-                  ) : (
-                    <span>Individual lesion count unavailable for this image.</span>
-                  )}
-                </div>
-
-                {/* Grad-CAM Heatmap overlay slider (13. WHAT THE AI FOCUSED ON) */}
-                <div className="space-y-3">
-                  <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">WHAT THE AI FOCUSED ON</span>
-                  <div 
-                    ref={sliderContainerRef}
-                    onMouseDown={handleSliderMouse}
-                    onTouchStart={handleSliderTouch}
-                    className="relative aspect-square w-full rounded-3xl overflow-hidden border border-pink-500/10 cursor-ew-resize select-none"
-                  >
-                    <img src={result.overlay_image} alt="cam" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
-                    <div 
-                      className="absolute inset-0 overflow-hidden border-r border-amber-500"
-                      style={{ width: `${sliderPosition}%` }}
-                    >
-                      <img 
-                        src={result.original_image} 
-                        alt="orig" 
-                        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-                        style={{ width: sliderContainerRef.current ? sliderContainerRef.current.clientWidth : '100%' }}
-                      />
-                    </div>
-                    <div 
-                      className="absolute top-0 bottom-0 w-0.5 bg-amber-500 flex items-center justify-center"
-                      style={{ left: `${sliderPosition}%`, transform: 'translateX(-50%)' }}
-                    >
-                      <div className="w-5 h-5 rounded-full bg-amber-600 text-white flex items-center justify-center text-[9px] border border-white font-bold">↔</div>
-                    </div>
-                  </div>
-                  <p className="text-[9px] text-slate-400 italic">
-                    💡 Swipe to compare original image vs attention overlay heatmap. Grad-CAM visualizes feature weight outputs and does not prove a medical diagnosis.
-                  </p>
-                </div>
-
-                {/* Suggestions Box (15. AI CARE SUGGESTIONS) */}
-                <div className="space-y-2">
-                  <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">AI CARE SUGGESTIONS</span>
-                  <div className="space-y-1.5 text-xs text-slate-500 leading-relaxed">
-                    {result.recommendations?.map((rec, idx) => (
-                      <div key={idx} className="flex gap-1.5 items-start">
-                        <span className="text-pink-500">•</span>
-                        <span>{rec}</span>
-                      </div>
-                    ))}
-                    <div className="p-3 bg-slate-950 rounded-2xl border border-slate-900 text-[10px] text-slate-400 font-bold block mt-2">
-                      ⚠️ Note: DermaScan AI is a decision-support tool and does not provide formal medical prescriptions. Consult a qualified dermatologist before using medication.
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action buttons */}
-                <div className="flex gap-2.5">
-                  <button 
-                    onClick={() => {
-                      setDiary(prev => [{
-                        id: Date.now().toString(),
-                        date: new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }),
-                        symptoms: { itching: 4, pain: 2, burning: 2, dryness: 3, redness: result.severity },
-                        notes: `AI screening match: ${result.disease}`,
-                        image: result.original_image
-                      }, ...prev]);
-                      alert("Diagnostic report successfully saved to Skin Diary!");
-                    }}
-                    className="flex-grow py-3 bg-slate-900 border border-slate-800 text-white rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5"
-                  >
-                    <Bookmark className="w-4 h-4 text-pink-500" /> Save to Skin Diary
-                  </button>
-                  <button 
-                    onClick={resetScannerState}
-                    className="px-6 py-3 bg-pink-600 hover:bg-pink-700 text-white rounded-2xl text-xs font-bold"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* PAGE 3: LOCATION & CARE CONNECT CLINICS */}
-        {activeTab === 'location' && (
-          <div className="space-y-6 animate-fade-in text-left">
-            <div className="flex flex-col gap-1 border-b border-pink-100/10 pb-3">
-              <h2 className="text-xl font-bold font-serif text-slate-900 dark:text-white">Care Connect</h2>
-              <p className="text-slate-500 text-xs">Locate specialty clinics and schedule consultation times.</p>
-            </div>
-
-            <div className="mock-card p-5 space-y-4">
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={detectLocation}
-                  disabled={locLoading}
-                  className={`flex-grow flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold border transition-all ${
-                    locSuccess 
-                      ? 'bg-pink-500/10 border-pink-500/30 text-pink-500' 
-                      : 'bg-slate-950 border-slate-800 text-slate-350'
-                  }`}
-                >
-                  <MapPin className="w-4 h-4 text-pink-500" />
-                  {locLoading ? "Locking GPS..." : locSuccess ? "GPS Locked" : "Use Current GPS"}
-                </button>
-                <input
-                  type="text"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="Or enter city"
-                  className="w-1/2 border border-slate-800 rounded-xl px-3 py-2.5 text-xs bg-slate-950 text-slate-100 outline-none"
-                />
-              </div>
-
-              <div className="h-[200px] rounded-[2rem] overflow-hidden border border-slate-800 shadow-inner">
-                <div ref={mapContainerRef} className="w-full h-full bg-stone-100"></div>
-              </div>
-
-              <div className="space-y-3 pt-2">
-                {((result && result.hospitals && result.hospitals.length > 0) ? result.hospitals : [
-                  { name: "City Dermatology Clinic", distance: "1.4 km", rating: "4.8", hours: "09:00 AM – 06:00 PM", lat: 12.973, lon: 77.596 },
-                  { name: "Apollo Skin Care Hospital", distance: "3.2 km", rating: "4.7", hours: "08:00 AM – 08:00 PM", lat: 12.969, lon: 77.592 }
-                ]).map((h, idx) => (
-                  <div key={idx} className="p-3.5 bg-slate-950 border border-slate-855 rounded-2xl flex flex-col gap-2">
-                    <div className="flex justify-between items-start">
-                      <span className="font-bold text-xs leading-snug text-slate-200">{h.name}</span>
-                      <span className="text-[9px] font-black text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded-full flex-shrink-0 uppercase">{h.distance}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-[10px] text-slate-450">
-                      <span>★ {h.rating || "4.5"} Rating</span>
-                      <span>Hours: {h.hours || "09:00 AM - 05:00 PM"}</span>
-                    </div>
-                    {h.phone && (
-                      <div className="text-[10px] text-slate-450">
-                        <span>📞 Phone: {h.phone}</span>
-                      </div>
-                    )}
-                    <div className="text-[10px] text-slate-500 italic pt-1 border-t border-slate-900">
-                      <div>Doctor Availability: Availability information unavailable.</div>
-                      <div>Next Available Slot: Availability information unavailable.</div>
-                    </div>
-                    <div className="flex gap-2 pt-1">
-                      <a href={`https://www.google.com/maps/dir/?api=1&destination=${h.lat},${h.lon}`} target="_blank" rel="noreferrer" className="w-full py-2 border border-slate-800 hover:bg-slate-900 rounded-xl text-[10px] font-bold text-center text-slate-300">
-                        Directions
-                      </a>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          </>
         )}
 
       </main>
-
-      {/* DIARY LOG OVERLAY MODAL */}
-      {showDiaryModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-6 text-center animate-fade-in text-left">
-          <div className="mock-card p-6 max-w-sm w-full shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto custom-scrollbar animate-scale-in">
-            <div className="flex justify-between items-center border-b border-slate-800 pb-2">
-              <h3 className="font-serif font-bold text-slate-800 dark:text-slate-100">Log Daily Symptoms</h3>
-              <button onClick={() => setShowDiaryModal(false)} className="text-slate-400"><X className="w-5 h-5" /></button>
-            </div>
-
-            {[
-              { label: "Itching level", state: itching, set: setItching },
-              { label: "Pain intensity", state: pain, set: setPain },
-              { label: "Burning sensation", state: burning, set: setBurning },
-              { label: "Dryness level", state: dryness, set: setDryness }
-            ].map((s, idx) => (
-              <div key={idx} className="space-y-1">
-                <div className="flex justify-between text-xs font-bold">
-                  <span>{s.label}</span>
-                  <span className="text-pink-500">{s.state}/10</span>
-                </div>
-                <input 
-                  type="range" min="0" max="10" value={s.state} 
-                  onChange={(e) => s.set(parseInt(e.target.value))}
-                  className="w-full accent-pink-500 h-1 bg-slate-950 rounded-lg cursor-pointer"
-                />
-              </div>
-            ))}
-
-            <div className="space-y-1.5">
-              <span className="text-xs font-bold block">Redness level</span>
-              <div className="grid grid-cols-4 gap-2">
-                {['None', 'Mild', 'Moderate', 'High'].map(level => (
-                  <button
-                    key={level} type="button" onClick={() => setRedness(level)}
-                    className={`py-1.5 rounded-xl text-[10px] font-bold border transition-all ${
-                      redness === level ? 'bg-pink-600 border-pink-600 text-white shadow-sm' : 'bg-slate-950 border-slate-855 text-slate-400'
-                    }`}
-                  >
-                    {level}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <span className="text-xs font-bold block">Add Notes</span>
-              <textarea
-                rows={2} value={diaryNotes} onChange={(e) => setDiaryNotes(e.target.value)}
-                placeholder="Describe updates..."
-                className="w-full border border-slate-855 rounded-xl p-2.5 text-xs bg-slate-950 outline-none text-slate-100"
-              ></textarea>
-            </div>
-
-            <button
-              onClick={saveDiaryEntry}
-              className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-indigo-600 text-white font-bold text-xs rounded-xl"
-            >
-              Save Diary Log
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* PROFILE DIALOG OVERLAY */}
-      {showProfileModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-6 text-center animate-fade-in text-left">
-          <div className="mock-card p-6 max-w-sm w-full shadow-2xl space-y-4 animate-scale-in dark:bg-slate-905">
-            <div className="flex justify-between items-center border-b border-slate-800 pb-2">
-              <h3 className="font-serif font-bold text-slate-850 dark:text-slate-100">Patient Profile</h3>
-              <button onClick={() => setShowProfileModal(false)} className="text-slate-400"><X className="w-5 h-5" /></button>
-            </div>
-
-            {isLogged ? (
-              <div className="space-y-4 text-xs text-left">
-                <div>
-                  <span className="text-slate-400 block font-bold">Patient Name</span>
-                  <span className="text-sm font-bold text-slate-700 dark:text-slate-100">{profileName}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block font-bold">Registered Email</span>
-                  <span className="text-sm font-bold text-slate-700 dark:text-slate-100">{profileEmail}</span>
-                </div>
-                
-                <div className="p-3 bg-slate-950 rounded-2xl space-y-1.5 text-[10px] text-slate-400">
-                  <p className="font-bold text-slate-300">📊 Diagnostic logs size:</p>
-                  <p>• Screening Logs: **{history.length} records**</p>
-                  <p>• Diary Logs: **{diary.length} records**</p>
-                </div>
-
-                <div className="space-y-2">
-                  <button 
-                    onClick={deleteHistory}
-                    className="w-full py-2 border border-red-500/30 text-red-500 rounded-xl hover:bg-red-500/10 text-xs font-bold"
-                  >
-                    Delete Diagnostics History
-                  </button>
-                  <button 
-                    onClick={deleteDiary}
-                    className="w-full py-2 border border-red-500/30 text-red-500 rounded-xl hover:bg-red-500/10 text-xs font-bold"
-                  >
-                    Clear Skin Diary Logs
-                  </button>
-                  <button 
-                    onClick={handleLogout}
-                    className="w-full py-2.5 bg-slate-100 dark:bg-slate-950 text-slate-500 rounded-xl text-xs font-bold"
-                  >
-                    Log Out Profile
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <form onSubmit={handleProfileSave} className="space-y-3 text-xs text-left">
-                <div className="space-y-1">
-                  <span className="font-bold block">Patient Name</span>
-                  <input 
-                    type="text" required value={profileName} onChange={(e) => setProfileName(e.target.value)}
-                    className="w-full border border-slate-800 rounded-xl p-2.5 bg-slate-950 text-slate-100 outline-none"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <span className="font-bold block">Email Address</span>
-                  <input 
-                    type="email" required value={profileEmail} onChange={(e) => setProfileEmail(e.target.value)}
-                    className="w-full border border-slate-800 rounded-xl p-2.5 bg-slate-950 text-slate-100 outline-none"
-                  />
-                </div>
-                <button 
-                  type="submit"
-                  className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-indigo-600 text-white font-bold text-xs rounded-xl"
-                >
-                  Create & Save Profile
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
-
-
-      {/* MOCKUP FLOATING NAVIGATION PILL BAR (Exactly 3 destinations) */}
-      <footer className="fixed bottom-6 left-0 right-0 z-45">
-        <div className="nav-pill">
-          {[
-            { id: 'home', icon: <Home className="w-5.5 h-5.5" />, color: 'text-pink-500' },
-            { id: 'analyze', icon: <Camera className="w-5.5 h-5.5" />, color: 'text-indigo-600' },
-            { id: 'location', icon: <MapPin className="w-5.5 h-5.5" />, color: 'text-purple-500' }
-          ].map(tab => {
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => { setActiveTab(tab.id); resetScannerState(); }}
-                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
-                  isActive 
-                    ? `bg-slate-100 dark:bg-slate-900 ${tab.color} scale-110 shadow-sm border border-pink-100/10` 
-                    : 'text-slate-400 hover:text-slate-650'
-                }`}
-              >
-                {tab.icon}
-              </button>
-            );
-          })}
-        </div>
-      </footer>
 
     </div>
   );

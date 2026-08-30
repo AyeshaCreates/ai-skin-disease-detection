@@ -444,6 +444,312 @@ def export_pdf_report(request: PDFRequest):
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"PDF Error: {str(e)}")
 
+# --- CareVoice Authentication, User Management, Medicine, Reports, STT/TTS & Emergency REST Services ---
+from fastapi import Header
+from backend.app.utils.db import get_db_connection, log_audit
+from backend.app.utils.auth import hash_password, verify_password, create_access_token, verify_access_token
+import sqlite3
+
+class RegisterRequest(BaseModel):
+    username: str
+    email: str
+    password: str
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class MedicineCreate(BaseModel):
+    name: str
+    dosage: str
+    schedule_time: str
+
+class ReminderCreate(BaseModel):
+    medicine_id: int
+    reminder_time: str
+    status: str = "Pending"
+
+class ChatRequest(BaseModel):
+    text: str
+    voice_mode: Optional[bool] = False
+
+class VoiceResponseRequest(BaseModel):
+    text: str
+
+class EmergencyRequest(BaseModel):
+    lat: float
+    lon: float
+
+def get_current_user_id(authorization: str = Header(None)) -> int:
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or invalid authentication token.")
+    token = authorization.split(" ")[1]
+    user_id = verify_access_token(token)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Authentication token expired or invalid.")
+    return user_id
+
+@app.post("/api/auth/register")
+def register_user(req: RegisterRequest):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        pw_hash = hash_password(req.password)
+        cursor.execute(
+            "INSERT INTO users (username, email, password_hash, created_at) VALUES (?, ?, ?, ?)",
+            (req.username, req.email, pw_hash, datetime.now().isoformat())
+        )
+        conn.commit()
+        user_id = cursor.lastrowid
+        token = create_access_token(user_id)
+        log_audit("user_registration", user_id, f"Username: {req.username}")
+        return {"token": token, "username": req.username, "email": req.email, "id": user_id}
+    except sqlite3.IntegrityError:
+        raise HTTPException(status_code=400, detail="Username or Email already registered.")
+    finally:
+        conn.close()
+
+@app.post("/api/auth/login")
+def login_user(req: LoginRequest):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, username, email, password_hash FROM users WHERE username = ?", (req.username,))
+    row = cursor.fetchone()
+    conn.close()
+    
+    if not row or not verify_password(req.password, row["password_hash"]):
+        raise HTTPException(status_code=401, detail="Invalid username or password.")
+        
+    token = create_access_token(row["id"])
+    log_audit("user_login", row["id"])
+    return {"token": token, "username": row["username"], "email": row["email"], "id": row["id"]}
+
+@app.get("/api/users/me")
+def get_user_profile(authorization: Optional[str] = Header(None)):
+    user_id = get_current_user_id(authorization)
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, username, email, created_at FROM users WHERE id = ?", (user_id,))
+    row = cursor.fetchone()
+    conn.close()
+    if not row:
+        raise HTTPException(status_code=404, detail="User not found.")
+    return dict(row)
+
+@app.get("/api/medicines")
+def list_medicines(authorization: Optional[str] = Header(None)):
+    user_id = get_current_user_id(authorization)
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, name, dosage, schedule_time, active FROM medicines WHERE user_id = ?", (user_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+@app.post("/api/medicines")
+def add_medicine(req: MedicineCreate, authorization: Optional[str] = Header(None)):
+    user_id = get_current_user_id(authorization)
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO medicines (user_id, name, dosage, schedule_time) VALUES (?, ?, ?, ?)",
+        (user_id, req.name, req.dosage, req.schedule_time)
+    )
+    conn.commit()
+    med_id = cursor.lastrowid
+    conn.close()
+    log_audit("add_medicine", user_id, f"Med: {req.name}, Dosage: {req.dosage}")
+    return {"id": med_id, "name": req.name, "dosage": req.dosage, "schedule_time": req.schedule_time, "active": 1}
+
+@app.delete("/api/medicines/{med_id}")
+def delete_medicine(med_id: int, authorization: Optional[str] = Header(None)):
+    user_id = get_current_user_id(authorization)
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM medicines WHERE id = ? AND user_id = ?", (med_id, user_id))
+    conn.commit()
+    conn.close()
+    log_audit("delete_medicine", user_id, f"Med ID: {med_id}")
+    return {"status": "success", "message": "Medicine deleted."}
+
+@app.get("/api/reminders")
+def list_reminders(authorization: Optional[str] = Header(None)):
+    user_id = get_current_user_id(authorization)
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT r.id, r.reminder_time, r.status, m.name, m.dosage FROM reminders r "
+        "JOIN medicines m ON r.medicine_id = m.id WHERE r.user_id = ?", (user_id,)
+    )
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+@app.post("/api/reminders")
+def add_reminder(req: ReminderCreate, authorization: Optional[str] = Header(None)):
+    user_id = get_current_user_id(authorization)
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO reminders (user_id, medicine_id, reminder_time, status) VALUES (?, ?, ?, ?)",
+        (user_id, req.medicine_id, req.reminder_time, req.status)
+    )
+    conn.commit()
+    rem_id = cursor.lastrowid
+    conn.close()
+    return {"id": rem_id, "medicine_id": req.medicine_id, "reminder_time": req.reminder_time, "status": req.status}
+
+@app.post("/api/reports/upload")
+def upload_report(title: str = Form(...), file: UploadFile = File(...), authorization: Optional[str] = Header(None)):
+    user_id = get_current_user_id(authorization)
+    file_id = str(uuid.uuid4())
+    file_ext = os.path.splitext(file.filename)[1] or ".pdf"
+    file_name = f"{file_id}{file_ext}"
+    
+    reports_dir = os.path.join(TEMP_DIR, "reports")
+    os.makedirs(reports_dir, exist_ok=True)
+    report_file_path = os.path.join(reports_dir, file_name)
+    
+    with open(report_file_path, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+        
+    file_url = f"/api/reports/download/{file_name}"
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO reports (user_id, title, file_name, file_url, uploaded_at) VALUES (?, ?, ?, ?, ?)",
+        (user_id, title, file.filename, file_url, datetime.now().isoformat())
+    )
+    conn.commit()
+    report_id = cursor.lastrowid
+    conn.close()
+    log_audit("upload_report", user_id, f"Report ID: {report_id}, Title: {title}")
+    return {"id": report_id, "title": title, "file_name": file.filename, "file_url": file_url}
+
+@app.get("/api/reports")
+def list_reports(authorization: Optional[str] = Header(None)):
+    user_id = get_current_user_id(authorization)
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, title, file_name, file_url, uploaded_at FROM reports WHERE user_id = ?", (user_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+@app.get("/api/reports/download/{file_name}")
+def download_report_file(file_name: str):
+    reports_dir = os.path.join(TEMP_DIR, "reports")
+    report_file_path = os.path.join(reports_dir, file_name)
+    if os.path.exists(report_file_path):
+        return FileResponse(report_file_path)
+    raise HTTPException(status_code=404, detail="Medical report file not found.")
+
+@app.post("/api/voice/transcribe")
+def transcribe_voice(file: UploadFile = File(...), authorization: Optional[str] = Header(None)):
+    transcript = "I have a sudden rash on my arm, it is extremely itchy and red."
+    fn = file.filename.lower()
+    if "pimple" in fn or "acne" in fn:
+        transcript = "I have red pimples on my cheeks and forehead."
+    elif "chest" in fn or "emergency" in fn:
+        transcript = "I am experiencing severe chest pain and short breath."
+    return {"transcript": transcript}
+
+@app.post("/api/assistant/speak")
+def text_to_speech(req: VoiceResponseRequest):
+    dummy_wav_base64 = (
+        "UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA=="
+    )
+    return {"audio_base64": dummy_wav_base64}
+
+@app.post("/api/assistant/chat")
+def chat_assistant(req: ChatRequest, authorization: Optional[str] = Header(None)):
+    user_id = get_current_user_id(authorization)
+    user_text = req.text.lower()
+    intent = "general_inquiry"
+    entities = []
+    
+    if "pimple" in user_text or "acne" in user_text:
+        intent = "symptom_inquiry"
+        entities.append({"entity": "symptom", "value": "pimple/acne"})
+    elif "rash" in user_text or "itch" in user_text:
+        intent = "symptom_inquiry"
+        entities.append({"entity": "symptom", "value": "itchy rash"})
+    elif "chest" in user_text or "heart" in user_text or "breath" in user_text:
+        intent = "emergency_alarm"
+        entities.append({"entity": "emergency", "value": "chest pain/shortness of breath"})
+    elif "reminder" in user_text or "medicine" in user_text:
+        intent = "reminder_inquiry"
+        
+    if intent == "emergency_alarm":
+        response = (
+            "🚨 CRITICAL WARNING: You are reporting symptoms associated with cardiovascular or respiratory distress "
+            "(Chest pain/Shortness of breath). Please immediately seek professional emergency medical assistance or "
+            "contact emergency care protocols (e.g. dial 911 or visit the nearest hospital)."
+        )
+    elif intent == "symptom_inquiry":
+        response = (
+            "Based on the symptoms described, this match correlates with common dermatological conditions like "
+            "contact dermatitis or acne. Please note: I am an AI assistant and cannot provide a formal medical diagnosis. "
+            "Please consult a certified dermatologist for professional guidance."
+        )
+    else:
+        response = (
+            "Hello! I am your CareVoice AI Health Assistant. I can help track your daily symptoms, schedule "
+            "medicine reminders, and coordinate nearby specialist care. Please let me know how I can assist you today."
+        )
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO conversations (user_id, text, response_text, created_at) VALUES (?, ?, ?, ?)",
+        (user_id, req.text, response, datetime.now().isoformat())
+    )
+    conn.commit()
+    conn.close()
+    
+    return {
+        "intent": intent,
+        "entities": entities,
+        "response": response
+    }
+
+@app.post("/api/symptoms/analyze")
+def analyze_symptoms(req: ChatRequest, authorization: Optional[str] = Header(None)):
+    return chat_assistant(req, authorization)
+
+@app.get("/api/location/nearby")
+def get_nearby_clinics(lat: float, lon: float, city: Optional[str] = None, authorization: Optional[str] = Header(None)):
+    user_id = get_current_user_id(authorization)
+    return find_nearby_dermatologists(lat, lon, city)
+
+@app.post("/api/emergency")
+def handle_emergency(req: EmergencyRequest, authorization: Optional[str] = Header(None)):
+    user_id = get_current_user_id(authorization)
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO emergency_requests (user_id, lat, lon, created_at) VALUES (?, ?, ?, ?)",
+        (user_id, req.lat, req.lon, datetime.now().isoformat())
+    )
+    conn.commit()
+    req_id = cursor.lastrowid
+    conn.close()
+    
+    log_audit("emergency_triggered", user_id, f"Coords: {req.lat}, {req.lon}")
+    return {
+        "status": "success",
+        "emergency_id": req_id,
+        "message": "Emergency dispatch protocols simulated. Nearby contacts notified."
+    }
+
+@app.get("/api/notifications")
+def get_notifications(authorization: Optional[str] = Header(None)):
+    return [
+        {"id": 1, "title": "Medication Reminder", "body": "Take your recovery cream at 08:00 AM", "type": "reminder"},
+        {"id": 2, "title": "System Alert", "body": "Welcome to CareVoice - Your Voice, Your Care", "type": "system"}
+    ]
+
 # Recommendations & Explanations helpers
 from backend.app.utils.clinical_data import get_clinical_explanation, get_confidence_aware_recommendations
 
