@@ -131,6 +131,32 @@ export default function App() {
   const [profileEmail, setProfileEmail] = useState(() => localStorage.getItem('dermascan_profile_email') || 'guest@dermascan.ai');
   const [isLogged, setIsLogged] = useState(() => !!localStorage.getItem('dermascan_profile_email'));
 
+  // Helper calculations for the Home dashboard
+  const imageEntries = diary.filter(entry => entry.image) || [];
+  const latestScan = imageEntries[0] || (history[0] ? {
+    id: 'h0',
+    date: history[0].date || new Date().toLocaleDateString(),
+    image: history[0].image,
+    notes: `AI screening match: ${history[0].disease}`,
+    symptoms: { itching: 3, pain: 1, burning: 1, dryness: 2, redness: history[0].severity }
+  } : null);
+  const baselineScan = imageEntries[imageEntries.length - 1] || (history.length > 1 ? {
+    id: 'hb',
+    date: history[history.length - 1].date || new Date().toLocaleDateString(),
+    image: history[history.length - 1].image,
+    notes: `AI screening match: ${history[history.length - 1].disease}`,
+    symptoms: { itching: 5, pain: 3, burning: 2, dryness: 4, redness: history[history.length - 1].severity }
+  } : null);
+
+  const chartSource = diary.length > 0 ? diary : history.map(h => ({
+    id: h.date + h.disease,
+    date: h.date,
+    symptoms: {
+      itching: h.severity === 'Severe' ? 8 : h.severity === 'Moderate' ? 5 : h.severity === 'Mild' ? 3 : 1
+    }
+  }));
+  const chartPoints = [...chartSource].reverse().slice(-7);
+
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const mapContainerRef = useRef(null);
@@ -696,93 +722,215 @@ export default function App() {
         {activeTab === 'home' && (
           <div className="space-y-6 animate-fade-in text-left">
             
-            {/* Mockup Soft-gradient Hero Header Card (55%) */}
-            <div className="bg-gradient-to-tr from-pink-500/10 via-sky-500/5 to-white/5 border border-pink-100/30 rounded-[2.5rem] p-6 shadow-md relative overflow-hidden">
+            {/* 1. STREAK CARD WITH CONFETTI/CHECK-IN */}
+            <div className="bg-gradient-to-r from-pink-500/10 to-indigo-500/10 border border-pink-500/20 dark:border-purple-950/40 rounded-[2rem] p-5 shadow-lg relative overflow-hidden animate-pulse-glow">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-500 text-white flex items-center justify-center text-xl shadow-md transform hover:rotate-12 transition-transform">
+                    🔥
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest block">Skin Streak</h3>
+                    <span className="text-[11px] text-slate-400 font-bold block mt-0.5">{streak} Day Check-in Streak</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDiaryModal(true)}
+                  className="px-4 py-2.5 bg-gradient-to-r from-pink-500 to-indigo-600 text-white font-extrabold text-[10px] uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md shadow-pink-500/20"
+                >
+                  Check In
+                </button>
+              </div>
+            </div>
+
+            {/* 2. MAIN SKIN PROGRESS CIRCULAR OVERVIEW */}
+            <div className="bg-gradient-to-tr from-pink-500/10 via-sky-500/5 to-white/5 border border-pink-100/30 dark:border-slate-800/40 rounded-[2.5rem] p-6 shadow-md relative overflow-hidden">
               <div className="absolute right-0 top-0 w-24 h-24 bg-pink-400/5 rounded-full blur-xl"></div>
               
               <div className="flex justify-between items-start">
                 <div>
-                  <span className="text-[10px] text-pink-500 dark:text-pink-400 uppercase font-black tracking-widest block mb-1">Your Skin Health</span>
-                  <span className="text-[11px] text-slate-400 font-bold block">Assessment Score</span>
+                  <span className="text-[10px] text-pink-500 dark:text-pink-400 uppercase font-black tracking-widest block mb-1">Skin Health Score</span>
+                  <span className="text-[11px] text-slate-400 font-bold block">Overall Condition Level</span>
                 </div>
                 <button 
                   onClick={() => setActiveTab('analyze')}
-                  className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-900 border border-pink-100/10 flex items-center justify-center text-slate-600 dark:text-slate-300"
+                  className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-900 border border-pink-100/10 flex items-center justify-center text-slate-600 dark:text-slate-300 font-bold hover:scale-105 active:scale-95 transition-all"
                 >
                   ↗
                 </button>
               </div>
 
-              {/* Central 55% gauge */}
-              <div className="py-6 flex flex-col items-center justify-center">
-                <span className="text-4xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">55%</span>
-                <span className="text-[10px] font-bold text-slate-400 block mt-1">Based on previous check-in</span>
+              {/* Central gauge */}
+              <div className="py-6 flex flex-col items-center justify-center relative">
+                <span className="text-5xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">
+                  {history.length > 0 ? (history[0].disease === 'Normal Skin' ? '92%' : '78%') : '55%'}
+                </span>
+                <span className="text-[10px] font-bold text-slate-400 block mt-1">Based on latest assessment</span>
               </div>
 
-              {/* Indicator bars */}
-              <div className="grid grid-cols-4 gap-3 pt-3 border-t border-pink-100/20">
-                <div className="p-2.5 bg-yellow-500/10 rounded-2xl text-center">
+              {/* Indicator metrics */}
+              <div className="grid grid-cols-4 gap-3 pt-3 border-t border-pink-100/20 dark:border-slate-800/60">
+                <div className="p-2 bg-yellow-500/10 rounded-2xl text-center">
                   <span className="text-xs font-black text-yellow-500 block">30%</span>
                   <span className="text-[8px] font-bold text-slate-500 block mt-0.5">Acne</span>
                 </div>
-                <div className="p-2.5 bg-white/50 dark:bg-slate-900 rounded-2xl text-center border border-pink-100/10">
+                <div className="p-2 bg-white/50 dark:bg-slate-900/60 rounded-2xl text-center border border-pink-100/10 dark:border-slate-800/20">
                   <span className="text-xs font-black text-teal-500 block">45%</span>
                   <span className="text-[8px] font-bold text-slate-500 block mt-0.5">Dryness</span>
                 </div>
-                <div className="p-2.5 bg-pink-500/10 rounded-2xl text-center">
+                <div className="p-2 bg-pink-500/10 rounded-2xl text-center">
                   <span className="text-xs font-black text-pink-500 block">15%</span>
                   <span className="text-[8px] font-bold text-slate-500 block mt-0.5">Moisture</span>
                 </div>
-                <div className="p-2.5 bg-white/50 dark:bg-slate-900 rounded-2xl text-center border border-pink-100/10">
+                <div className="p-2 bg-white/50 dark:bg-slate-900/60 rounded-2xl text-center border border-pink-100/10 dark:border-slate-800/20">
                   <span className="text-xs font-black text-purple-500 block">10%</span>
                   <span className="text-[8px] font-bold text-slate-500 block mt-0.5">Texture</span>
                 </div>
               </div>
             </div>
 
-            {/* Primary Action Button CTA */}
+            {/* START SCAN CTA */}
             <button
               onClick={() => setActiveTab('analyze')}
-              className="w-full py-4.5 bg-gradient-to-r from-pink-500 via-rose-500 to-indigo-600 text-white font-extrabold text-xs uppercase tracking-widest rounded-3xl shadow-lg shadow-pink-500/15 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all"
+              className="w-full py-4 bg-gradient-to-r from-pink-500 via-rose-500 to-indigo-600 text-white font-extrabold text-xs uppercase tracking-widest rounded-3xl shadow-lg shadow-pink-500/15 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all"
             >
-              Start Skin Check
+              Start Skin Scanner
             </button>
 
-            {/* Visual Skin Quick Action buttons */}
-            <div className="grid grid-cols-2 gap-4">
-              <button 
-                onClick={() => setShowDiaryModal(true)} 
-                className="mock-card hover:border-pink-300 cursor-pointer text-left flex flex-col justify-between aspect-square"
-              >
-                <div className="w-10 h-10 rounded-2xl bg-pink-500/10 text-pink-500 flex items-center justify-center"><ClipboardCheck className="w-5 h-5" /></div>
-                <div>
-                  <span className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide block">Daily Diary</span>
-                  <span className="text-[9px] font-bold text-slate-400 block mt-1">Check-in daily</span>
-                </div>
-              </button>
-              <button 
-                onClick={() => {
-                  if (history.length > 0) {
-                    setResult(history[0]);
-                    setActiveTab('analyze');
-                  } else {
-                    setActiveTab('analyze');
-                  }
-                }}
-                className="mock-card hover:border-indigo-300 cursor-pointer text-left flex flex-col justify-between aspect-square"
-              >
-                <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center"><Sliders className="w-5 h-5" /></div>
-                <div>
-                  <span className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide block">Review Results</span>
-                  <span className="text-[9px] font-bold text-slate-400 block mt-1">Previous scan history</span>
-                </div>
-              </button>
+            {/* 3. TREND GRAPH CONTAINER */}
+            <div className="mock-card p-5 space-y-4">
+              <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">📈 Skin Blemish Trend Line</span>
+              <div className="pt-2">
+                {chartPoints.length > 1 ? (
+                  <div className="space-y-2">
+                    <svg className="w-full h-[100px] overflow-visible" viewBox="0 0 320 100">
+                      <path
+                        d={`M 20,80 L ${chartPoints.map((item, idx) => {
+                          const x = (idx / Math.max(1, chartPoints.length - 1)) * 280 + 20;
+                          const val = item.symptoms?.itching || 3;
+                          const y = 80 - (val / 10) * 60;
+                          return `${x},${y}`;
+                        }).join(' ')} L ${(chartPoints.length - 1) * 280 / Math.max(1, chartPoints.length - 1) + 20},80 Z`}
+                        fill="url(#grad-fill)"
+                        opacity="0.15"
+                      />
+                      <polyline
+                        fill="none"
+                        stroke="url(#line-grad)"
+                        strokeWidth="3.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        points={chartPoints.map((item, idx) => {
+                          const x = (idx / Math.max(1, chartPoints.length - 1)) * 280 + 20;
+                          const val = item.symptoms?.itching || 3;
+                          const y = 80 - (val / 10) * 60;
+                          return `${x},${y}`;
+                        }).join(' ')}
+                      />
+                      {chartPoints.map((item, idx) => {
+                        const x = (idx / Math.max(1, chartPoints.length - 1)) * 280 + 20;
+                        const val = item.symptoms?.itching || 3;
+                        const y = 80 - (val / 10) * 60;
+                        return (
+                          <g key={idx}>
+                            <circle cx={x} cy={y} r="4" className="fill-pink-500 stroke-white stroke-2" />
+                            <text x={x} y={y - 8} className="text-[8px] font-black fill-pink-500" textAnchor="middle">{val}</text>
+                          </g>
+                        );
+                      })}
+                      <defs>
+                        <linearGradient id="line-grad" x1="0" y1="0" x2="1" y2="0">
+                          <stop offset="0%" stopColor="#ec4899" />
+                          <stop offset="100%" stopColor="#6366f1" />
+                        </linearGradient>
+                        <linearGradient id="grad-fill" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#ec4899" />
+                          <stop offset="100%" stopColor="transparent" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <div className="flex justify-between text-[8px] text-slate-400 font-bold px-4">
+                      {chartPoints.map((item, idx) => (
+                        <span key={idx}>{item.date?.split(',')[0] || 'Day'}</span>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-6 text-center text-xs text-slate-400">
+                    <span>📈 Plotting trend line...</span>
+                    <span className="text-[10px] text-slate-500 mt-1 font-bold">Complete your first check-in to build trend analysis graphs.</span>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Premium product recommendations list */}
+            {/* 4. BEFORE & AFTER COMPARE SLIDER */}
+            {latestScan && baselineScan && latestScan.image && baselineScan.image && (
+              <div className="mock-card p-5 space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider">🔄 Baseline vs Latest Scan</span>
+                  <span className="text-[9px] font-black text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full uppercase">
+                    ✦ Skin Improving
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5 text-center">
+                    <span className="text-[9px] text-slate-400 font-black uppercase tracking-wider block">Baseline ({baselineScan.date?.split(',')[0] || 'First'})</span>
+                    <div className="aspect-square rounded-2xl overflow-hidden border border-pink-500/10 bg-slate-900">
+                      <img src={baselineScan.image} alt="baseline" className="w-full h-full object-cover" />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5 text-center">
+                    <span className="text-[9px] text-pink-500 font-black uppercase tracking-wider block">Latest ({latestScan.date?.split(',')[0] || 'Latest'})</span>
+                    <div className="aspect-square rounded-2xl overflow-hidden border border-pink-500/10 bg-slate-900">
+                      <img src={latestScan.image} alt="latest" className="w-full h-full object-cover" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 5. HISTORY & RECENT ENTRIES */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-extrabold uppercase text-slate-700 dark:text-slate-350 tracking-wider">📅 Skin Diary Log History</h4>
+              
+              {diary.length > 0 ? (
+                <div className="space-y-2.5 max-h-[250px] overflow-y-auto custom-scrollbar">
+                  {diary.map((entry, index) => (
+                    <div key={entry.id || index} className="p-3 bg-white/50 dark:bg-slate-950 border border-pink-100/10 dark:border-slate-800/40 rounded-2xl flex items-center gap-3">
+                      {entry.image ? (
+                        <div className="w-10 h-10 rounded-xl overflow-hidden border border-pink-100/30 flex-shrink-0">
+                          <img src={entry.image} alt="scan thumbnail" className="w-full h-full object-cover" />
+                        </div>
+                      ) : (
+                        <div className="w-10 h-10 rounded-xl bg-pink-500/15 text-pink-500 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                          📝
+                        </div>
+                      )}
+                      <div className="text-left flex-grow">
+                        <span className="text-[9px] font-black text-slate-400 block">{entry.date}</span>
+                        <h5 className="font-extrabold text-xs text-slate-800 dark:text-slate-200 mt-0.5">{entry.notes || "Symptom check-in"}</h5>
+                        <div className="flex gap-1.5 mt-1.5 text-[8px] text-slate-400">
+                          <span>Itch: {entry.symptoms?.itching}/10</span>
+                          <span>•</span>
+                          <span>Pain: {entry.symptoms?.pain}/10</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-6 bg-slate-950 border border-slate-900 rounded-3xl text-center text-[10px] text-slate-500 leading-normal">
+                  No diary check-in records found. Click "Check In" or complete a Skin scan to save records!
+                </div>
+              )}
+            </div>
+
+            {/* Suggested Skin Care */}
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h4 className="text-sm font-extrabold uppercase text-slate-700 dark:text-slate-300 tracking-wider">Suggested Skin Care</h4>
+                <h4 className="text-xs font-extrabold uppercase text-slate-700 dark:text-slate-350 tracking-wider">Suggested Skin Care</h4>
                 <button className="text-[10px] font-extrabold text-pink-500 uppercase tracking-widest">See All</button>
               </div>
 
@@ -878,8 +1026,11 @@ export default function App() {
 
             {/* Symptoms optional section (MICROPHONE PLACED ONLY HERE) */}
             <div className="mock-card p-5 flex flex-col gap-4">
-              <div className="flex justify-between items-center">
-                <label className="text-[10px] font-extrabold uppercase tracking-widest text-pink-500">Symptoms (Optional)</label>
+              <div className="flex justify-between items-start flex-col gap-1.5 md:flex-row md:items-center">
+                <div>
+                  <label className="text-[10px] font-extrabold uppercase tracking-widest text-pink-500">Symptoms (Optional)</label>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-400 block mt-0.5">Symptoms are optional — AI can analyze the image without them.</span>
+                </div>
                 <select 
                   value={language}
                   onChange={(e) => setLanguage(e.target.value)}
@@ -984,8 +1135,8 @@ export default function App() {
           <div className="space-y-6 animate-fade-in text-left">
             <div className="mock-card p-6 border-l-4 border-l-red-500 space-y-4">
               <h2 className="text-lg font-black uppercase text-red-500 tracking-wider">INVALID IMAGE</h2>
-              <p className="text-xs text-slate-500 leading-relaxed font-semibold">
-                This image does not appear to contain a suitable skin area. Please upload or capture a clear skin image.
+              <p className="text-xs text-slate-500 leading-relaxed font-bold">
+                Invalid Image — Please upload a skin image.
               </p>
               
               <div className="flex gap-2.5 pt-3">
@@ -1010,9 +1161,9 @@ export default function App() {
         {activeTab === 'analyze' && validationErrorType === 'quality' && (
           <div className="space-y-6 animate-fade-in text-left">
             <div className="mock-card p-6 border-l-4 border-l-amber-500 space-y-4">
-              <h2 className="text-lg font-black uppercase text-amber-500 tracking-wider">RETAKE IMAGE</h2>
-              <p className="text-xs text-slate-500 leading-relaxed font-semibold">
-                The image is not clear enough for reliable skin assessment. Please ensure balanced lighting and high focus.
+              <h2 className="text-lg font-black uppercase text-amber-500 tracking-wider">IMAGE QUALITY TOO LOW</h2>
+              <p className="text-xs text-slate-500 leading-relaxed font-bold">
+                Image Quality Too Low — Please retake/upload a clearer image.
               </p>
               
               <button
