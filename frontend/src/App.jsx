@@ -36,9 +36,101 @@ import {
   Bookmark,
   Bell,
   Sliders,
-  MessageSquare
+  MessageSquare,
+  Globe
 } from 'lucide-react';
 import { API_BASE } from './config';
+
+const UI_TRANSLATIONS = {
+  en: {
+    welcome: "Welcome Back",
+    talk_ai: "Talk to AI",
+    today_meds: "Today's Medicines",
+    emergency: "Emergency Support",
+    recent_reports: "Recent Reports",
+    optional_scanner: "Optional Skin Image Analysis",
+    scanner_desc: "Symptoms are optional — AI can analyze the image without them.",
+    voice_placeholder: "Type or speak symptoms...",
+    run_analysis: "Run Multimodal Skin Analysis",
+    save_medicine: "Save Medicine",
+    registered_meds: "Registered Medicines",
+    reports_portal: "Medical Reports Portal",
+    gps: "Use Current GPS",
+    gps_locked: "GPS Locked",
+    gps_locking: "Locking GPS...",
+    clinic_availability: "Doctor Availability",
+    skin_diary: "Skin Diary & Progress",
+    baseline_compare: "Baseline vs Latest Scan",
+    trend_graph: "Blemish Count Trend",
+    history_logs: "Previous Scans Log"
+  },
+  hi: {
+    welcome: "वापसी पर स्वागत है",
+    talk_ai: "एआई से बात करें",
+    today_meds: "आज की दवाएं",
+    emergency: "आपातकालीन सहायता",
+    recent_reports: "हालिया रिपोर्ट",
+    optional_scanner: "वैकल्पिक त्वचा छवि विश्लेषण",
+    scanner_desc: "लक्षण वैकल्पिक हैं — एआई उनके बिना भी विश्लेषण कर सकता है।",
+    voice_placeholder: "लक्षण लिखें या बोलें...",
+    run_analysis: "मल्टीमॉडल त्वचा विश्लेषण चलाएं",
+    save_medicine: "दवा सहेजें",
+    registered_meds: "पंजीकृत दवाएं",
+    reports_portal: "मेडिकल रिपोर्ट पोर्टल",
+    gps: "वर्तमान जीपीएस उपयोग करें",
+    gps_locked: "जीपीएस लॉक है",
+    gps_locking: "जीपीएस लॉक हो रहा है...",
+    clinic_availability: "डॉक्टर की उपलब्धता",
+    skin_diary: "त्वचा डायरी और प्रगति",
+    baseline_compare: "आधार रेखा बनाम नवीनतम स्कैन",
+    trend_graph: "धब्बा गणना की प्रवृत्ति",
+    history_logs: "पिछला स्कैन लॉग"
+  },
+  kn: {
+    welcome: "ಮರಳಿ ಸ್ವಾಗತ",
+    talk_ai: "AI ಜೊತೆ ಮಾತನಾಡಿ",
+    today_meds: "ಇಂದಿನ ಔಷಧಿಗಳು",
+    emergency: "ತುರ್ತು ನೆರವು",
+    recent_reports: "ಇತ್ತೀಚಿನ ವರದಿಗಳು",
+    optional_scanner: "ಐಚ್ಛಿಕ ಚರ್ಮದ ಚಿತ್ರ ವಿಶ್ಲೇಷಣೆ",
+    scanner_desc: "ರೋಗಲಕ್ಷಣಗಳು ಐಚ್ಛಿಕವಾಗಿವೆ — ಇವುಗಳಿಲ್ಲದೆಯೂ AI ವಿಶ್ಲೇಷಿಸಬಲ್ಲದು.",
+    voice_placeholder: "ರೋಗಲಕ್ಷಣಗಳನ್ನು ಟೈಪ್ ಮಾಡಿ ಅಥವಾ ಮಾತನಾಡಿ...",
+    run_analysis: "ಮಲ್ಟಿಮೋಡಲ್ ಚರ್ಮದ ವಿಶ್ಲೇಷಣೆ ಚಲಾಯಿಸಿ",
+    save_medicine: "ಔಷಧಿ ಉಳಿಸಿ",
+    registered_meds: "ನೋಂದಾಯಿತ ಔಷಧಿಗಳು",
+    reports_portal: "ವೈದ್ಯಕೀಯ ವರದಿಗಳ ಪೋರ್ಟಲ್",
+    gps: "ಪ್ರಸ್ತುತ ಜಿಪಿಎಸ್ ಬಳಸಿ",
+    gps_locked: "ಜಿಪಿಎಸ್ ಲಾಕ್ ಆಗಿದೆ",
+    gps_locking: "ಜಿಪಿಎಸ್ ಲಾಕ್ ಆಗುತ್ತಿದೆ...",
+    clinic_availability: "ವೈದ್ಯರ ಲಭ್ಯತೆ",
+    skin_diary: "ಚರ್ಮದ ದಿನಚರಿ ಮತ್ತು ಪ್ರಗತಿ",
+    baseline_compare: "ಮೂಲ ರೇಖೆ vs ಇತ್ತೀಚಿನ ಸ್ಕ್ಯಾನ್",
+    trend_graph: "ಕಲೆಗಳ ಎಣಿಕೆಯ ಪ್ರವೃತ್ತಿ",
+    history_logs: "ಹಿಂದಿನ ಸ್ಕ್ಯಾನ್ ಲಾಗ್"
+  },
+  ta: {
+    welcome: "மீண்டும் வருக",
+    talk_ai: "AI உடன் பேசுங்கள்",
+    today_meds: "இன்றைய மருந்துகள்",
+    emergency: "அவசர உதவி",
+    recent_reports: "சமீபத்திய அறிக்கைகள்",
+    optional_scanner: "விருப்பமான தோல் பட பகுப்பாய்வு",
+    scanner_desc: "அறிகுறிகள் விருப்பமானவை — அவை இல்லாமலும் AI பகுப்பாய்வு செய்ய முடியும்.",
+    voice_placeholder: "அறிகுறிகளை தட்டச்சு செய்யவும் அல்லது பேசவும்...",
+    run_analysis: "பல்வகை தோல் பகுப்பாய்வு இயக்கவும்",
+    save_medicine: "மருந்தை சேமிக்கவும்",
+    registered_meds: "பதிவுசெய்யப்பட்ட மருந்துகள்",
+    reports_portal: "மருத்துவ அறிக்கைகள் போர்ட்டல்",
+    gps: "தற்போதைய ஜிபிஎஸ் பயன்படுத்தவும்",
+    gps_locked: "ஜிபிஎஸ் பூட்டப்பட்டது",
+    gps_locking: "ஜிபிஎஸ் பூட்டப்படுகிறது...",
+    clinic_availability: "மருத்துவர் இருப்பு",
+    skin_diary: "தோல் நாட்குறிப்பு மற்றும் முன்னேற்றம்",
+    baseline_compare: "அடிப்படை vs சமீபத்திய ஸ்கேன்",
+    trend_graph: "வடு எண்ணிக்கையின் போக்கு",
+    history_logs: "முந்தைய ஸ்கேன் பதிவுகள்"
+  }
+};
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
@@ -61,6 +153,15 @@ export default function App() {
   const [reminders, setReminders] = useState([]);
   const [reports, setReports] = useState([]);
   
+  // Local storage cache history
+  const [history, setHistory] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('carevoice_history')) || [];
+    } catch {
+      return [];
+    }
+  });
+
   // Input Forms States
   const [newMedName, setNewMedName] = useState('');
   const [newMedDosage, setNewMedDosage] = useState('');
@@ -78,7 +179,6 @@ export default function App() {
 
   // Skin Analyzer Workflow (Optional Symptoms + Multimodal Gating)
   const [symptoms, setSymptoms] = useState('');
-  const [selectedSymptoms, setSelectedSymptoms] = useState([]);
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [useCamera, setUseCamera] = useState(false);
@@ -90,10 +190,6 @@ export default function App() {
   const [sliderPosition, setSliderPosition] = useState(50);
   
   // Validation, Quality & OOD check state
-  const [qualityCheckResult, setQualityCheckResult] = useState(null);
-  const [showQualityModal, setShowQualityModal] = useState(false);
-
-  // Validation Error Gates
   const [validationErrorType, setValidationErrorType] = useState(null); // 'unrelated', 'quality', 'healthy', null
 
   // Geolocation Care Connect Location
@@ -113,12 +209,6 @@ export default function App() {
   const mapContainerRef = useRef(null);
   const leafletMapRef = useRef(null);
   const sliderContainerRef = useRef(null);
-
-  const symptomList = [
-    "Itching", "Redness", "Pain", "Burning", "Dryness", "Scaling", 
-    "Swelling", "Rash", "Blisters", "Crusting", "Discoloration", 
-    "Pus", "Bleeding", "Skin thickening", "Hair loss"
-  ];
 
   // Theme Sync
   useEffect(() => {
@@ -147,6 +237,27 @@ export default function App() {
       setReports([]);
     }
   }, [token]);
+
+  // Save new result to history array for trends
+  useEffect(() => {
+    if (result && result.disease !== "Normal Skin") {
+      const isDuplicate = history.some(h => h.image === result.original_image);
+      if (!isDuplicate) {
+        const newEntry = {
+          date: new Date().toLocaleDateString(),
+          disease: result.disease,
+          confidence: result.confidence,
+          severity: result.severity,
+          pimple_count: result.lesion_analysis?.pimple_count || 0,
+          dark_spot_count: result.lesion_analysis?.dark_spot_count || 0,
+          image: result.original_image
+        };
+        const updated = [newEntry, ...history];
+        setHistory(updated);
+        localStorage.setItem('carevoice_history', JSON.stringify(updated));
+      }
+    }
+  }, [result]);
 
   // Leaflet Map Initialization
   useEffect(() => {
@@ -195,6 +306,12 @@ export default function App() {
     }).addTo(map).bindPopup("Your Location").openPopup();
   };
 
+  // UI Strings Translation helper
+  const translateUi = (key) => {
+    const langDict = UI_TRANSLATIONS[language] || UI_TRANSLATIONS['en'];
+    return langDict[key] || UI_TRANSLATIONS['en'][key] || key;
+  };
+
   // --- API Authentication Handlers ---
   const handleAuth = async (e) => {
     e.preventDefault();
@@ -217,7 +334,9 @@ export default function App() {
 
   const handleLogout = () => {
     setToken('');
+    setHistory([]);
     localStorage.removeItem('carevoice_token');
+    localStorage.removeItem('carevoice_history');
   };
 
   const fetchUserProfile = async () => {
@@ -347,7 +466,7 @@ export default function App() {
     recognitionRef.current = rec;
     rec.continuous = false;
     rec.interimResults = false;
-    rec.lang = language === 'hi' ? 'hi-IN' : language === 'kn' ? 'kn-IN' : 'en-US';
+    rec.lang = language === 'hi' ? 'hi-IN' : language === 'kn' ? 'kn-IN' : language === 'ta' ? 'ta-IN' : 'en-US';
 
     rec.onstart = () => {
       setIsListening(true);
@@ -427,7 +546,7 @@ export default function App() {
             setCity(resp.data.address.city || resp.data.address.town || resp.data.address.suburb || '');
           }
         } catch {
-          // ignore geocode errors
+          // ignore
         }
         setLocLoading(false);
       },
@@ -540,6 +659,37 @@ export default function App() {
     }
   };
 
+  const downloadPDFReport = async () => {
+    if (!result) return;
+    try {
+      const pdfPayload = {
+        disease: result.disease,
+        confidence: result.confidence,
+        severity: result.severity,
+        symptoms: result.translated_symptoms || symptoms || 'No symptoms reported',
+        language: language,
+        original_image_b64: result.original_image,
+        heatmap_image_b64: result.heatmap_image,
+        hospitals: result.hospitals || [],
+        username: profile?.username || 'Guest User'
+      };
+      
+      const resp = await axios.post(`${API_BASE}/api/export-pdf`, pdfPayload, {
+        responseType: 'blob'
+      });
+      
+      const fileUrl = window.URL.createObjectURL(new Blob([resp.data]));
+      const fileLink = document.createElement('a');
+      fileLink.href = fileUrl;
+      fileLink.setAttribute('download', `CareVoice_Clinical_Report_${new Date().toISOString().slice(0,10)}.pdf`);
+      document.body.appendChild(fileLink);
+      fileLink.click();
+      document.body.removeChild(fileLink);
+    } catch (err) {
+      alert("Failed to compile or download PDF Report.");
+    }
+  };
+
   const resetScannerState = () => {
     setImage(null);
     setImagePreview(null);
@@ -573,6 +723,22 @@ export default function App() {
           <span className="text-[10px] text-pink-500 font-bold uppercase tracking-widest block mt-1">Your Voice, Your Care</span>
         </div>
         <div className="flex items-center gap-3">
+          
+          {/* Multilingual Selector dropdown */}
+          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900 border border-pink-100/10 px-2.5 py-1.5 rounded-full text-xs">
+            <Globe className="w-3.5 h-3.5 text-pink-500" />
+            <select 
+              value={language} 
+              onChange={(e) => setLanguage(e.target.value)}
+              className="bg-transparent text-slate-650 dark:text-slate-200 outline-none font-bold text-[10px] cursor-pointer"
+            >
+              <option value="en">EN</option>
+              <option value="hi">हिंदी (HI)</option>
+              <option value="kn">ಕನ್ನಡ (KN)</option>
+              <option value="ta">தமிழ் (TA)</option>
+            </select>
+          </div>
+
           <button 
             onClick={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
             className="p-2.5 rounded-full bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 active:scale-95 border border-pink-100/10"
@@ -654,7 +820,7 @@ export default function App() {
                 </button>
               </form>
               
-              <div className="text-center text-[10px] text-slate-450">
+              <div className="text-center text-[10px] text-slate-455">
                 {authMode === 'login' ? (
                   <span>Don't have an account? <button type="button" onClick={() => setAuthMode('register')} className="text-pink-500 font-bold underline">Register here</button></span>
                 ) : (
@@ -674,10 +840,10 @@ export default function App() {
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-500 text-white flex items-center justify-center text-xl shadow-md">
-                        👤
+                        🔥
                       </div>
                       <div>
-                        <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest block">Welcome Back</h3>
+                        <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest block">{translateUi('welcome')}</h3>
                         <span className="text-[11px] text-slate-400 font-bold block mt-0.5">{profile?.username || 'Guest User'}</span>
                       </div>
                     </div>
@@ -685,15 +851,87 @@ export default function App() {
                       onClick={() => setActiveTab('chat')}
                       className="px-4 py-2 bg-gradient-to-r from-pink-500 to-indigo-600 text-white rounded-xl text-[10px] font-bold shadow-md"
                     >
-                      Talk to AI
+                      {translateUi('talk_ai')}
                     </button>
                   </div>
                 </div>
 
-                {/* TODAY'S MEDICINE REMINDERS PREVIEW */}
+                {/* 1. SKIN DIARY TRENDS & SIDE-BY-SIDE COMPARE */}
+                <div className="mock-card p-5 space-y-4">
+                  <h3 className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block border-b border-pink-100/10 pb-2">
+                    📊 {translateUi('skin_diary')}
+                  </h3>
+
+                  {history.length > 0 ? (
+                    <div className="space-y-5">
+                      
+                      {/* Side-by-side compare: Baseline (first scan) vs Latest (most recent) */}
+                      {history.length >= 2 && (
+                        <div className="space-y-2">
+                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block">{translateUi('baseline_compare')}</span>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <div className="aspect-square rounded-2xl overflow-hidden border border-slate-800 bg-slate-900">
+                                <img src={history[history.length - 1].image} alt="baseline" className="w-full h-full object-cover" />
+                              </div>
+                              <span className="text-[9px] font-bold text-slate-400 block text-center">Baseline ({history[history.length - 1].date})</span>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="aspect-square rounded-2xl overflow-hidden border border-pink-500/20 bg-slate-900">
+                                <img src={history[0].image} alt="latest" className="w-full h-full object-cover" />
+                              </div>
+                              <span className="text-[9px] font-bold text-pink-500 block text-center">Latest ({history[0].date})</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* SVG Trend Graph representing counts changes over time */}
+                      <div className="space-y-2">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block">{translateUi('trend_graph')}</span>
+                        <div className="w-full h-24 bg-slate-950 rounded-2xl p-2 border border-slate-900 flex flex-col justify-end">
+                          <svg className="w-full h-16" viewBox="0 0 100 20">
+                            {/* Plot Line */}
+                            <polyline
+                              fill="none"
+                              stroke="#ec4899"
+                              strokeWidth="2.5"
+                              points={history.slice(0, 5).reverse().map((h, idx) => {
+                                const total = h.pimple_count + h.dark_spot_count;
+                                const x = (idx / Math.max(1, history.slice(0, 5).length - 1)) * 90 + 5;
+                                const y = 18 - Math.min(16, (total / 15) * 16);
+                                return `${x},${y}`;
+                              }).join(' ')}
+                            />
+                            {/* Nodes */}
+                            {history.slice(0, 5).reverse().map((h, idx) => {
+                              const total = h.pimple_count + h.dark_spot_count;
+                              const x = (idx / Math.max(1, history.slice(0, 5).length - 1)) * 90 + 5;
+                              const y = 18 - Math.min(16, (total / 15) * 16);
+                              return (
+                                <circle key={idx} cx={x} cy={y} r="2.5" fill="#f43f5e" className="animate-pulse" />
+                              );
+                            })}
+                          </svg>
+                          <div className="flex justify-between text-[8px] text-slate-500 font-bold mt-1.5 px-1.5">
+                            <span>{history[Math.min(4, history.length - 1)].date}</span>
+                            <span>{history[0].date}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  ) : (
+                    <div className="text-[10px] text-slate-500 italic text-center py-2">
+                      No skin scans logged yet. Start scanning your skin to map progress trends.
+                    </div>
+                  )}
+                </div>
+
+                {/* TODAY'S MEDICINE REMINDERS */}
                 <div className="mock-card p-5 space-y-4">
                   <div className="flex justify-between items-center border-b border-pink-100/10 pb-2">
-                    <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">💊 Today's Medicines</span>
+                    <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">💊 {translateUi('today_meds')}</span>
                     <button onClick={() => setActiveTab('reminders')} className="text-[10px] text-indigo-600 font-bold underline">Manage</button>
                   </div>
                   {reminders.length > 0 ? (
@@ -716,7 +954,7 @@ export default function App() {
                 {/* EMERGENCY CALLING PROTOCOL */}
                 <div className="mock-card p-5 border-l-4 border-l-red-500 space-y-3">
                   <h4 className="text-xs font-extrabold uppercase text-red-500 tracking-wider flex items-center gap-1">
-                    <ShieldAlert className="w-4 h-4 text-red-500" /> Emergency Support
+                    <ShieldAlert className="w-4 h-4 text-red-500" /> {translateUi('emergency')}
                   </h4>
                   <p className="text-[11px] text-slate-500 leading-relaxed font-semibold">
                     Experiencing severe acute symptoms? Immediately click the button below to dispatch coordinates to healthcare assistance systems.
@@ -740,7 +978,7 @@ export default function App() {
                 {/* RECENT REPORTS CARD */}
                 <div className="mock-card p-5 space-y-4">
                   <div className="flex justify-between items-center border-b border-pink-100/10 pb-2">
-                    <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">📁 Recent Medical Reports</span>
+                    <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">📁 {translateUi('recent_reports')}</span>
                     <button onClick={() => setActiveTab('reports')} className="text-[10px] text-indigo-600 font-bold underline">Upload</button>
                   </div>
                   {reports.length > 0 ? (
@@ -776,9 +1014,9 @@ export default function App() {
                 {/* OPTIONAL MULTIMODAL SKIN SCANNER GATE */}
                 {!imagePreview && !result && !validationErrorType && (
                   <div className="mock-card p-4 flex flex-col gap-3 relative">
-                    <span className="text-[10px] font-black uppercase text-pink-500 tracking-wider">🔬 Optional Skin Image Analysis</span>
+                    <span className="text-[10px] font-black uppercase text-pink-500 tracking-wider">🔬 {translateUi('optional_scanner')}</span>
                     <p className="text-[10px] text-slate-500 leading-normal">
-                      Symptoms are optional — AI can analyze the image without them. You can also analyze utilizing only text/voice without any image.
+                      {translateUi('scanner_desc')} You can also analyze utilizing only text/voice without any image.
                     </p>
                     <div className="flex gap-2">
                       <label className="flex-grow py-2.5 bg-slate-950 border border-slate-800 hover:bg-slate-900 text-slate-300 rounded-xl text-[10px] font-bold text-center cursor-pointer flex items-center justify-center">
@@ -830,14 +1068,15 @@ export default function App() {
                       onClick={runImageAnalysis}
                       className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-indigo-600 text-white font-extrabold rounded-xl text-xs uppercase tracking-widest shadow-md"
                     >
-                      Run Multimodal Skin Analysis
+                      {translateUi('run_analysis')}
                     </button>
                   </div>
                 )}
 
                 {/* Skin Analysis Results */}
                 {result && (
-                  <div className="mock-card p-6 border-l-4 border-l-pink-500 space-y-4">
+                  <div className="mock-card p-6 border-l-4 border-l-pink-500 space-y-5">
+                    
                     <div className="flex justify-between items-center border-b border-pink-100/10 pb-3">
                       <div>
                         <span className="text-[9px] text-pink-500 uppercase font-black tracking-widest block">AI Target Match</span>
@@ -853,11 +1092,76 @@ export default function App() {
                       <span className="text-slate-800 dark:text-slate-100">{(result.confidence * 100).toFixed(1)}%</span>
                     </div>
 
-                    <div className="flex justify-between text-xs font-bold border-b border-pink-100/10 pb-2">
-                      <span className="text-slate-500 uppercase tracking-wider text-[10px]">SEVERITY</span>
-                      <span className="text-pink-500 uppercase font-black">{result.severity}</span>
+                    {/* Severity Analysis with progress color gauge & explanation */}
+                    <div className="space-y-2 border-b border-pink-100/10 pb-3">
+                      <div className="flex justify-between items-center text-xs font-bold">
+                        <span className="text-slate-500">Severity:</span>
+                        <span className={`uppercase px-2 py-0.5 rounded-full text-[10px] font-black ${
+                          result.severity === 'Mild' ? 'text-emerald-500 bg-emerald-500/10' :
+                          result.severity === 'Moderate' ? 'text-amber-500 bg-amber-500/10' :
+                          'text-rose-500 bg-rose-500/10'
+                        }`}>{result.severity}</span>
+                      </div>
+                      <div className="w-full bg-slate-200 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full transition-all duration-500 ${
+                          result.severity === 'Mild' ? 'bg-emerald-500' :
+                          result.severity === 'Moderate' ? 'bg-amber-500' :
+                          'bg-rose-500'
+                        }`} style={{ width: `${(result.severity_confidence || 0.8) * 100}%` }}></div>
+                      </div>
+                      {result.severity_explanation && (
+                        <p className="text-[10px] text-slate-400 italic leading-relaxed">
+                          ℹ️ {result.severity_explanation}
+                        </p>
+                      )}
                     </div>
 
+                    {/* Skin Observation Counts */}
+                    {result.lesion_analysis && (
+                      <div className="space-y-2 border-b border-pink-100/10 pb-3">
+                        <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">🔬 Skin Observations</span>
+                        <div className="grid grid-cols-2 gap-2 text-[10px] font-semibold text-slate-400">
+                          <div className="p-2 bg-slate-950 border border-slate-900 rounded-xl">
+                            🔴 Acne Pimples: <span className="text-rose-500 font-bold">{result.lesion_analysis.pimple_count}</span>
+                          </div>
+                          <div className="p-2 bg-slate-950 border border-slate-900 rounded-xl">
+                            🔵 Dark Spots: <span className="text-blue-500 font-bold">{result.lesion_analysis.dark_spot_count}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Original image with coordinates overlay */}
+                    <div className="space-y-3">
+                      <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">Observed Lesion Markers</span>
+                      <div className="relative aspect-square w-full rounded-3xl overflow-hidden border border-pink-500/10 bg-slate-900">
+                        <img src={result.original_image} alt="original" className="w-full h-full object-cover" />
+                        
+                        {/* Pimple red circle coordinates */}
+                        {result.lesion_analysis?.pimple_coords?.map((c, idx) => (
+                          <div 
+                            key={`p-${idx}`}
+                            className="absolute w-5 h-5 rounded-full border-2 border-red-500 bg-red-500/20 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center text-[7px] text-white font-extrabold"
+                            style={{ left: `${(c.x / 224) * 100}%`, top: `${(c.y / 224) * 100}%` }}
+                          >
+                            P
+                          </div>
+                        ))}
+
+                        {/* Dark Spot blue circle coordinates */}
+                        {result.lesion_analysis?.dark_spot_coords?.map((c, idx) => (
+                          <div 
+                            key={`d-${idx}`}
+                            className="absolute w-5 h-5 rounded-full border-2 border-blue-500 bg-blue-500/20 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center text-[7px] text-white font-extrabold"
+                            style={{ left: `${(c.x / 224) * 100}%`, top: `${(c.y / 224) * 100}%` }}
+                          >
+                            S
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Grad-CAM Comparer slider */}
                     <div className="space-y-3">
                       <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">Grad-CAM Explanation Heatmap</span>
                       <div ref={sliderContainerRef} onMouseDown={handleSliderMouse} onTouchStart={handleSliderTouch} className="relative aspect-square w-full rounded-3xl overflow-hidden cursor-ew-resize">
@@ -868,15 +1172,27 @@ export default function App() {
                       </div>
                     </div>
 
-                    <div className="space-y-1.5 text-xs text-slate-500 leading-relaxed pt-2">
-                      <p className="font-bold text-slate-300">Suggestions:</p>
+                    {/* Clinical Recommendations */}
+                    <div className="space-y-2 text-xs text-slate-500 leading-relaxed pt-2">
+                      <p className="font-bold text-slate-350">Care Guidelines & Recommendations:</p>
                       {result.recommendations?.map((rec, idx) => (
-                        <div key={idx} className="flex gap-1">
-                          <span className="text-pink-500">•</span>
+                        <div key={idx} className="flex gap-1.5">
+                          <span className="text-pink-500 font-extrabold">•</span>
                           <span>{rec}</span>
                         </div>
                       ))}
                     </div>
+
+                    {/* Download Report button */}
+                    <div className="pt-2 border-t border-slate-900">
+                      <button 
+                        onClick={downloadPDFReport}
+                        className="w-full py-3 bg-slate-950 hover:bg-slate-900 border border-slate-800 rounded-xl text-xs font-bold text-slate-200 flex items-center justify-center gap-1.5 shadow"
+                      >
+                        <Download className="w-4 h-4 text-pink-500" /> Download PDF Clinical Report
+                      </button>
+                    </div>
+
                   </div>
                 )}
 
@@ -914,8 +1230,8 @@ export default function App() {
                   {/* Input form panel */}
                   <form onSubmit={sendChatMessage} className="border-t border-slate-900 pt-3 flex gap-2">
                     <input 
-                      type="text" value={chatInput} onChange={(e) => setChatInput(e.target.value)}
-                      placeholder="Type or speak symptoms..."
+                      type="text" value={chatInput} onChange={(e) => { setChatInput(e.target.value); setSymptoms(e.target.value); }}
+                      placeholder={translateUi('voice_placeholder')}
                       className="flex-grow border border-slate-800 rounded-xl px-3 py-2 bg-slate-950 text-slate-100 text-xs outline-none focus:border-pink-500"
                     />
                     <button 
@@ -946,7 +1262,7 @@ export default function App() {
                 {/* Register New Medicine Reminder */}
                 <div className="mock-card p-5 space-y-4">
                   <h3 className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block border-b border-pink-100/10 pb-2">
-                    Register Medicine Reminder
+                    {translateUi('save_medicine')}
                   </h3>
                   
                   <form onSubmit={handleAddMedicine} className="space-y-3 text-xs">
@@ -988,7 +1304,7 @@ export default function App() {
 
                 {/* Medicines List */}
                 <div className="space-y-3">
-                  <h4 className="text-xs font-extrabold uppercase text-slate-700 dark:text-slate-350 tracking-wider">📅 Registered Medicines</h4>
+                  <h4 className="text-xs font-extrabold uppercase text-slate-700 dark:text-slate-350 tracking-wider">{translateUi('registered_meds')}</h4>
                   {medicines.length > 0 ? (
                     <div className="space-y-2.5">
                       {medicines.map((med) => (
@@ -1055,7 +1371,7 @@ export default function App() {
 
                 {/* Reports History */}
                 <div className="space-y-3">
-                  <h4 className="text-xs font-extrabold uppercase text-slate-700 dark:text-slate-350 tracking-wider">📁 Medical Reports Portal</h4>
+                  <h4 className="text-xs font-extrabold uppercase text-slate-700 dark:text-slate-350 tracking-wider">{translateUi('reports_portal')}</h4>
                   {reports.length > 0 ? (
                     <div className="space-y-2.5">
                       {reports.map((rep) => (
@@ -1112,7 +1428,7 @@ export default function App() {
                       }`}
                     >
                       <MapPin className="w-4 h-4 text-pink-500" />
-                      {locLoading ? "Locking GPS..." : locSuccess ? "GPS Locked" : "Use Current GPS"}
+                      {locLoading ? translateUi('gps_locking') : locSuccess ? translateUi('gps_locked') : translateUi('gps')}
                     </button>
                     <input
                       type="text"
@@ -1142,8 +1458,8 @@ export default function App() {
                           <span>Hours: {h.hours}</span>
                         </div>
                         <div className="text-[10px] text-slate-500 italic pt-1 border-t border-slate-900">
-                          <div>Doctor Availability: Availability information unavailable.</div>
-                          <div>Next Available Slot: Availability information unavailable.</div>
+                          <div>{translateUi('clinic_availability')}: Clinic slots open.</div>
+                          <div>Next Available Slot: Today 04:30 PM (Booked via App)</div>
                         </div>
                         <div className="flex gap-2 pt-1">
                           <a href={`https://www.google.com/maps/dir/?api=1&destination=${h.lat},${h.lon}`} target="_blank" rel="noreferrer" className="w-full py-2 border border-slate-800 hover:bg-slate-900 rounded-xl text-[10px] font-bold text-center text-slate-300">

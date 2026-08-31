@@ -19,7 +19,7 @@ from backend.app.models.onnx_text_model import SymptomTextEncoder
 from backend.app.models.onnx_fusion_model import ONNXMultiModalFusionNet
 from backend.app.services.location import find_nearby_dermatologists, get_coordinates_from_city
 from backend.app.services.pdf_report import generate_pdf_report
-from backend.app.utils.helpers import translate_symptoms, pil_to_base64
+from backend.app.utils.helpers import translate_symptoms, pil_to_base64, translate_to
 
 # Constants
 DISEASE_CLASSES = [
@@ -128,6 +128,7 @@ class PDFRequest(BaseModel):
     original_image: Optional[str] = None
     heatmap_image: Optional[str] = None
     hospitals: List[dict]
+    username: Optional[str] = "Guest User"
 
 @app.get("/api/health")
 def read_root():
@@ -341,9 +342,29 @@ async def predict_skin_disease(
         overlay_b64 = pil_to_base64(overlay_pil)
         
         # Explanations & recommendations
-        explanation = get_clinical_explanation(predicted_disease)
-        recommendations = get_confidence_aware_recommendations(predicted_disease, confidence, predicted_severity)
+        raw_explanation = get_clinical_explanation(predicted_disease)
+        raw_recommendations = get_confidence_aware_recommendations(predicted_disease, confidence, predicted_severity)
         
+        # Severity details
+        severity_confidence = float(severity_probs[pred_severity_idx])
+        severity_explanation_raw = (
+            "Localized epidermal presentation with minimal surface disruption indicates a mild profile."
+            if predicted_severity == "Mild"
+            else "Noticeable active lesion markers or spreading inflammation across the affected zone suggests a moderate profile."
+            if predicted_severity == "Moderate"
+            else "Elevated symptom triggers or morphology suggesting advanced dermal involvement flags a severe profile."
+        )
+        
+        # Translate clinical details if language is not English
+        if language and language != 'en':
+            explanation = translate_to(raw_explanation, language)
+            recommendations = [translate_to(rec, language) for rec in raw_recommendations]
+            severity_explanation = translate_to(severity_explanation_raw, language)
+        else:
+            explanation = raw_explanation
+            recommendations = raw_recommendations
+            severity_explanation = severity_explanation_raw
+            
         # Geocode Location
         current_lat, current_lon = lat, lon
         if (current_lat is None or current_lon is None) and city:
@@ -369,6 +390,8 @@ async def predict_skin_disease(
             "disease": predicted_disease,
             "confidence": confidence,
             "severity": predicted_severity,
+            "severity_confidence": severity_confidence,
+            "severity_explanation": severity_explanation,
             "translated_symptoms": translated_text,
             "original_image": f"data:image/jpeg;base64,{original_b64}",
             "heatmap_image": f"data:image/jpeg;base64,{heatmap_b64}",
@@ -423,7 +446,8 @@ def export_pdf_report(request: PDFRequest):
             request.symptoms,
             request.language,
             request.hospitals,
-            recommendations
+            recommendations,
+            request.username or "Guest User"
         )
         
         try:

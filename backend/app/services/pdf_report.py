@@ -17,7 +17,8 @@ def generate_pdf_report(
     symptoms: str,
     language: str,
     hospitals: list,
-    recommendations: list
+    recommendations: list,
+    username: str = "Guest User"
 ):
     """
     Generates a professional, clinical PDF report of the diagnosis.
@@ -105,10 +106,12 @@ def generate_pdf_report(
     # Metadata Block
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     meta_data = [
-        [Paragraph("Report Timestamp:", meta_label_style), Paragraph(now_str, body_style),
-         Paragraph("Symptom Language:", meta_label_style), Paragraph(language.upper(), body_style)],
+        [Paragraph("Patient Name:", meta_label_style), Paragraph(username, body_style),
+         Paragraph("Report Timestamp:", meta_label_style), Paragraph(now_str, body_style)],
+        [Paragraph("Symptom Language:", meta_label_style), Paragraph(language.upper(), body_style),
+         Paragraph("System Model:", meta_label_style), Paragraph("EfficientNetB0 + MiniLM Fusion", body_style)],
         [Paragraph("Patient Symptoms:", meta_label_style), Paragraph(symptoms, body_style),
-         Paragraph("System Model:", meta_label_style), Paragraph("EfficientNetB0 + MiniLM Fusion", body_style)]
+         Paragraph("", meta_label_style), Paragraph("", body_style)]
     ]
     meta_table = Table(meta_data, colWidths=[1.5*inch, 2.0*inch, 1.5*inch, 2.0*inch])
     meta_table.setStyle(TableStyle([
