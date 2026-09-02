@@ -9,8 +9,8 @@ const getApiBase = () => {
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     return 'http://localhost:8000';
   }
-  // Default to Render production backend URL (with VITE_API_BASE override)
-  return import.meta.env.VITE_API_BASE || 'https://dermascan-ai.onrender.com';
+  // Default to relative path for same-origin production deployment (Vercel)
+  return import.meta.env.VITE_API_BASE || '';
 };
 
 export const API_BASE = getApiBase();
