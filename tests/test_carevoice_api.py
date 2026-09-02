@@ -157,7 +157,36 @@ def run_integration_tests():
     assert em_data["status"] == "success"
     print(f"Emergency dispatch response message: {em_data['message']}")
 
-    # 13. Health Check
+    # 13. Test Appointment Booking & Cancellation
+    print("\nTesting Appointment Booking: POST /api/appointments...")
+    appt_url = f"{base_url}/api/appointments"
+    appt_payload = {
+        "hospital_name": "Bangalore Medical College & Research Institute (Dermatology)",
+        "doctor_name": "Dr. Ananya Rao, MD (Dermatology)",
+        "appointment_date": "2026-09-05",
+        "appointment_time": "10:00 AM",
+        "patient_symptoms": "Skin redness and irritation"
+    }
+    resp = requests.post(appt_url, json=appt_payload, headers=headers)
+    assert resp.status_code == 200
+    appt_data = resp.json()
+    assert appt_data["status"] == "Confirmed"
+    appt_id = appt_data["id"]
+    print(f"Appointment booked successfully! ID: {appt_id}")
+
+    print("Testing GET /api/appointments...")
+    resp = requests.get(appt_url, headers=headers)
+    assert resp.status_code == 200
+    appts = resp.json()
+    assert any(a["id"] == appt_id for a in appts)
+    print(f"User appointments retrieved: {len(appts)} active bookings")
+
+    print(f"Testing Cancel Appointment: DELETE /api/appointments/{appt_id}...")
+    resp = requests.delete(f"{appt_url}/{appt_id}", headers=headers)
+    assert resp.status_code == 200
+    print("Appointment cancelled successfully!")
+
+    # 14. Health Check
     print("\nTesting backend API health check: /api/health...")
     health_resp = requests.get(f"{base_url}/api/health")
     assert health_resp.status_code == 200

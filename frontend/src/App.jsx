@@ -12,32 +12,35 @@ import {
   RefreshCw, 
   Navigation, 
   Phone, 
-  Star,
-  ChevronRight,
-  ShieldAlert,
-  Download,
-  Camera,
-  ArrowLeft,
-  Sun,
-  Moon,
-  User,
-  Settings,
-  Lock,
-  Eye,
-  Trash2,
-  Calendar,
-  ClipboardCheck,
-  Home,
-  Plus,
-  X,
-  Flame,
-  Mic,
-  Volume2,
-  Bookmark,
-  Bell,
-  Sliders,
-  MessageSquare,
-  Globe
+  Star, 
+  ChevronRight, 
+  ShieldAlert, 
+  Download, 
+  Camera, 
+  ArrowLeft, 
+  Sun, 
+  Moon, 
+  User, 
+  Settings, 
+  Lock, 
+  Eye, 
+  Trash2, 
+  Calendar, 
+  ClipboardCheck, 
+  Home, 
+  Plus, 
+  X, 
+  Flame, 
+  Mic, 
+  Volume2, 
+  Bookmark, 
+  Bell, 
+  Sliders, 
+  MessageSquare, 
+  Globe,
+  Clock,
+  UserCheck,
+  Check
 } from 'lucide-react';
 import { API_BASE } from './config';
 
@@ -50,7 +53,7 @@ const UI_TRANSLATIONS = {
     recent_reports: "Recent Reports",
     optional_scanner: "Optional Skin Image Analysis",
     scanner_desc: "Symptoms are optional — AI can analyze the image without them.",
-    voice_placeholder: "Type or speak symptoms...",
+    voice_placeholder: "Type or speak symptoms (Optional)...",
     run_analysis: "Run Multimodal Skin Analysis",
     save_medicine: "Save Medicine",
     registered_meds: "Registered Medicines",
@@ -62,7 +65,14 @@ const UI_TRANSLATIONS = {
     skin_diary: "Skin Diary & Progress",
     baseline_compare: "Baseline vs Latest Scan",
     trend_graph: "Blemish Count Trend",
-    history_logs: "Previous Scans Log"
+    history_logs: "Previous Scans Log",
+    book_appointment: "Book Appointment",
+    hospital_schedules: "Clinic Timings & Schedules",
+    select_slot: "Select Time Slot",
+    select_date: "Appointment Date",
+    my_appointments: "My Booked Appointments",
+    listening_voice: "Listening... Speak symptoms in English",
+    optional_badge: "Optional"
   },
   hi: {
     welcome: "वापसी पर स्वागत है",
@@ -72,7 +82,7 @@ const UI_TRANSLATIONS = {
     recent_reports: "हालिया रिपोर्ट",
     optional_scanner: "वैकल्पिक त्वचा छवि विश्लेषण",
     scanner_desc: "लक्षण वैकल्पिक हैं — एआई उनके बिना भी विश्लेषण कर सकता है।",
-    voice_placeholder: "लक्षण लिखें या बोलें...",
+    voice_placeholder: "लक्षण लिखें या बोलें (वैकल्पिक)...",
     run_analysis: "मल्टीमॉडल त्वचा विश्लेषण चलाएं",
     save_medicine: "दवा सहेजें",
     registered_meds: "पंजीकृत दवाएं",
@@ -84,7 +94,14 @@ const UI_TRANSLATIONS = {
     skin_diary: "त्वचा डायरी और प्रगति",
     baseline_compare: "आधार रेखा बनाम नवीनतम स्कैन",
     trend_graph: "धब्बा गणना की प्रवृत्ति",
-    history_logs: "पिछला स्कैन लॉग"
+    history_logs: "पिछला स्कैन लॉग",
+    book_appointment: "अपॉइंटमेंट बुक करें",
+    hospital_schedules: "क्लिनिक समय और कार्यक्रम",
+    select_slot: "समय स्लॉट चुनें",
+    select_date: "अपॉइंटमेंट तिथि",
+    my_appointments: "मेरे बुक किए गए अपॉइंटमेंट",
+    listening_voice: "सुन रहा हूँ... हिंदी में लक्षण बोलें",
+    optional_badge: "वैकल्पिक"
   },
   kn: {
     welcome: "ಮರಳಿ ಸ್ವಾಗತ",
@@ -94,7 +111,7 @@ const UI_TRANSLATIONS = {
     recent_reports: "ಇತ್ತೀಚಿನ ವರದಿಗಳು",
     optional_scanner: "ಐಚ್ಛಿಕ ಚರ್ಮದ ಚಿತ್ರ ವಿಶ್ಲೇಷಣೆ",
     scanner_desc: "ರೋಗಲಕ್ಷಣಗಳು ಐಚ್ಛಿಕವಾಗಿವೆ — ಇವುಗಳಿಲ್ಲದೆಯೂ AI ವಿಶ್ಲೇಷಿಸಬಲ್ಲದು.",
-    voice_placeholder: "ರೋಗಲಕ್ಷಣಗಳನ್ನು ಟೈಪ್ ಮಾಡಿ ಅಥವಾ ಮಾತನಾಡಿ...",
+    voice_placeholder: "ರೋಗಲಕ್ಷಣಗಳನ್ನು ಟೈಪ್ ಮಾಡಿ ಅಥವಾ ಮಾತನಾಡಿ (ಐಚ್ಛಿಕ)...",
     run_analysis: "ಮಲ್ಟಿಮೋಡಲ್ ಚರ್ಮದ ವಿಶ್ಲೇಷಣೆ ಚಲಾಯಿಸಿ",
     save_medicine: "ಔಷಧಿ ಉಳಿಸಿ",
     registered_meds: "ನೋಂದಾಯಿತ ಔಷಧಿಗಳು",
@@ -106,7 +123,14 @@ const UI_TRANSLATIONS = {
     skin_diary: "ಚರ್ಮದ ದಿನಚರಿ ಮತ್ತು ಪ್ರಗತಿ",
     baseline_compare: "ಮೂಲ ರೇಖೆ vs ಇತ್ತೀಚಿನ ಸ್ಕ್ಯಾನ್",
     trend_graph: "ಕಲೆಗಳ ಎಣಿಕೆಯ ಪ್ರವೃತ್ತಿ",
-    history_logs: "ಹಿಂದಿನ ಸ್ಕ್ಯಾನ್ ಲಾಗ್"
+    history_logs: "ಹಿಂದಿನ ಸ್ಕ್ಯಾನ್ ಲಾಗ್",
+    book_appointment: "ಅಪಾಯಿಂಟ್‌ಮೆಂಟ್ ಬುಕ್ ಮಾಡಿ",
+    hospital_schedules: "ಕ್ಲಿನಿಕ್ ಸಮಯ ಮತ್ತು ವೇಳಾಪಟ್ಟಿ",
+    select_slot: "ಸಮಯ ಸ್ಲಾಟ್ ಆಯ್ಕೆಮಾಡಿ",
+    select_date: "ಅಪಾಯಿಂಟ್‌ಮೆಂಟ್ ದಿನಾಂಕ",
+    my_appointments: "ನನ್ನ ಕಾಯ್ದಿರಿಸಿದ ಅಪಾಯಿಂಟ್‌ಮೆಂಟ್‌ಗಳು",
+    listening_voice: "ಕೇಳಿಸಿಕೊಳ್ಳುತ್ತಿದೆ... ಕನ್ನಡದಲ್ಲಿ ಮಾತನಾಡಿ",
+    optional_badge: "ಐಚ್ಛಿಕ"
   },
   ta: {
     welcome: "மீண்டும் வருக",
@@ -116,7 +140,7 @@ const UI_TRANSLATIONS = {
     recent_reports: "சமீபத்திய அறிக்கைகள்",
     optional_scanner: "விருப்பமான தோல் பட பகுப்பாய்வு",
     scanner_desc: "அறிகுறிகள் விருப்பமானவை — அவை இல்லாமலும் AI பகுப்பாய்வு செய்ய முடியும்.",
-    voice_placeholder: "அறிகுறிகளை தட்டச்சு செய்யவும் அல்லது பேசவும்...",
+    voice_placeholder: "அறிகுறிகளை தட்டச்சு செய்யவும் அல்லது பேசவும் (விருப்பமானது)...",
     run_analysis: "பல்வகை தோல் பகுப்பாய்வு இயக்கவும்",
     save_medicine: "மருந்தை சேமிக்கவும்",
     registered_meds: "பதிவுசெய்யப்பட்ட மருந்துகள்",
@@ -128,7 +152,14 @@ const UI_TRANSLATIONS = {
     skin_diary: "தோல் நாட்குறிப்பு மற்றும் முன்னேற்றம்",
     baseline_compare: "அடிப்படை vs சமீபத்திய ஸ்கேன்",
     trend_graph: "வடு எண்ணிக்கையின் போக்கு",
-    history_logs: "முந்தைய ஸ்கேன் பதிவுகள்"
+    history_logs: "முந்தைய ஸ்கேன் பதிவுகள்",
+    book_appointment: "முன்பதிவு செய்யுங்கள்",
+    hospital_schedules: "மருத்துவமனை நேரம் மற்றும் அட்டவணை",
+    select_slot: "நேரத்தை தேர்ந்தெடுக்கவும்",
+    select_date: "முன்பதிவு தேதி",
+    my_appointments: "எனது முன்பதிவு செய்யப்பட்ட சந்திப்புகள்",
+    listening_voice: "கேட்கிறது... தமிழில் அறிகுறிகளைப் பேசுங்கள்",
+    optional_badge: "விருப்பமானது"
   }
 };
 
@@ -148,10 +179,12 @@ export default function App() {
   // Profile data
   const [profile, setProfile] = useState(null);
 
-  // Reminders, Medicines, and Reports List States
+  // Reminders, Medicines, Reports, and Appointments List States
   const [medicines, setMedicines] = useState([]);
   const [reminders, setReminders] = useState([]);
   const [reports, setReports] = useState([]);
+  const [appointments, setAppointments] = useState([]);
+  const [nearbyHospitals, setNearbyHospitals] = useState([]);
   
   // Local storage cache history
   const [history, setHistory] = useState(() => {
@@ -169,9 +202,17 @@ export default function App() {
   const [reportTitle, setReportTitle] = useState('');
   const [reportFile, setReportFile] = useState(null);
 
+  // Appointment Booking Modal State
+  const [selectedHospitalForBooking, setSelectedHospitalForBooking] = useState(null);
+  const [bookingDate, setBookingDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [bookingSlot, setBookingSlot] = useState('10:00 AM');
+  const [bookingNotes, setBookingNotes] = useState('');
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [bookingSuccessMsg, setBookingSuccessMsg] = useState('');
+
   // Chatbot State
   const [chatHistory, setChatHistory] = useState([
-    { sender: 'bot', text: 'Hello! I am your CareVoice AI Health Assistant. I can analyze symptoms, voice queries, schedule medicine reminders, and assist in emergencies.' }
+    { sender: 'bot', text: 'Hello! I am your CareVoice AI Health Assistant. I can analyze symptoms, voice queries, schedule medicine reminders, and assist with appointments & emergencies.' }
   ]);
   const [chatInput, setChatInput] = useState('');
   const [isAiProcessing, setIsAiProcessing] = useState(false);
@@ -190,12 +231,12 @@ export default function App() {
   const [sliderPosition, setSliderPosition] = useState(50);
   
   // Validation, Quality & OOD check state
-  const [validationErrorType, setValidationErrorType] = useState(null); // 'unrelated', 'quality', 'healthy', null
+  const [validationErrorType, setValidationErrorType] = useState(null);
 
   // Geolocation Care Connect Location
   const [city, setCity] = useState('');
-  const [lat, setLat] = useState(null);
-  const [lon, setLon] = useState(null);
+  const [lat, setLat] = useState(12.9716);
+  const [lon, setLon] = useState(77.5946);
   const [locLoading, setLocLoading] = useState(false);
   const [locSuccess, setLocSuccess] = useState(false);
 
@@ -229,12 +270,14 @@ export default function App() {
       fetchMedicines();
       fetchReminders();
       fetchReports();
+      fetchAppointments();
     } else {
       localStorage.removeItem('carevoice_token');
       setProfile(null);
       setMedicines([]);
       setReminders([]);
       setReports([]);
+      setAppointments([]);
     }
   }, [token]);
 
@@ -258,6 +301,28 @@ export default function App() {
       }
     }
   }, [result]);
+
+  // Fetch Hospitals when Location Tab or Coordinates Change
+  useEffect(() => {
+    if (activeTab === 'location' || activeTab === 'home') {
+      fetchNearbyHospitals();
+    }
+  }, [activeTab, lat, lon, city]);
+
+  const fetchNearbyHospitals = async () => {
+    try {
+      const resp = await axios.get(`${API_BASE}/api/location/nearby`, {
+        params: { lat: lat || 12.9716, lon: lon || 77.5946, city: city || 'Bengaluru' },
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      setNearbyHospitals(resp.data || []);
+      if (leafletMapRef.current && window.L && resp.data) {
+        updateMapMarkers(resp.data);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   // Leaflet Map Initialization
   useEffect(() => {
@@ -298,12 +363,32 @@ export default function App() {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
+    // Current location marker
     window.L.marker(mapCenter, {
       icon: window.L.divIcon({
         className: 'bg-pink-500 w-4 h-4 rounded-full border-2 border-white shadow-lg animate-pulse',
         iconSize: [16, 16]
       })
-    }).addTo(map).bindPopup("Your Location").openPopup();
+    }).addTo(map).bindPopup("<b>Your Location</b>").openPopup();
+
+    if (nearbyHospitals.length > 0) {
+      updateMapMarkers(nearbyHospitals);
+    }
+  };
+
+  const updateMapMarkers = (hospitals) => {
+    if (!leafletMapRef.current || !window.L) return;
+    hospitals.forEach(h => {
+      if (h.lat && h.lon) {
+        window.L.marker([h.lat, h.lon], {
+          icon: window.L.divIcon({
+            className: 'bg-indigo-600 text-white rounded-full p-1 text-[8px] font-bold text-center flex items-center justify-center border-2 border-white shadow-md',
+            iconSize: [22, 22],
+            html: '🏥'
+          })
+        }).addTo(leafletMapRef.current).bindPopup(`<b>${h.name}</b><br/>${h.hours || 'Open'}<br/>${h.distance}`);
+      }
+    });
   };
 
   // UI Strings Translation helper
@@ -350,8 +435,66 @@ export default function App() {
     }
   };
 
+  // --- Appointments API Services ---
+  const fetchAppointments = async () => {
+    if (!token) return;
+    try {
+      const resp = await axios.get(`${API_BASE}/api/appointments`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setAppointments(resp.data || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleBookAppointment = async (e) => {
+    e.preventDefault();
+    if (!selectedHospitalForBooking) return;
+    setBookingLoading(true);
+    setBookingSuccessMsg('');
+
+    try {
+      const payload = {
+        hospital_name: selectedHospitalForBooking.name,
+        doctor_name: selectedHospitalForBooking.specialist || "Dermatology Specialist",
+        appointment_date: bookingDate,
+        appointment_time: bookingSlot,
+        patient_symptoms: bookingNotes || symptoms || "Skin consultation"
+      };
+
+      await axios.post(`${API_BASE}/api/appointments`, payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setBookingSuccessMsg('Appointment confirmed successfully!');
+      fetchAppointments();
+      setTimeout(() => {
+        setSelectedHospitalForBooking(null);
+        setBookingSuccessMsg('');
+      }, 1800);
+    } catch (err) {
+      alert("Failed to book appointment: " + (err.response?.data?.detail || err.message));
+    } finally {
+      setBookingLoading(false);
+    }
+  };
+
+  const handleCancelAppointment = async (id) => {
+    if (!window.confirm("Are you sure you want to cancel this appointment?")) return;
+    try {
+      await axios.delete(`${API_BASE}/api/appointments/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchAppointments();
+    } catch (err) {
+      alert("Failed to cancel appointment.");
+    }
+  };
+
   // --- Medicines & Reminders CRUD API Services ---
   const fetchMedicines = async () => {
+    if (!token) return;
     try {
       const resp = await axios.get(`${API_BASE}/api/medicines`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -363,6 +506,7 @@ export default function App() {
   };
 
   const fetchReminders = async () => {
+    if (!token) return;
     try {
       const resp = await axios.get(`${API_BASE}/api/reminders`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -383,7 +527,6 @@ export default function App() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      // Auto register a corresponding reminder for today
       await axios.post(
         `${API_BASE}/api/reminders`,
         { medicine_id: resp.data.id, reminder_time: newMedTime, status: 'Pending' },
@@ -413,6 +556,7 @@ export default function App() {
 
   // --- Medical Reports API Services ---
   const fetchReports = async () => {
+    if (!token) return;
     try {
       const resp = await axios.get(`${API_BASE}/api/reports`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -446,11 +590,15 @@ export default function App() {
     }
   };
 
-  // --- Chatbot Voice / Speech Pipeline API Services ---
+  // --- Robust Multilingual Voice Microphone Pipeline ---
   const triggerVoiceListen = () => {
     if (isListening) {
       if (recognitionRef.current) {
-        recognitionRef.current.stop();
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {
+          console.error(e);
+        }
       }
       setIsListening(false);
       return;
@@ -458,38 +606,52 @@ export default function App() {
 
     const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRec) {
-      alert("Web Speech API is not supported in this browser. Please type symptoms instead.");
+      alert("Voice speech recognition is not supported in this browser. Please type symptoms instead.");
       return;
     }
 
-    const rec = new SpeechRec();
-    recognitionRef.current = rec;
-    rec.continuous = false;
-    rec.interimResults = false;
-    rec.lang = language === 'hi' ? 'hi-IN' : language === 'kn' ? 'kn-IN' : language === 'ta' ? 'ta-IN' : 'en-US';
+    try {
+      const rec = new SpeechRec();
+      recognitionRef.current = rec;
+      rec.continuous = false;
+      rec.interimResults = false;
 
-    rec.onstart = () => {
-      setIsListening(true);
-      setMicPermissionDenied(false);
-    };
+      // Language mapping for Web Speech API
+      const langMap = {
+        'hi': 'hi-IN',
+        'kn': 'kn-IN',
+        'ta': 'ta-IN',
+        'en': 'en-US'
+      };
+      rec.lang = langMap[language] || 'en-US';
 
-    rec.onresult = (evt) => {
-      const transcript = evt.results[0][0].transcript;
-      setChatInput(transcript);
-      setSymptoms(transcript);
-    };
+      rec.onstart = () => {
+        setIsListening(true);
+        setMicPermissionDenied(false);
+      };
 
-    rec.onerror = (err) => {
-      console.error(err);
-      if (err.error === 'not-allowed') setMicPermissionDenied(true);
+      rec.onresult = (evt) => {
+        const transcript = evt.results[0][0].transcript;
+        setSymptoms(prev => prev ? `${prev} ${transcript}` : transcript);
+        setChatInput(transcript);
+        setIsListening(false);
+      };
+
+      rec.onerror = (err) => {
+        console.error("Speech recognition error:", err);
+        if (err.error === 'not-allowed') setMicPermissionDenied(true);
+        setIsListening(false);
+      };
+
+      rec.onend = () => {
+        setIsListening(false);
+      };
+
+      rec.start();
+    } catch (err) {
+      console.error("Failed to start speech recognition:", err);
       setIsListening(false);
-    };
-
-    rec.onend = () => {
-      setIsListening(false);
-    };
-
-    rec.start();
+    }
   };
 
   const sendChatMessage = async (e) => {
@@ -505,13 +667,12 @@ export default function App() {
       const resp = await axios.post(
         `${API_BASE}/api/assistant/chat`,
         { text: userText },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
 
       const botReply = resp.data.response;
       setChatHistory(prev => [...prev, { sender: 'bot', text: botReply }]);
       
-      // Auto-trigger Speech response (TTS)
       setIsSpeaking(true);
       const speakResp = await axios.post(`${API_BASE}/api/assistant/speak`, { text: botReply });
       if (speakResp.data.audio_base64) {
@@ -549,6 +710,7 @@ export default function App() {
           // ignore
         }
         setLocLoading(false);
+        fetchNearbyHospitals();
       },
       () => {
         setError("Unable to retrieve GPS coordinates.");
@@ -565,7 +727,7 @@ export default function App() {
       const resp = await axios.post(
         `${API_BASE}/api/emergency`,
         { lat: currentLat, lon: currentLon },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
       alert(`⚠️ Emergency Alert Dispatched!\n${resp.data.message}`);
     } catch (err) {
@@ -624,11 +786,11 @@ export default function App() {
   };
 
   const runImageAnalysis = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!image) return;
 
     setLoading(true);
-    setLoadingStep('Validating skin presence...');
+    setLoadingStep('Validating skin presence & lighting...');
     setError(null);
     setValidationErrorType(null);
     setResult(null);
@@ -646,6 +808,9 @@ export default function App() {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setResult(resp.data);
+      if (resp.data.hospitals) {
+        setNearbyHospitals(resp.data.hospitals);
+      }
     } catch (err) {
       const valData = err.response?.data?.detail;
       if (valData && typeof valData === 'object') {
@@ -716,8 +881,11 @@ export default function App() {
   return (
     <div className="min-h-screen pb-28 text-slate-800 dark:text-slate-100 transition-colors duration-300">
       
+      {/* Hidden Canvas for Photo Capture */}
+      <canvas ref={canvasRef} className="hidden"></canvas>
+
       {/* PREMIUM HEADER */}
-      <header className="sticky top-0 z-40 backdrop-blur-lg bg-white/70 dark:bg-slate-950/70 py-5 px-6 flex justify-between items-center border-b border-pink-100/10">
+      <header className="sticky top-0 z-40 backdrop-blur-lg bg-white/70 dark:bg-slate-950/70 py-4 px-6 flex justify-between items-center border-b border-pink-100/10">
         <div className="text-left">
           <h1 className="text-lg font-black uppercase tracking-wider text-slate-900 dark:text-white leading-none">CareVoice</h1>
           <span className="text-[10px] text-pink-500 font-bold uppercase tracking-widest block mt-1">Your Voice, Your Care</span>
@@ -771,6 +939,88 @@ export default function App() {
               </div>
               <h3 className="text-base font-extrabold uppercase tracking-widest text-slate-800 dark:text-slate-100">CareVoice AI</h3>
               <p className="text-xs text-pink-500 font-mono mt-1 font-bold animate-pulse">{loadingStep || 'Analyzing Image...'}</p>
+            </div>
+          </div>
+        )}
+
+        {/* APPOINTMENT BOOKING MODAL */}
+        {selectedHospitalForBooking && (
+          <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-5 animate-fade-in">
+            <div className="mock-card max-w-sm w-full p-6 space-y-4 shadow-2xl dark:bg-slate-950 border border-pink-500/30 text-left animate-scale-in">
+              <div className="flex justify-between items-start border-b border-pink-100/10 pb-3">
+                <div>
+                  <span className="text-[9px] font-black uppercase tracking-widest text-pink-500 block">Schedule Consultation</span>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white leading-snug">{selectedHospitalForBooking.name}</h3>
+                </div>
+                <button onClick={() => setSelectedHospitalForBooking(null)} className="p-1 rounded-full text-slate-400 hover:text-white">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {bookingSuccessMsg ? (
+                <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-center space-y-2">
+                  <Check className="w-8 h-8 text-emerald-500 mx-auto" />
+                  <p className="text-xs font-bold text-emerald-500">{bookingSuccessMsg}</p>
+                </div>
+              ) : (
+                <form onSubmit={handleBookAppointment} className="space-y-4 text-xs">
+                  <div className="p-2.5 bg-slate-900 border border-slate-800 rounded-xl space-y-1">
+                    <span className="text-[10px] text-slate-400 font-bold block">Assigned Doctor:</span>
+                    <span className="font-extrabold text-pink-400 text-xs block">{selectedHospitalForBooking.specialist || "Dermatology Specialist"}</span>
+                    <span className="text-[10px] text-slate-500 block">Timing: {selectedHospitalForBooking.hours}</span>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-400 block">{translateUi('select_date')}</label>
+                    <input 
+                      type="date" 
+                      required 
+                      value={bookingDate} 
+                      onChange={(e) => setBookingDate(e.target.value)}
+                      className="w-full border border-slate-800 rounded-xl p-2.5 bg-slate-900 text-slate-100 outline-none font-semibold"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="font-bold text-slate-400 block">{translateUi('select_slot')}</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(selectedHospitalForBooking.available_slots || ["09:30 AM", "11:00 AM", "02:30 PM", "04:00 PM"]).map(slot => (
+                        <button
+                          key={slot}
+                          type="button"
+                          onClick={() => setBookingSlot(slot)}
+                          className={`py-2 px-2.5 rounded-xl text-[11px] font-bold border transition-all ${
+                            bookingSlot === slot 
+                              ? 'bg-pink-600 border-pink-500 text-white shadow-md' 
+                              : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
+                          }`}
+                        >
+                          <Clock className="w-3 h-3 inline mr-1" /> {slot}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-400 block">Optional Symptoms Note</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Skin rash, itchy spot consultation"
+                      value={bookingNotes}
+                      onChange={(e) => setBookingNotes(e.target.value)}
+                      className="w-full border border-slate-800 rounded-xl p-2.5 bg-slate-900 text-slate-100 outline-none text-xs"
+                    />
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    disabled={bookingLoading}
+                    className="w-full py-3 bg-gradient-to-r from-pink-500 to-indigo-600 text-white font-extrabold rounded-xl text-xs uppercase tracking-wider shadow-md hover:opacity-90"
+                  >
+                    {bookingLoading ? 'Confirming...' : 'Confirm Appointment'}
+                  </button>
+                </form>
+              )}
             </div>
           </div>
         )}
@@ -865,7 +1115,7 @@ export default function App() {
                   {history.length > 0 ? (
                     <div className="space-y-5">
                       
-                      {/* Side-by-side compare: Baseline (first scan) vs Latest (most recent) */}
+                      {/* Side-by-side compare: Baseline vs Latest */}
                       {history.length >= 2 && (
                         <div className="space-y-2">
                           <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block">{translateUi('baseline_compare')}</span>
@@ -886,12 +1136,11 @@ export default function App() {
                         </div>
                       )}
 
-                      {/* SVG Trend Graph representing counts changes over time */}
+                      {/* SVG Trend Graph */}
                       <div className="space-y-2">
                         <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block">{translateUi('trend_graph')}</span>
                         <div className="w-full h-24 bg-slate-950 rounded-2xl p-2 border border-slate-900 flex flex-col justify-end">
                           <svg className="w-full h-16" viewBox="0 0 100 20">
-                            {/* Plot Line */}
                             <polyline
                               fill="none"
                               stroke="#ec4899"
@@ -903,7 +1152,6 @@ export default function App() {
                                 return `${x},${y}`;
                               }).join(' ')}
                             />
-                            {/* Nodes */}
                             {history.slice(0, 5).reverse().map((h, idx) => {
                               const total = h.pimple_count + h.dark_spot_count;
                               const x = (idx / Math.max(1, history.slice(0, 5).length - 1)) * 90 + 5;
@@ -927,6 +1175,29 @@ export default function App() {
                     </div>
                   )}
                 </div>
+
+                {/* MY BOOKED APPOINTMENTS SUMMARY */}
+                {appointments.length > 0 && (
+                  <div className="mock-card p-5 space-y-3">
+                    <div className="flex justify-between items-center border-b border-pink-100/10 pb-2">
+                      <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">📅 {translateUi('my_appointments')}</span>
+                      <button onClick={() => setActiveTab('location')} className="text-[10px] text-indigo-600 font-bold underline">View All</button>
+                    </div>
+                    <div className="space-y-2">
+                      {appointments.slice(0, 2).map(appt => (
+                        <div key={appt.id} className="p-3 bg-slate-900 border border-slate-800 rounded-xl flex justify-between items-center text-xs">
+                          <div>
+                            <span className="font-extrabold text-slate-200 block">{appt.hospital_name}</span>
+                            <span className="text-[10px] text-slate-400 block mt-0.5">{appt.doctor_name} • {appt.appointment_date} at {appt.appointment_time}</span>
+                          </div>
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            {appt.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* TODAY'S MEDICINE REMINDERS */}
                 <div className="mock-card p-5 space-y-4">
@@ -1014,16 +1285,19 @@ export default function App() {
                 {/* OPTIONAL MULTIMODAL SKIN SCANNER GATE */}
                 {!imagePreview && !result && !validationErrorType && (
                   <div className="mock-card p-4 flex flex-col gap-3 relative">
-                    <span className="text-[10px] font-black uppercase text-pink-500 tracking-wider">🔬 {translateUi('optional_scanner')}</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-black uppercase text-pink-500 tracking-wider">🔬 {translateUi('optional_scanner')}</span>
+                      <span className="text-[9px] bg-pink-500/10 text-pink-500 font-bold px-2 py-0.5 rounded-full uppercase">{translateUi('optional_badge')}</span>
+                    </div>
                     <p className="text-[10px] text-slate-500 leading-normal">
-                      {translateUi('scanner_desc')} You can also analyze utilizing only text/voice without any image.
+                      {translateUi('scanner_desc')}
                     </p>
                     <div className="flex gap-2">
                       <label className="flex-grow py-2.5 bg-slate-950 border border-slate-800 hover:bg-slate-900 text-slate-300 rounded-xl text-[10px] font-bold text-center cursor-pointer flex items-center justify-center">
-                        Upload Skin Photo
+                        <Upload className="w-3.5 h-3.5 mr-1 text-pink-500" /> Upload Skin Photo
                         <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
                       </label>
-                      <button type="button" onClick={startCamera} className="py-2.5 px-4 bg-pink-600 text-white rounded-xl text-[10px] font-bold flex items-center gap-1">
+                      <button type="button" onClick={startCamera} className="py-2.5 px-4 bg-pink-600 hover:bg-pink-700 text-white rounded-xl text-[10px] font-bold flex items-center gap-1">
                         <Camera className="w-3.5 h-3.5" /> Use Camera
                       </button>
                     </div>
@@ -1045,7 +1319,7 @@ export default function App() {
                   </div>
                 )}
 
-                {/* Image Preview & Analyze Triggers */}
+                {/* Image Preview & Optional Symptoms Box (Text + Mic) */}
                 {imagePreview && !result && !validationErrorType && (
                   <div className="mock-card p-4 space-y-4">
                     <div className="aspect-square rounded-2xl overflow-hidden bg-slate-900 relative">
@@ -1055,13 +1329,50 @@ export default function App() {
                       </button>
                     </div>
                     
+                    {/* OPTIONAL SYMPTOMS INPUT WITH TEXT & MULTILINGUAL MIC */}
                     <div className="space-y-2 text-xs">
-                      <label className="font-extrabold uppercase text-pink-500 text-[10px]">Add Optional Symptoms Details</label>
-                      <textarea
-                        rows={2} value={symptoms} onChange={(e) => { setSymptoms(e.target.value); setChatInput(e.target.value); }}
-                        placeholder="Itchy rash, redness... (optional)"
-                        className="w-full border border-slate-800 rounded-xl p-3 bg-slate-950 text-slate-100 outline-none"
-                      ></textarea>
+                      <div className="flex justify-between items-center">
+                        <label className="font-extrabold uppercase text-pink-500 text-[10px]">
+                          Optional Symptoms Note ({translateUi('optional_badge')})
+                        </label>
+                        {symptoms && (
+                          <button type="button" onClick={() => setSymptoms('')} className="text-[9px] text-slate-400 hover:text-red-400">
+                            Clear
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="relative">
+                        <textarea
+                          rows={2}
+                          value={symptoms}
+                          onChange={(e) => { setSymptoms(e.target.value); setChatInput(e.target.value); }}
+                          placeholder={translateUi('voice_placeholder')}
+                          className="w-full border border-slate-800 rounded-xl p-3 pr-10 bg-slate-950 text-slate-100 outline-none text-xs focus:border-pink-500"
+                        ></textarea>
+                        
+                        {/* Interactive Microphone Button inside Symptoms box */}
+                        <button
+                          type="button"
+                          onClick={triggerVoiceListen}
+                          title="Click to speak symptoms"
+                          className={`absolute right-2.5 bottom-3.5 p-2 rounded-lg border transition-all ${
+                            isListening 
+                              ? 'bg-red-500 border-red-500 text-white animate-pulse' 
+                              : 'bg-slate-900 border-slate-800 text-pink-500 hover:bg-slate-850'
+                          }`}
+                        >
+                          <Mic className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* Active Voice Listening Banner */}
+                      {isListening && (
+                        <div className="p-2 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center justify-between text-[10px] text-red-400 font-bold animate-pulse">
+                          <span>🎙️ {translateUi('listening_voice')}</span>
+                          <span className="text-[9px] uppercase px-1.5 py-0.5 bg-red-500/20 rounded">Active</span>
+                        </div>
+                      )}
                     </div>
 
                     <button 
@@ -1183,6 +1494,25 @@ export default function App() {
                       ))}
                     </div>
 
+                    {/* Nearby Hospital Quick Action */}
+                    {result.hospitals && result.hospitals.length > 0 && (
+                      <div className="space-y-2 pt-2 border-t border-slate-900 text-left">
+                        <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">Nearby Specialists for this condition</span>
+                        <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex justify-between items-center">
+                          <div>
+                            <span className="font-extrabold text-xs text-slate-200 block">{result.hospitals[0].name}</span>
+                            <span className="text-[10px] text-slate-400 block">{result.hospitals[0].hours} • {result.hospitals[0].distance}</span>
+                          </div>
+                          <button
+                            onClick={() => setSelectedHospitalForBooking(result.hospitals[0])}
+                            className="px-3 py-1.5 bg-pink-600 hover:bg-pink-700 text-white rounded-lg text-[10px] font-bold shadow"
+                          >
+                            {translateUi('book_appointment')}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Download Report button */}
                     <div className="pt-2 border-t border-slate-900">
                       <button 
@@ -1211,7 +1541,7 @@ export default function App() {
                   </div>
                 )}
 
-                {/* CHATBOT DIALOG CONVERSATION BOX */}
+                {/* CHATBOT DIALOG CONVERSATION BOX WITH VOICE SUPPORT */}
                 <div className="mock-card p-4 space-y-4 flex flex-col h-[320px] justify-between">
                   <div className="flex-grow overflow-y-auto space-y-3 custom-scrollbar pr-1 text-xs">
                     {chatHistory.map((chat, idx) => (
@@ -1237,8 +1567,9 @@ export default function App() {
                     <button 
                       type="button" 
                       onClick={triggerVoiceListen} 
+                      title="Speak symptoms in selected language"
                       className={`p-2.5 rounded-xl border transition-all ${
-                        isListening ? 'bg-red-500 border-red-500 text-white animate-pulse' : 'bg-slate-950 border-slate-800 text-pink-500'
+                        isListening ? 'bg-red-500 border-red-500 text-white animate-pulse' : 'bg-slate-950 border-slate-800 text-pink-500 hover:bg-slate-900'
                       }`}
                     >
                       <Mic className="w-4 h-4" />
@@ -1386,7 +1717,7 @@ export default function App() {
                             </div>
                           </div>
                           <a 
-                            href={API_BASE + rep.file_url}
+                            href={API_BASE + rep.file_url} 
                             target="_blank" 
                             rel="noreferrer"
                             className="p-2 bg-slate-100 dark:bg-slate-900 border border-slate-800 rounded-lg text-pink-500"
@@ -1407,14 +1738,51 @@ export default function App() {
               </div>
             )}
 
-            {/* PAGE 5: LOCATION MAPPING */}
+            {/* PAGE 5: LOCATION MAPPING, HOSPITAL TIMINGS & APPOINTMENT BOOKING */}
             {activeTab === 'location' && (
               <div className="space-y-6 animate-fade-in text-left">
                 <div className="flex flex-col gap-1 border-b border-pink-100/10 pb-3">
                   <h2 className="text-xl font-bold font-serif text-slate-900 dark:text-white">Care Connect</h2>
-                  <p className="text-slate-500 text-xs">Locate specialty clinics and available appointment timings.</p>
+                  <p className="text-slate-500 text-xs">Locate specialty clinics, verify opening timings, and book dermatologist appointment slots.</p>
                 </div>
 
+                {/* MY BOOKED APPOINTMENTS LIST */}
+                {appointments.length > 0 && (
+                  <div className="mock-card p-5 space-y-3">
+                    <h3 className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block border-b border-pink-100/10 pb-2">
+                      📅 {translateUi('my_appointments')} ({appointments.length})
+                    </h3>
+                    <div className="space-y-2.5">
+                      {appointments.map(appt => (
+                        <div key={appt.id} className="p-3.5 bg-slate-950 border border-slate-850 rounded-2xl flex justify-between items-center">
+                          <div className="space-y-0.5">
+                            <span className="font-bold text-xs text-slate-200 block">{appt.hospital_name}</span>
+                            <span className="text-[10px] text-pink-400 font-semibold block">{appt.doctor_name}</span>
+                            <span className="text-[10px] text-slate-400 block">
+                              <Clock className="w-3 h-3 inline mr-1 text-slate-500" /> {appt.appointment_date} at {appt.appointment_time}
+                            </span>
+                            {appt.patient_symptoms && (
+                              <span className="text-[9px] text-slate-500 italic block">Note: {appt.patient_symptoms}</span>
+                            )}
+                          </div>
+                          <div className="flex flex-col items-end gap-2">
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                              {appt.status}
+                            </span>
+                            <button
+                              onClick={() => handleCancelAppointment(appt.id)}
+                              className="text-[9px] text-red-400 hover:text-red-300 font-bold underline"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* SEARCH & GPS CONTROLS */}
                 <div className="mock-card p-5 space-y-4">
                   <div className="flex gap-2">
                     <button
@@ -1439,31 +1807,118 @@ export default function App() {
                     />
                   </div>
 
+                  {/* Leaflet Live Map Viewport */}
                   <div className="h-[200px] rounded-[2rem] overflow-hidden border border-slate-800 shadow-inner">
                     <div ref={mapContainerRef} className="w-full h-full bg-stone-100"></div>
                   </div>
 
+                  {/* NEARBY HOSPITALS LIST WITH TIMINGS & BOOKING BUTTONS */}
                   <div className="space-y-3 pt-2">
-                    {[
-                      { name: "City Dermatology Clinic", distance: "1.4 km", rating: "4.8", hours: "09:00 AM – 06:00 PM", lat: 12.973, lon: 77.596 },
-                      { name: "Apollo Skin Care Hospital", distance: "3.2 km", rating: "4.7", hours: "08:00 AM – 08:00 PM", lat: 12.969, lon: 77.592 }
-                    ].map((h, idx) => (
-                      <div key={idx} className="p-3.5 bg-slate-950 border border-slate-855 rounded-2xl flex flex-col gap-2">
-                        <div className="flex justify-between items-start">
-                          <span className="font-bold text-xs leading-snug text-slate-200">{h.name}</span>
+                    <h3 className="text-xs font-extrabold uppercase text-pink-500 tracking-wider">
+                      🏥 {translateUi('hospital_schedules')}
+                    </h3>
+
+                    {(nearbyHospitals.length > 0 ? nearbyHospitals : [
+                      {
+                        name: "Bangalore Medical College & Research Institute (Dermatology)",
+                        address: "Fort Road, near City Market, Bengaluru 560002",
+                        distance: "2.4 km",
+                        rating: "4.6",
+                        phone: "+91 80 2670 1150",
+                        hours: "Mon-Sat: 08:30 AM – 05:30 PM (Emergency 24/7)",
+                        status: "Open Now",
+                        specialist: "Dr. Ananya Rao, MD (Dermatology)",
+                        available_slots: ["09:30 AM", "11:00 AM", "02:00 PM", "04:45 PM"],
+                        lat: 12.9592,
+                        lon: 77.5744
+                      },
+                      {
+                        name: "Victoria Hospital Dermatology Department",
+                        address: "K.R. Road, Kalasipalya, Bengaluru 560002",
+                        distance: "2.5 km",
+                        rating: "4.4",
+                        phone: "+91 80 2670 1150",
+                        hours: "Mon-Sat: 09:00 AM – 06:00 PM",
+                        status: "Open Now",
+                        specialist: "Dr. Ramesh Patil, MBBS, DVD",
+                        available_slots: ["10:00 AM", "11:30 AM", "02:30 PM", "04:00 PM"],
+                        lat: 12.9632,
+                        lon: 77.5739
+                      },
+                      {
+                        name: "Manipal Hospital Old Airport Road (Skin Clinic)",
+                        address: "98, HAL Old Airport Rd, Kodihalli, Bengaluru 560017",
+                        distance: "6.2 km",
+                        rating: "4.8",
+                        phone: "+91 80 2502 4444",
+                        hours: "Mon-Sat: 09:00 AM – 07:00 PM",
+                        status: "Open Now",
+                        specialist: "Dr. Kavitha Sundaram, MD, FRCP",
+                        available_slots: ["09:45 AM", "11:15 AM", "03:15 PM", "05:00 PM"],
+                        lat: 12.9593,
+                        lon: 77.6444
+                      }
+                    ]).map((h, idx) => (
+                      <div key={idx} className="p-4 bg-slate-950 border border-slate-850 rounded-2xl space-y-2.5 shadow-sm">
+                        <div className="flex justify-between items-start gap-2">
+                          <div>
+                            <span className="font-extrabold text-xs text-slate-200 block leading-snug">{h.name}</span>
+                            {h.address && <span className="text-[9px] text-slate-400 block mt-0.5">{h.address}</span>}
+                          </div>
                           <span className="text-[9px] font-black text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded-full flex-shrink-0 uppercase">{h.distance}</span>
                         </div>
-                        <div className="flex justify-between items-center text-[10px] text-slate-450">
+
+                        {/* Specialist and Ratings row */}
+                        <div className="flex justify-between items-center text-[10px] text-slate-400 border-t border-slate-900 pt-2">
+                          <span className="font-semibold text-pink-400">🩺 {h.specialist || "Specialist on Duty"}</span>
                           <span>★ {h.rating} Rating</span>
-                          <span>Hours: {h.hours}</span>
                         </div>
-                        <div className="text-[10px] text-slate-500 italic pt-1 border-t border-slate-900">
-                          <div>{translateUi('clinic_availability')}: Clinic slots open.</div>
-                          <div>Next Available Slot: Today 04:30 PM (Booked via App)</div>
+
+                        {/* Timing Schedule details */}
+                        <div className="p-2 bg-slate-900/60 border border-slate-850 rounded-xl space-y-1 text-[10px]">
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-400"><Clock className="w-3 h-3 inline mr-1 text-slate-500" /> Timing Schedule:</span>
+                            <span className="text-emerald-400 font-bold">{h.status || "Open Now"}</span>
+                          </div>
+                          <span className="text-slate-300 font-semibold block">{h.hours || "Mon-Sat: 09:00 AM – 06:30 PM"}</span>
                         </div>
-                        <div className="flex gap-2 pt-1">
-                          <a href={`https://www.google.com/maps/dir/?api=1&destination=${h.lat},${h.lon}`} target="_blank" rel="noreferrer" className="w-full py-2 border border-slate-800 hover:bg-slate-900 rounded-xl text-[10px] font-bold text-center text-slate-300">
-                            Directions
+
+                        {/* Available Slots Preview */}
+                        {h.available_slots && (
+                          <div className="space-y-1">
+                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Available Booking Slots:</span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {h.available_slots.slice(0, 4).map((slot, sIdx) => (
+                                <span key={sIdx} className="px-2 py-0.5 bg-slate-900 border border-slate-800 rounded-md text-[9px] font-semibold text-slate-300">
+                                  {slot}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Action Buttons: Book, Call, Directions */}
+                        <div className="grid grid-cols-3 gap-2 pt-1 border-t border-slate-900">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedHospitalForBooking(h)}
+                            className="py-2 bg-gradient-to-r from-pink-500 to-indigo-600 text-white rounded-xl text-[10px] font-bold text-center uppercase tracking-wider shadow"
+                          >
+                            📅 Book
+                          </button>
+                          <a
+                            href={`tel:${h.phone || '+918026701150'}`}
+                            className="py-2 border border-slate-800 hover:bg-slate-900 rounded-xl text-[10px] font-bold text-center text-slate-300 flex items-center justify-center gap-1"
+                          >
+                            <Phone className="w-3 h-3 text-pink-500" /> Call
+                          </a>
+                          <a
+                            href={`https://www.google.com/maps/dir/?api=1&destination=${h.lat},${h.lon}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="py-2 border border-slate-800 hover:bg-slate-900 rounded-xl text-[10px] font-bold text-center text-slate-300 flex items-center justify-center gap-1"
+                          >
+                            <Navigation className="w-3 h-3 text-pink-500" /> Map
                           </a>
                         </div>
                       </div>

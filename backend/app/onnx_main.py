@@ -117,6 +117,13 @@ class HospitalRequest(BaseModel):
     lon: float
     city: Optional[str] = None
 
+class AppointmentCreate(BaseModel):
+    hospital_name: str
+    doctor_name: str
+    appointment_date: str
+    appointment_time: str
+    patient_symptoms: Optional[str] = "Skin consultation"
+
 class PDFRequest(BaseModel):
     disease: str
     confidence: float
@@ -214,7 +221,7 @@ def detect_lesion_features(pil_img: Image.Image):
 @app.post("/api/predict")
 async def predict_skin_disease(
     image: UploadFile = File(...),
-    symptoms: str = Form(...),
+    symptoms: Optional[str] = Form(""),
     language: str = Form("en"),
     lat: Optional[float] = Form(None),
     lon: Optional[float] = Form(None),
@@ -741,6 +748,50 @@ def chat_assistant(req: ChatRequest, authorization: Optional[str] = Header(None)
 @app.post("/api/symptoms/analyze")
 def analyze_symptoms(req: ChatRequest, authorization: Optional[str] = Header(None)):
     return chat_assistant(req, authorization)
+
+@app.get("/api/appointments")
+def get_appointments(authorization: Optional[str] = Header(None)):
+    user_id = get_current_user_id(authorization)
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM appointments WHERE user_id = ? ORDER BY id DESC", (user_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+@app.post("/api/appointments")
+def create_appointment(req: AppointmentCreate, authorization: Optional[str] = Header(None)):
+    user_id = get_current_user_id(authorization)
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO appointments (user_id, hospital_name, doctor_name, appointment_date, appointment_time, patient_symptoms, status, created_at) VALUES (?, ?, ?, ?, ?, ?, 'Confirmed', ?)",
+        (user_id, req.hospital_name, req.doctor_name, req.appointment_date, req.appointment_time, req.patient_symptoms or "Skin consultation", datetime.now().isoformat())
+    )
+    conn.commit()
+    appt_id = cursor.lastrowid
+    conn.close()
+    log_audit("appointment_booked", user_id, f"Hospital: {req.hospital_name}, Slot: {req.appointment_date} {req.appointment_time}")
+    return {
+        "id": appt_id,
+        "hospital_name": req.hospital_name,
+        "doctor_name": req.doctor_name,
+        "appointment_date": req.appointment_date,
+        "appointment_time": req.appointment_time,
+        "patient_symptoms": req.patient_symptoms,
+        "status": "Confirmed"
+    }
+
+@app.delete("/api/appointments/{appt_id}")
+def cancel_appointment(appt_id: int, authorization: Optional[str] = Header(None)):
+    user_id = get_current_user_id(authorization)
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM appointments WHERE id = ? AND user_id = ?", (appt_id, user_id))
+    conn.commit()
+    conn.close()
+    log_audit("appointment_cancelled", user_id, f"ID: {appt_id}")
+    return {"status": "success", "message": "Appointment cancelled successfully."}
 
 @app.get("/api/location/nearby")
 def get_nearby_clinics(lat: float, lon: float, city: Optional[str] = None, authorization: Optional[str] = Header(None)):

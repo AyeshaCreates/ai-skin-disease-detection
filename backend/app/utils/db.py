@@ -101,6 +101,22 @@ def init_db():
         timestamp TEXT NOT NULL
     )
     """)
+
+    # 8. Create Appointments Table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS appointments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        hospital_name TEXT NOT NULL,
+        doctor_name TEXT NOT NULL,
+        appointment_date TEXT NOT NULL,
+        appointment_time TEXT NOT NULL,
+        patient_symptoms TEXT,
+        status TEXT DEFAULT 'Confirmed',
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+    """)
     
     conn.commit()
     conn.close()
