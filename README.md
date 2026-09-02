@@ -1,100 +1,139 @@
-# AI Skin Disease Detection System using Multi-Modal AI
+# CareVoice: AI Skin Disease Detection & Multi-Modal Healthcare System
 
 ### 🌐 Live Cloud Deployment
-- **Unified Production Web Application Portal**: [https://ai-skin-disease-detection-one.vercel.app](https://ai-skin-disease-detection-one.vercel.app)
-- **FastAPI API Health Check**: [https://ai-skin-disease-detection-one.vercel.app/api/health](https://ai-skin-disease-detection-one.vercel.app/api/health)
-
-*Note: The React frontend and the Python serverless backend are hosted together on the same domain, running optimized ONNX model inference without any LocalTunnel or localhost dependencies.*
+- **Production Web Application**: [https://ai-skin-disease-detection.vercel.app](https://ai-skin-disease-detection.vercel.app)
+- **FastAPI Health Endpoint**: [https://ai-skin-disease-detection.vercel.app/api/health](https://ai-skin-disease-detection.vercel.app/api/health)
 
 ---
 
-Dermascan is a production-ready, deployable AI healthcare web application built from scratch for a B.E. Final Year Engineering project. It performs multi-modal dermatological classification by fusing visual features from **skin lesion photographs** and linguistic features from **multilingual symptom descriptions** (supporting English, Hindi, and Kannada, both typed and spoken).
+## 📖 Overview
+
+**CareVoice** is a full-stack, multimodal AI healthcare assistant and dermatological diagnostic application. It combines deep learning computer vision (**EfficientNet-B0 ONNX**), natural language processing (**MiniLM Transformer**), and multi-modal fusion with real-time health services including hospital location routing, clinic appointment booking, voice speech recognition, and automated medication reminders.
 
 ---
 
-## 1. System Architecture
+## ✨ Key Features
 
-The application is split into a Python FastAPI backend and a Vite + React + Tailwind CSS frontend.
+1. **🔬 18-Class Multimodal Skin Disease Diagnostic AI**:
+   - Classifies 18 distinct dermatological conditions (Melanoma, Eczema, Psoriasis, Acne, Basal Cell Carcinoma, Ringworm, etc.).
+   - Calibrated probability confidence scoring.
+   - **Grad-CAM Heatmaps**: Explainable AI overlay with interactive split-screen slider.
+   - **Lesion Detection & Counting**: Detects and highlights acne pimples (`🔴 P`) and dark spots (`🔵 S`) with coordinate markers.
+   - **Severity Gauge**: Mild, Moderate, and Severe classification with clinical rationale.
 
-- **Image processing**: Pretrained **EfficientNetB0** CNN model extracts a 1280-dimensional feature vector and uses **Grad-CAM** backpropagation hooks to compute clinical heatmap overlays.
-- **Symptom processing**: Semantic embeddings of **384 dimensions** are extracted from English, Hindi, or Kannada sentences via a multilingual **MiniLM Transformer** (with an offline keyword random projection fallback).
-- **Feature Fusion**: A joint fully-connected network fuses visual and textual vectors (1664 dimensions total) to classify the disease type and determine clinical severity (Mild, Moderate, Severe).
-- **Dermatologist Routing**: Queries Nominatim and OpenStreetMap Overpass APIs to dynamically resolve nearby clinics within a 10km radius of the user's GPS/selected city.
-- **Report Generation**: Dynamically compiles a downloadable PDF report including Grad-CAM maps, severity gauges, and recommended hospitals using ReportLab.
+2. **🎙️ Multilingual Voice & Optional Symptoms**:
+   - Symptoms are **100% optional** (model analyzes images with or without symptoms).
+   - Real-time Speech-to-Text Microphone support in **English (`en-US`)**, **Hindi (`hi-IN`)**, **Kannada (`kn-IN`)**, and **Tamil (`ta-IN`)**.
+   - Editable transcription box before running analysis.
 
-See the detailed [Architecture Documentation](doc/architecture.md) and [Model Documentation](doc/model_documentation.md).
+3. **📍 Care Connect: Hospital Timings & Appointment Booking**:
+   - Real-time GPS location lock with manual city search fallback.
+   - Interactive Leaflet OpenStreetMap pins.
+   - Real clinic opening hours (e.g., `Mon-Sat: 08:30 AM – 06:30 PM (Emergency 24/7)`) and `Open Now` status badges.
+   - On-duty specialist dermatologist names.
+   - **Interactive Appointment Booking Modal**: Pick date and time slots (`09:30 AM`, `11:00 AM`, `02:30 PM`, `04:00 PM`, etc.).
+   - **My Booked Appointments**: Manage confirmed bookings with cancellation options.
+   - Direct Google Maps Navigation (`Map`) and direct calling (`Call`).
+
+4. **📊 Skin Diary & Progress Analytics**:
+   - **Baseline vs. Latest Comparison**: Side-by-side progression analysis.
+   - **SVG Trend Line Chart**: Tracks blemish count changes over time.
+
+5. **💊 Medication Reminders & Health Reports**:
+   - Register medicines with dosage and schedule times.
+   - Upload and download clinical laboratory reports and medical records.
+   - Automated PDF Clinical Report generator with patient name, symptoms, images, and care instructions.
+
+6. **🚨 Emergency SOS System**:
+   - Instant coordinate dispatch alert for acute emergencies.
+   - One-tap 911 emergency calling.
+
+7. **🎨 UI / UX & Multi-Language Support**:
+   - Dark Mode / Light Mode toggle.
+   - Multilingual interface supporting English, Hindi, Kannada, and Tamil.
 
 ---
 
-## 2. Project Directory Structure
+## 🏛️ System Architecture
+
+```
+                               ┌────────────────────────┐
+                               │   React Frontend UI    │
+                               │ (Vite + Tailwind CSS)  │
+                               └───────────┬────────────┘
+                                           │ HTTPS / REST
+                               ┌───────────▼────────────┐
+                               │   FastAPI ONNX Backend │
+                               └─────┬───────┬──────────┘
+                                     │       │
+            ┌────────────────────────┴─┐   ┌─┴────────────────────────┐
+            │   AI Inference Pipeline  │   │     Healthcare Services  │
+            ├──────────────────────────┤   ├──────────────────────────┤
+            │ • EfficientNet-B0 (CNN)  │   │ • SQLite Database        │
+            │ • MiniLM Text Encoder    │   │ • Geolocation & Leaflet  │
+            │ • Multimodal Fusion      │   │ • Appointment Booking    │
+            │ • Grad-CAM Heatmap Gen   │   │ • Medicine Reminders     │
+            │ • Lesion Feature Counter │   │ • ReportLab PDF Compiler │
+            └──────────────────────────┘   └──────────────────────────┘
+```
+
+---
+
+## 📂 Project Directory Structure
 
 ```
 ai-skin-disease-detection/
+├── api/                       # Vercel serverless entrypoint
+│   ├── index.py
+│   └── requirements.txt
 ├── backend/
-│   ├── app/
-│   │   ├── models/            # EfficientNetB0 CNN, MiniLM text encoder, Fusion Network
-│   │   ├── services/          # Data download, model training, OSM routing, ReportLab PDF
-│   │   ├── utils/             # Helper tools, offline translation dictionaries
-│   │   └── main.py            # FastAPI REST endpoints
-│   ├── requirements.txt       # Backend dependencies
-│   └── run_backend.ps1        # PowerShell backend runner script
+│   └── app/
+│       ├── models/            # ONNX models (EfficientNet-B0, Text, Fusion)
+│       │   └── checkpoints/   # Trained ONNX weights & metrics.json
+│       ├── services/          # Location, ReportLab PDF generation
+│       │   ├── location.py    # Clinic timings & hospital databases
+│       │   └── pdf_report.py  # Clinical PDF generator
+│       ├── utils/             # SQLite DB, translation, image validation
+│       │   ├── db.py          # SQLite schema (users, appointments, meds)
+│       │   └── helpers.py     # Multilingual Google Translate helper
+│       └── onnx_main.py       # FastAPI application endpoints
 ├── frontend/
 │   ├── src/
-│   │   ├── components/        # SpeechRecorder, interactive widgets
-│   │   ├── App.jsx            # Multi-page main dashboard
-│   │   └── index.css          # Styling & Outfit/Inter fonts loader
-│   ├── tailwind.config.js     # Medical-themed Tailwind configuration
-│   ├── index.html             # Entry HTML + Leaflet CSS CDN loader
-│   └── run_frontend.ps1       # PowerShell frontend runner script
+│   │   ├── App.jsx            # Main React Dashboard & Modals
+│   │   ├── config.js          # API origin configuration
+│   │   └── index.css          # Styling & dark mode variables
+│   ├── index.html
+│   ├── package.json
+│   └── vite.config.js
 ├── tests/
-│   └── test_backend.py        # PyTest integration & model unit tests
-└── doc/                       # Full technical specs (architecture, API, models)
+│   ├── test_carevoice_api.py  # Local integration test suite
+│   └── test_live_vercel.py    # Production deployment tests
+└── README.md
 ```
 
 ---
 
-## 3. Local Installation & Setup
+## 💻 Local Development Setup
 
 ### Prerequisites
-- Python 3.8+ (Verified on Python 3.14)
-- Node.js 18+ (Verified on Node v24)
+- Python 3.9+
+- Node.js 18+
 - Git
 
-### Quick Start (PowerShell on Windows)
-1. **Clone the repository**:
-   ```powershell
-   git clone <repository_url> ai-skin-disease-detection
-   cd ai-skin-disease-detection
-   ```
-2. **Start Backend**:
-   Open a PowerShell terminal and run:
-   ```powershell
-   cd backend
-   .\run_backend.ps1
-   ```
-   *Note: On first boot, if model weights are missing, the backend will automatically download training images from the ISIC Archive API (or generate high-fidelity synthetic fallbacks if offline) and run training for 3 epochs to generate the required model checkpoints (`cnn_model.pth`, `fusion_model.pth`, `metrics.json`).*
-
-3. **Start Frontend**:
-   Open a separate PowerShell terminal and run:
-   ```powershell
-   cd frontend
-   .\run_frontend.ps1
-   ```
-   Visit the application at: `http://localhost:5173`.
-
----
-
-## 4. Running Tests
-
-To verify all system modules, run the integration and unit tests:
+### 1. Run Backend:
 ```powershell
-pytest tests/test_backend.py
+python -m uvicorn backend.app.main:app --port 8000 --reload
 ```
-This runs checks verifying that the image CNN output dimensions, text transformer embeddings, fusion layer feedforward matrices, distance calculation logic, and ReportLab PDF compilers are completely operational.
 
----
+### 2. Run Frontend:
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+Visit `http://localhost:5173`.
 
-## 5. Academic Details
-- **Project Title**: AI Skin Disease Detection System using Multi-Modal Artificial Intelligence
-- **Degree**: Bachelor of Engineering (B.E.) in Computer Science & Engineering
-- **Implementation**: B.E. Final Year Project Submission
+### 3. Run Tests:
+```powershell
+python tests/test_carevoice_api.py
+```
