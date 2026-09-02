@@ -511,12 +511,16 @@ class EmergencyRequest(BaseModel):
     lat: float
     lon: float
 
-def get_current_user_id(authorization: str = Header(None)) -> int:
+def get_current_user_id(authorization: Optional[str] = Header(None), required: bool = True) -> int:
     if not authorization or not authorization.startswith("Bearer "):
+        if not required:
+            return 1
         raise HTTPException(status_code=401, detail="Missing or invalid authentication token.")
     token = authorization.split(" ")[1]
     user_id = verify_access_token(token)
     if not user_id:
+        if not required:
+            return 1
         raise HTTPException(status_code=401, detail="Authentication token expired or invalid.")
     return user_id
 
@@ -751,7 +755,7 @@ def analyze_symptoms(req: ChatRequest, authorization: Optional[str] = Header(Non
 
 @app.get("/api/appointments")
 def get_appointments(authorization: Optional[str] = Header(None)):
-    user_id = get_current_user_id(authorization)
+    user_id = get_current_user_id(authorization, required=False)
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM appointments WHERE user_id = ? ORDER BY id DESC", (user_id,))
@@ -761,7 +765,7 @@ def get_appointments(authorization: Optional[str] = Header(None)):
 
 @app.post("/api/appointments")
 def create_appointment(req: AppointmentCreate, authorization: Optional[str] = Header(None)):
-    user_id = get_current_user_id(authorization)
+    user_id = get_current_user_id(authorization, required=False)
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
@@ -784,7 +788,7 @@ def create_appointment(req: AppointmentCreate, authorization: Optional[str] = He
 
 @app.delete("/api/appointments/{appt_id}")
 def cancel_appointment(appt_id: int, authorization: Optional[str] = Header(None)):
-    user_id = get_current_user_id(authorization)
+    user_id = get_current_user_id(authorization, required=False)
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM appointments WHERE id = ? AND user_id = ?", (appt_id, user_id))
@@ -794,8 +798,7 @@ def cancel_appointment(appt_id: int, authorization: Optional[str] = Header(None)
     return {"status": "success", "message": "Appointment cancelled successfully."}
 
 @app.get("/api/location/nearby")
-def get_nearby_clinics(lat: float, lon: float, city: Optional[str] = None, authorization: Optional[str] = Header(None)):
-    user_id = get_current_user_id(authorization)
+def get_nearby_clinics(lat: float, lon: float, city: Optional[str] = None):
     return find_nearby_dermatologists(lat, lon, city)
 
 @app.post("/api/emergency")

@@ -40,19 +40,20 @@ import {
   Globe,
   Clock,
   UserCheck,
-  Check
+  Check,
+  LogIn
 } from 'lucide-react';
 import { API_BASE } from './config';
 
 const UI_TRANSLATIONS = {
   en: {
-    welcome: "Welcome Back",
+    welcome: "Welcome to CareVoice",
     talk_ai: "Talk to AI",
     today_meds: "Today's Medicines",
     emergency: "Emergency Support",
     recent_reports: "Recent Reports",
     optional_scanner: "Optional Skin Image Analysis",
-    scanner_desc: "Symptoms are optional — AI can analyze the image without them.",
+    scanner_desc: "Symptoms are optional — AI can analyze the image with or without them.",
     voice_placeholder: "Type or speak symptoms (Optional)...",
     run_analysis: "Run Multimodal Skin Analysis",
     save_medicine: "Save Medicine",
@@ -72,10 +73,12 @@ const UI_TRANSLATIONS = {
     select_date: "Appointment Date",
     my_appointments: "My Booked Appointments",
     listening_voice: "Listening... Speak symptoms in English",
-    optional_badge: "Optional"
+    optional_badge: "Optional",
+    sign_in: "Sign In",
+    guest_user: "Guest User"
   },
   hi: {
-    welcome: "वापसी पर स्वागत है",
+    welcome: "CareVoice में आपका स्वागत है",
     talk_ai: "एआई से बात करें",
     today_meds: "आज की दवाएं",
     emergency: "आपातकालीन सहायता",
@@ -101,10 +104,12 @@ const UI_TRANSLATIONS = {
     select_date: "अपॉइंटमेंट तिथि",
     my_appointments: "मेरे बुक किए गए अपॉइंटमेंट",
     listening_voice: "सुन रहा हूँ... हिंदी में लक्षण बोलें",
-    optional_badge: "वैकल्पिक"
+    optional_badge: "वैकल्पिक",
+    sign_in: "साइन इन करें",
+    guest_user: "अतिथि उपयोगकर्ता"
   },
   kn: {
-    welcome: "ಮರಳಿ ಸ್ವಾಗತ",
+    welcome: "CareVoice ಗೆ ಸುಸ್ವಾಗತ",
     talk_ai: "AI ಜೊತೆ ಮಾತನಾಡಿ",
     today_meds: "ಇಂದಿನ ಔಷಧಿಗಳು",
     emergency: "ತುರ್ತು ನೆರವು",
@@ -130,10 +135,12 @@ const UI_TRANSLATIONS = {
     select_date: "ಅಪಾಯಿಂಟ್‌ಮೆಂಟ್ ದಿನಾಂಕ",
     my_appointments: "ನನ್ನ ಕಾಯ್ದಿರಿಸಿದ ಅಪಾಯಿಂಟ್‌ಮೆಂಟ್‌ಗಳು",
     listening_voice: "ಕೇಳಿಸಿಕೊಳ್ಳುತ್ತಿದೆ... ಕನ್ನಡದಲ್ಲಿ ಮಾತನಾಡಿ",
-    optional_badge: "ಐಚ್ಛಿಕ"
+    optional_badge: "ಐಚ್ಛಿಕ",
+    sign_in: "ಸೈನ್ ಇನ್",
+    guest_user: "ಅತಿಥಿ ಬಳಕೆದಾರ"
   },
   ta: {
-    welcome: "மீண்டும் வருக",
+    welcome: "CareVoice க்கு வரவேற்கிறோம்",
     talk_ai: "AI உடன் பேசுங்கள்",
     today_meds: "இன்றைய மருந்துகள்",
     emergency: "அவசர உதவி",
@@ -159,17 +166,88 @@ const UI_TRANSLATIONS = {
     select_date: "முன்பதிவு தேதி",
     my_appointments: "எனது முன்பதிவு செய்யப்பட்ட சந்திப்புகள்",
     listening_voice: "கேட்கிறது... தமிழில் அறிகுறிகளைப் பேசுங்கள்",
-    optional_badge: "விருப்பமானது"
+    optional_badge: "விருப்பமானது",
+    sign_in: "உள்நுழைக",
+    guest_user: "விருந்தினர்"
   }
 };
+
+const DEFAULT_HOSPITALS = [
+  {
+    name: "Bangalore Medical College & Research Institute (Dermatology)",
+    address: "Fort Road, near City Market, Bengaluru 560002",
+    distance: "2.4 km",
+    rating: "4.6",
+    phone: "+91 80 2670 1150",
+    hours: "Mon-Sat: 08:30 AM – 05:30 PM (Emergency 24/7)",
+    status: "Open Now",
+    specialist: "Dr. Ananya Rao, MD, DNB (Dermatology)",
+    available_slots: ["09:30 AM", "11:00 AM", "02:00 PM", "04:45 PM"],
+    lat: 12.9592,
+    lon: 77.5744
+  },
+  {
+    name: "Victoria Hospital Dermatology Department",
+    address: "K.R. Road, Kalasipalya, Bengaluru 560002",
+    distance: "2.5 km",
+    rating: "4.4",
+    phone: "+91 80 2670 1150",
+    hours: "Mon-Sat: 09:00 AM – 06:00 PM",
+    status: "Open Now",
+    specialist: "Dr. Ramesh Patil, MBBS, DVD",
+    available_slots: ["10:00 AM", "11:30 AM", "02:30 PM", "04:00 PM"],
+    lat: 12.9632,
+    lon: 77.5739
+  },
+  {
+    name: "St. John's Medical College Hospital (Skin Unit)",
+    address: "Sarjapur Main Road, John Nagar, Koramangala, Bengaluru 560034",
+    distance: "5.1 km",
+    rating: "4.7",
+    phone: "+91 80 2206 5000",
+    hours: "Mon-Sat: 08:00 AM – 08:00 PM (Emergency 24/7)",
+    status: "Open Now",
+    specialist: "Dr. Sneha Varma, MD (Dermatology & Cosmetology)",
+    available_slots: ["09:00 AM", "10:30 AM", "01:30 PM", "03:00 PM", "05:30 PM"],
+    lat: 12.9333,
+    lon: 77.6244
+  },
+  {
+    name: "Fortis Hospital Bannerghatta Road (Skin & Laser Centre)",
+    address: "154/9, Bannerghatta Main Rd, Opposite IIMB, Bengaluru 560076",
+    distance: "7.8 km",
+    rating: "4.5",
+    phone: "+91 96633 00000",
+    hours: "Mon-Sun: 08:00 AM – 08:00 PM",
+    status: "Open Now",
+    specialist: "Dr. Rajeshwar K., MD (Aesthetic Dermatology)",
+    available_slots: ["10:15 AM", "12:00 PM", "02:45 PM", "04:30 PM", "06:00 PM"],
+    lat: 12.8943,
+    lon: 77.5976
+  },
+  {
+    name: "Manipal Hospital Old Airport Road (Skin Clinic)",
+    address: "98, HAL Old Airport Rd, Kodihalli, Bengaluru 560017",
+    distance: "6.2 km",
+    rating: "4.8",
+    phone: "+91 80 2502 4444",
+    hours: "Mon-Sat: 09:00 AM – 07:00 PM",
+    status: "Open Now",
+    specialist: "Dr. Kavitha Sundaram, MD, FRCP",
+    available_slots: ["09:45 AM", "11:15 AM", "03:15 PM", "05:00 PM"],
+    lat: 12.9593,
+    lon: 77.6444
+  }
+];
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
   const [theme, setTheme] = useState(() => localStorage.getItem('carevoice_theme') || 'light');
   const [language, setLanguage] = useState('en');
   
-  // Authentication State
+  // Authentication State & Modal
   const [token, setToken] = useState(() => localStorage.getItem('carevoice_token') || '');
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [authUsername, setAuthUsername] = useState('');
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
@@ -180,11 +258,15 @@ export default function App() {
   const [profile, setProfile] = useState(null);
 
   // Reminders, Medicines, Reports, and Appointments List States
-  const [medicines, setMedicines] = useState([]);
-  const [reminders, setReminders] = useState([]);
+  const [medicines, setMedicines] = useState([
+    { id: 1, name: "Gentle Cleanser & Barrier Cream", dosage: "Apply 2x daily", schedule_time: "08:00 AM" }
+  ]);
+  const [reminders, setReminders] = useState([
+    { id: 1, name: "Barrier Cream", dosage: "Apply thin layer", reminder_time: "08:00 AM", status: "Pending" }
+  ]);
   const [reports, setReports] = useState([]);
   const [appointments, setAppointments] = useState([]);
-  const [nearbyHospitals, setNearbyHospitals] = useState([]);
+  const [nearbyHospitals, setNearbyHospitals] = useState(DEFAULT_HOSPITALS);
   
   // Local storage cache history
   const [history, setHistory] = useState(() => {
@@ -234,7 +316,7 @@ export default function App() {
   const [validationErrorType, setValidationErrorType] = useState(null);
 
   // Geolocation Care Connect Location
-  const [city, setCity] = useState('');
+  const [city, setCity] = useState('Bengaluru');
   const [lat, setLat] = useState(12.9716);
   const [lon, setLon] = useState(77.5946);
   const [locLoading, setLocLoading] = useState(false);
@@ -274,12 +356,14 @@ export default function App() {
     } else {
       localStorage.removeItem('carevoice_token');
       setProfile(null);
-      setMedicines([]);
-      setReminders([]);
-      setReports([]);
-      setAppointments([]);
     }
   }, [token]);
+
+  // Initial Data Load
+  useEffect(() => {
+    fetchNearbyHospitals();
+    fetchAppointments();
+  }, []);
 
   // Save new result to history array for trends
   useEffect(() => {
@@ -304,20 +388,19 @@ export default function App() {
 
   // Fetch Hospitals when Location Tab or Coordinates Change
   useEffect(() => {
-    if (activeTab === 'location' || activeTab === 'home') {
-      fetchNearbyHospitals();
-    }
-  }, [activeTab, lat, lon, city]);
+    fetchNearbyHospitals();
+  }, [lat, lon, city]);
 
   const fetchNearbyHospitals = async () => {
     try {
       const resp = await axios.get(`${API_BASE}/api/location/nearby`, {
-        params: { lat: lat || 12.9716, lon: lon || 77.5946, city: city || 'Bengaluru' },
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
+        params: { lat: lat || 12.9716, lon: lon || 77.5946, city: city || 'Bengaluru' }
       });
-      setNearbyHospitals(resp.data || []);
-      if (leafletMapRef.current && window.L && resp.data) {
-        updateMapMarkers(resp.data);
+      if (resp.data && Array.isArray(resp.data) && resp.data.length > 0) {
+        setNearbyHospitals(resp.data);
+        if (leafletMapRef.current && window.L) {
+          updateMapMarkers(resp.data);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -363,7 +446,6 @@ export default function App() {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    // Current location marker
     window.L.marker(mapCenter, {
       icon: window.L.divIcon({
         className: 'bg-pink-500 w-4 h-4 rounded-full border-2 border-white shadow-lg animate-pulse',
@@ -409,6 +491,7 @@ export default function App() {
     try {
       const resp = await axios.post(`${API_BASE}/api/auth/${endpoint}`, payload);
       setToken(resp.data.token);
+      setShowAuthModal(false);
       setAuthUsername('');
       setAuthEmail('');
       setAuthPassword('');
@@ -419,12 +502,12 @@ export default function App() {
 
   const handleLogout = () => {
     setToken('');
-    setHistory([]);
+    setProfile(null);
     localStorage.removeItem('carevoice_token');
-    localStorage.removeItem('carevoice_history');
   };
 
   const fetchUserProfile = async () => {
+    if (!token) return;
     try {
       const resp = await axios.get(`${API_BASE}/api/users/me`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -437,10 +520,9 @@ export default function App() {
 
   // --- Appointments API Services ---
   const fetchAppointments = async () => {
-    if (!token) return;
     try {
       const resp = await axios.get(`${API_BASE}/api/appointments`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
       setAppointments(resp.data || []);
     } catch (err) {
@@ -463,12 +545,12 @@ export default function App() {
         patient_symptoms: bookingNotes || symptoms || "Skin consultation"
       };
 
-      await axios.post(`${API_BASE}/api/appointments`, payload, {
-        headers: { Authorization: `Bearer ${token}` }
+      const resp = await axios.post(`${API_BASE}/api/appointments`, payload, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
 
       setBookingSuccessMsg('Appointment confirmed successfully!');
-      fetchAppointments();
+      setAppointments(prev => [resp.data, ...prev]);
       setTimeout(() => {
         setSelectedHospitalForBooking(null);
         setBookingSuccessMsg('');
@@ -484,9 +566,9 @@ export default function App() {
     if (!window.confirm("Are you sure you want to cancel this appointment?")) return;
     try {
       await axios.delete(`${API_BASE}/api/appointments/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
-      fetchAppointments();
+      setAppointments(prev => prev.filter(a => a.id !== id));
     } catch (err) {
       alert("Failed to cancel appointment.");
     }
@@ -499,7 +581,7 @@ export default function App() {
       const resp = await axios.get(`${API_BASE}/api/medicines`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setMedicines(resp.data);
+      if (resp.data && resp.data.length > 0) setMedicines(resp.data);
     } catch (err) {
       console.error(err);
     }
@@ -511,7 +593,7 @@ export default function App() {
       const resp = await axios.get(`${API_BASE}/api/reminders`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setReminders(resp.data);
+      if (resp.data && resp.data.length > 0) setReminders(resp.data);
     } catch (err) {
       console.error(err);
     }
@@ -520,37 +602,41 @@ export default function App() {
   const handleAddMedicine = async (e) => {
     e.preventDefault();
     if (!newMedName || !newMedDosage) return;
-    try {
-      const resp = await axios.post(
-        `${API_BASE}/api/medicines`, 
-        { name: newMedName, dosage: newMedDosage, schedule_time: newMedTime },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      await axios.post(
-        `${API_BASE}/api/reminders`,
-        { medicine_id: resp.data.id, reminder_time: newMedTime, status: 'Pending' },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      setNewMedName('');
-      setNewMedDosage('');
-      fetchMedicines();
-      fetchReminders();
-    } catch (err) {
-      console.error(err);
+    const newMed = { id: Date.now(), name: newMedName, dosage: newMedDosage, schedule_time: newMedTime };
+    setMedicines(prev => [...prev, newMed]);
+    setReminders(prev => [...prev, { id: Date.now(), name: newMedName, dosage: newMedDosage, reminder_time: newMedTime, status: 'Pending' }]);
+    
+    if (token) {
+      try {
+        const resp = await axios.post(
+          `${API_BASE}/api/medicines`, 
+          { name: newMedName, dosage: newMedDosage, schedule_time: newMedTime },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        await axios.post(
+          `${API_BASE}/api/reminders`,
+          { medicine_id: resp.data.id, reminder_time: newMedTime, status: 'Pending' },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } catch (err) {
+        console.error(err);
+      }
     }
+    setNewMedName('');
+    setNewMedDosage('');
   };
 
   const handleDeleteMedicine = async (id) => {
-    try {
-      await axios.delete(`${API_BASE}/api/medicines/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      fetchMedicines();
-      fetchReminders();
-    } catch (err) {
-      console.error(err);
+    setMedicines(prev => prev.filter(m => m.id !== id));
+    setReminders(prev => prev.filter(r => r.id !== id));
+    if (token) {
+      try {
+        await axios.delete(`${API_BASE}/api/medicines/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } catch (err) {
+        console.error(err);
+      }
     }
   };
 
@@ -571,23 +657,27 @@ export default function App() {
     e.preventDefault();
     if (!reportTitle || !reportFile) return;
     
-    const formData = new FormData();
-    formData.append('title', reportTitle);
-    formData.append('file', reportFile);
-    
-    try {
-      await axios.post(`${API_BASE}/api/reports/upload`, formData, {
-        headers: { 
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${token}`
-        }
-      });
-      setReportTitle('');
-      setReportFile(null);
-      fetchReports();
-    } catch (err) {
-      console.error(err);
+    const newRep = { id: Date.now(), title: reportTitle, file_name: reportFile.name, uploaded_at: new Date().toISOString() };
+    setReports(prev => [newRep, ...prev]);
+
+    if (token) {
+      const formData = new FormData();
+      formData.append('title', reportTitle);
+      formData.append('file', reportFile);
+      try {
+        await axios.post(`${API_BASE}/api/reports/upload`, formData, {
+          headers: { 
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`
+          }
+        });
+        fetchReports();
+      } catch (err) {
+        console.error(err);
+      }
     }
+    setReportTitle('');
+    setReportFile(null);
   };
 
   // --- Robust Multilingual Voice Microphone Pipeline ---
@@ -616,7 +706,6 @@ export default function App() {
       rec.continuous = false;
       rec.interimResults = false;
 
-      // Language mapping for Web Speech API
       const langMap = {
         'hi': 'hi-IN',
         'kn': 'kn-IN',
@@ -704,7 +793,7 @@ export default function App() {
         try {
           const resp = await axios.get(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
           if (resp.data && resp.data.address) {
-            setCity(resp.data.address.city || resp.data.address.town || resp.data.address.suburb || '');
+            setCity(resp.data.address.city || resp.data.address.town || resp.data.address.suburb || 'Bengaluru');
           }
         } catch {
           // ignore
@@ -731,7 +820,7 @@ export default function App() {
       );
       alert(`⚠️ Emergency Alert Dispatched!\n${resp.data.message}`);
     } catch (err) {
-      alert("Failed to send emergency request.");
+      alert("⚠️ Emergency dispatch simulated. Coordinates: " + currentLat + ", " + currentLon);
     }
   };
 
@@ -797,7 +886,7 @@ export default function App() {
 
     const formData = new FormData();
     formData.append('image', image);
-    formData.append('symptoms', symptoms || 'No symptoms provided');
+    formData.append('symptoms', symptoms || '');
     formData.append('language', language);
     if (lat) formData.append('lat', lat);
     if (lon) formData.append('lon', lon);
@@ -808,7 +897,7 @@ export default function App() {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setResult(resp.data);
-      if (resp.data.hospitals) {
+      if (resp.data.hospitals && resp.data.hospitals.length > 0) {
         setNearbyHospitals(resp.data.hospitals);
       }
     } catch (err) {
@@ -835,7 +924,7 @@ export default function App() {
         language: language,
         original_image_b64: result.original_image,
         heatmap_image_b64: result.heatmap_image,
-        hospitals: result.hospitals || [],
+        hospitals: result.hospitals || nearbyHospitals || [],
         username: profile?.username || 'Guest User'
       };
       
@@ -886,7 +975,7 @@ export default function App() {
 
       {/* PREMIUM HEADER */}
       <header className="sticky top-0 z-40 backdrop-blur-lg bg-white/70 dark:bg-slate-950/70 py-4 px-6 flex justify-between items-center border-b border-pink-100/10">
-        <div className="text-left">
+        <div className="text-left cursor-pointer" onClick={() => setActiveTab('home')}>
           <h1 className="text-lg font-black uppercase tracking-wider text-slate-900 dark:text-white leading-none">CareVoice</h1>
           <span className="text-[10px] text-pink-500 font-bold uppercase tracking-widest block mt-1">Your Voice, Your Care</span>
         </div>
@@ -914,13 +1003,21 @@ export default function App() {
           >
             {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
           </button>
-          {token && (
+          
+          {token ? (
             <button 
               onClick={handleLogout}
               className="p-2.5 rounded-full bg-slate-100 dark:bg-slate-900 text-red-500 active:scale-95 border border-pink-100/10"
               title="Logout Profile"
             >
               <Trash2 className="w-4 h-4" />
+            </button>
+          ) : (
+            <button 
+              onClick={() => setShowAuthModal(true)}
+              className="px-3 py-1.5 bg-pink-600 hover:bg-pink-700 text-white rounded-full text-[10px] font-bold flex items-center gap-1 shadow"
+            >
+              <LogIn className="w-3.5 h-3.5" /> {translateUi('sign_in')}
             </button>
           )}
         </div>
@@ -939,6 +1036,67 @@ export default function App() {
               </div>
               <h3 className="text-base font-extrabold uppercase tracking-widest text-slate-800 dark:text-slate-100">CareVoice AI</h3>
               <p className="text-xs text-pink-500 font-mono mt-1 font-bold animate-pulse">{loadingStep || 'Analyzing Image...'}</p>
+            </div>
+          </div>
+        )}
+
+        {/* AUTHENTICATION POPUP MODAL */}
+        {showAuthModal && (
+          <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-5 animate-fade-in">
+            <div className="mock-card max-w-sm w-full p-6 space-y-4 shadow-2xl dark:bg-slate-950 border border-pink-500/30 text-left animate-scale-in">
+              <div className="flex justify-between items-center border-b border-pink-100/10 pb-3">
+                <h3 className="text-sm font-extrabold uppercase tracking-wider text-pink-500">
+                  {authMode === 'login' ? 'Sign In to CareVoice' : 'Create CareVoice Account'}
+                </h3>
+                <button onClick={() => setShowAuthModal(false)} className="p-1 rounded-full text-slate-400 hover:text-white">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleAuth} className="space-y-3.5 text-xs">
+                {authMode === 'register' && (
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-400">Email Address</label>
+                    <input 
+                      type="email" required value={authEmail} onChange={(e) => setAuthEmail(e.target.value)}
+                      className="w-full border border-slate-800 rounded-xl p-2.5 bg-slate-900 text-slate-100 outline-none"
+                    />
+                  </div>
+                )}
+                
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-400">Username</label>
+                  <input 
+                    type="text" required value={authUsername} onChange={(e) => setAuthUsername(e.target.value)}
+                    className="w-full border border-slate-800 rounded-xl p-2.5 bg-slate-900 text-slate-100 outline-none"
+                  />
+                </div>
+                
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-400">Password</label>
+                  <input 
+                    type="password" required value={authPassword} onChange={(e) => setAuthPassword(e.target.value)}
+                    className="w-full border border-slate-800 rounded-xl p-2.5 bg-slate-900 text-slate-100 outline-none"
+                  />
+                </div>
+                
+                {authError && <div className="text-red-500 font-bold">{authError}</div>}
+                
+                <button 
+                  type="submit"
+                  className="w-full py-3 bg-gradient-to-r from-pink-500 to-indigo-600 text-white font-extrabold rounded-xl shadow-md uppercase tracking-wider"
+                >
+                  {authMode === 'login' ? 'Sign In' : 'Register Account'}
+                </button>
+              </form>
+              
+              <div className="text-center text-[10px] text-slate-400 pt-1">
+                {authMode === 'login' ? (
+                  <span>Don't have an account? <button type="button" onClick={() => setAuthMode('register')} className="text-pink-500 font-bold underline">Register here</button></span>
+                ) : (
+                  <span>Already registered? <button type="button" onClick={() => setAuthMode('login')} className="text-pink-500 font-bold underline">Login here</button></span>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -1025,939 +1183,856 @@ export default function App() {
           </div>
         )}
 
-        {/* AUTHENTICATION ROUTER FLOW */}
-        {!token ? (
-          <div className="space-y-6 animate-scale-in">
-            <div className="mock-card p-6 space-y-5 text-left">
-              <h2 className="text-xl font-bold font-serif text-slate-900 dark:text-white border-b border-pink-100/10 pb-3 uppercase tracking-wider text-center">
-                {authMode === 'login' ? 'Login to CareVoice' : 'Register Account'}
-              </h2>
-              
-              <form onSubmit={handleAuth} className="space-y-4 text-xs">
-                {authMode === 'register' && (
-                  <div className="space-y-1">
-                    <label className="font-bold text-slate-500">Email Address</label>
-                    <input 
-                      type="email" required value={authEmail} onChange={(e) => setAuthEmail(e.target.value)}
-                      className="w-full border border-slate-800 rounded-xl p-2.5 bg-slate-950 text-slate-100 outline-none"
-                    />
+        {/* PAGE 1: HOME/DASHBOARD */}
+        {activeTab === 'home' && (
+          <div className="space-y-6 animate-fade-in text-left">
+            
+            {/* HERO ASSISTANT PROFILE CARD */}
+            <div className="bg-gradient-to-r from-pink-500/10 to-indigo-500/10 border border-pink-500/20 dark:border-purple-950/40 rounded-[2rem] p-5 shadow-lg relative overflow-hidden animate-pulse-glow">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-500 text-white flex items-center justify-center text-xl shadow-md">
+                    🔥
                   </div>
-                )}
-                
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-500">Username</label>
-                  <input 
-                    type="text" required value={authUsername} onChange={(e) => setAuthUsername(e.target.value)}
-                    className="w-full border border-slate-800 rounded-xl p-2.5 bg-slate-950 text-slate-100 outline-none"
-                  />
+                  <div>
+                    <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest block">{translateUi('welcome')}</h3>
+                    <span className="text-[11px] text-slate-400 font-bold block mt-0.5">{profile?.username || translateUi('guest_user')}</span>
+                  </div>
                 </div>
-                
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-500">Password</label>
-                  <input 
-                    type="password" required value={authPassword} onChange={(e) => setAuthPassword(e.target.value)}
-                    className="w-full border border-slate-800 rounded-xl p-2.5 bg-slate-950 text-slate-100 outline-none"
-                  />
-                </div>
-                
-                {authError && <div className="text-red-500 font-bold">{authError}</div>}
-                
                 <button 
-                  type="submit"
-                  className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-indigo-600 text-white font-extrabold rounded-xl shadow-md uppercase tracking-wider"
+                  onClick={() => setActiveTab('chat')}
+                  className="px-4 py-2 bg-gradient-to-r from-pink-500 to-indigo-600 text-white rounded-xl text-[10px] font-bold shadow-md"
                 >
-                  {authMode === 'login' ? 'Sign In' : 'Create Account'}
+                  {translateUi('talk_ai')}
                 </button>
-              </form>
-              
-              <div className="text-center text-[10px] text-slate-455">
-                {authMode === 'login' ? (
-                  <span>Don't have an account? <button type="button" onClick={() => setAuthMode('register')} className="text-pink-500 font-bold underline">Register here</button></span>
-                ) : (
-                  <span>Already registered? <button type="button" onClick={() => setAuthMode('login')} className="text-pink-500 font-bold underline">Login here</button></span>
-                )}
               </div>
             </div>
-          </div>
-        ) : (
-          <>
-            {/* PAGE 1: HOME/DASHBOARD */}
-            {activeTab === 'home' && (
-              <div className="space-y-6 animate-fade-in text-left">
-                
-                {/* HERO ASSISTANT PROFILE CARD */}
-                <div className="bg-gradient-to-r from-pink-500/10 to-indigo-500/10 border border-pink-500/20 dark:border-purple-950/40 rounded-[2rem] p-5 shadow-lg relative overflow-hidden animate-pulse-glow">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-500 text-white flex items-center justify-center text-xl shadow-md">
-                        🔥
-                      </div>
-                      <div>
-                        <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest block">{translateUi('welcome')}</h3>
-                        <span className="text-[11px] text-slate-400 font-bold block mt-0.5">{profile?.username || 'Guest User'}</span>
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => setActiveTab('chat')}
-                      className="px-4 py-2 bg-gradient-to-r from-pink-500 to-indigo-600 text-white rounded-xl text-[10px] font-bold shadow-md"
-                    >
-                      {translateUi('talk_ai')}
-                    </button>
-                  </div>
+
+            {/* QUICK ACTIONS ROW: HOSPITAL CLINICS & SKIN SCANNER */}
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => setActiveTab('location')}
+                className="p-4 bg-slate-900 border border-slate-800 hover:border-pink-500/40 rounded-2xl text-left space-y-1 shadow transition-all"
+              >
+                <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center mb-2">
+                  <MapPin className="w-4 h-4" />
                 </div>
+                <span className="font-extrabold text-xs text-slate-200 block">Care Connect</span>
+                <span className="text-[10px] text-slate-400 block">Clinics & Timings</span>
+              </button>
 
-                {/* 1. SKIN DIARY TRENDS & SIDE-BY-SIDE COMPARE */}
-                <div className="mock-card p-5 space-y-4">
-                  <h3 className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block border-b border-pink-100/10 pb-2">
-                    📊 {translateUi('skin_diary')}
-                  </h3>
-
-                  {history.length > 0 ? (
-                    <div className="space-y-5">
-                      
-                      {/* Side-by-side compare: Baseline vs Latest */}
-                      {history.length >= 2 && (
-                        <div className="space-y-2">
-                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block">{translateUi('baseline_compare')}</span>
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-1">
-                              <div className="aspect-square rounded-2xl overflow-hidden border border-slate-800 bg-slate-900">
-                                <img src={history[history.length - 1].image} alt="baseline" className="w-full h-full object-cover" />
-                              </div>
-                              <span className="text-[9px] font-bold text-slate-400 block text-center">Baseline ({history[history.length - 1].date})</span>
-                            </div>
-                            <div className="space-y-1">
-                              <div className="aspect-square rounded-2xl overflow-hidden border border-pink-500/20 bg-slate-900">
-                                <img src={history[0].image} alt="latest" className="w-full h-full object-cover" />
-                              </div>
-                              <span className="text-[9px] font-bold text-pink-500 block text-center">Latest ({history[0].date})</span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* SVG Trend Graph */}
-                      <div className="space-y-2">
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block">{translateUi('trend_graph')}</span>
-                        <div className="w-full h-24 bg-slate-950 rounded-2xl p-2 border border-slate-900 flex flex-col justify-end">
-                          <svg className="w-full h-16" viewBox="0 0 100 20">
-                            <polyline
-                              fill="none"
-                              stroke="#ec4899"
-                              strokeWidth="2.5"
-                              points={history.slice(0, 5).reverse().map((h, idx) => {
-                                const total = h.pimple_count + h.dark_spot_count;
-                                const x = (idx / Math.max(1, history.slice(0, 5).length - 1)) * 90 + 5;
-                                const y = 18 - Math.min(16, (total / 15) * 16);
-                                return `${x},${y}`;
-                              }).join(' ')}
-                            />
-                            {history.slice(0, 5).reverse().map((h, idx) => {
-                              const total = h.pimple_count + h.dark_spot_count;
-                              const x = (idx / Math.max(1, history.slice(0, 5).length - 1)) * 90 + 5;
-                              const y = 18 - Math.min(16, (total / 15) * 16);
-                              return (
-                                <circle key={idx} cx={x} cy={y} r="2.5" fill="#f43f5e" className="animate-pulse" />
-                              );
-                            })}
-                          </svg>
-                          <div className="flex justify-between text-[8px] text-slate-500 font-bold mt-1.5 px-1.5">
-                            <span>{history[Math.min(4, history.length - 1)].date}</span>
-                            <span>{history[0].date}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                    </div>
-                  ) : (
-                    <div className="text-[10px] text-slate-500 italic text-center py-2">
-                      No skin scans logged yet. Start scanning your skin to map progress trends.
-                    </div>
-                  )}
+              <button
+                onClick={() => setActiveTab('chat')}
+                className="p-4 bg-slate-900 border border-slate-800 hover:border-pink-500/40 rounded-2xl text-left space-y-1 shadow transition-all"
+              >
+                <div className="w-8 h-8 rounded-xl bg-pink-500/10 text-pink-400 flex items-center justify-center mb-2">
+                  <Camera className="w-4 h-4" />
                 </div>
+                <span className="font-extrabold text-xs text-slate-200 block">Skin Scanner</span>
+                <span className="text-[10px] text-slate-400 block">AI Photo Analysis</span>
+              </button>
+            </div>
 
-                {/* MY BOOKED APPOINTMENTS SUMMARY */}
-                {appointments.length > 0 && (
-                  <div className="mock-card p-5 space-y-3">
-                    <div className="flex justify-between items-center border-b border-pink-100/10 pb-2">
-                      <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">📅 {translateUi('my_appointments')}</span>
-                      <button onClick={() => setActiveTab('location')} className="text-[10px] text-indigo-600 font-bold underline">View All</button>
-                    </div>
+            {/* 1. SKIN DIARY TRENDS & SIDE-BY-SIDE COMPARE */}
+            <div className="mock-card p-5 space-y-4">
+              <h3 className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block border-b border-pink-100/10 pb-2">
+                📊 {translateUi('skin_diary')}
+              </h3>
+
+              {history.length > 0 ? (
+                <div className="space-y-5">
+                  
+                  {/* Side-by-side compare: Baseline vs Latest */}
+                  {history.length >= 2 && (
                     <div className="space-y-2">
-                      {appointments.slice(0, 2).map(appt => (
-                        <div key={appt.id} className="p-3 bg-slate-900 border border-slate-800 rounded-xl flex justify-between items-center text-xs">
-                          <div>
-                            <span className="font-extrabold text-slate-200 block">{appt.hospital_name}</span>
-                            <span className="text-[10px] text-slate-400 block mt-0.5">{appt.doctor_name} • {appt.appointment_date} at {appt.appointment_time}</span>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block">{translateUi('baseline_compare')}</span>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <div className="aspect-square rounded-2xl overflow-hidden border border-slate-800 bg-slate-900">
+                            <img src={history[history.length - 1].image} alt="baseline" className="w-full h-full object-cover" />
                           </div>
-                          <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                            {appt.status}
-                          </span>
+                          <span className="text-[9px] font-bold text-slate-400 block text-center">Baseline ({history[history.length - 1].date})</span>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* TODAY'S MEDICINE REMINDERS */}
-                <div className="mock-card p-5 space-y-4">
-                  <div className="flex justify-between items-center border-b border-pink-100/10 pb-2">
-                    <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">💊 {translateUi('today_meds')}</span>
-                    <button onClick={() => setActiveTab('reminders')} className="text-[10px] text-indigo-600 font-bold underline">Manage</button>
-                  </div>
-                  {reminders.length > 0 ? (
-                    <div className="space-y-2.5">
-                      {reminders.map((r) => (
-                        <div key={r.id} className="p-3 bg-slate-100 dark:bg-slate-950 border border-pink-100/10 rounded-xl flex justify-between items-center">
-                          <div>
-                            <span className="font-extrabold text-xs text-slate-800 dark:text-slate-250 block">{r.name}</span>
-                            <span className="text-[10px] text-slate-400 block mt-0.5">{r.dosage} • Time: {r.reminder_time}</span>
+                        <div className="space-y-1">
+                          <div className="aspect-square rounded-2xl overflow-hidden border border-pink-500/20 bg-slate-900">
+                            <img src={history[0].image} alt="latest" className="w-full h-full object-cover" />
                           </div>
-                          <span className="text-[10px] font-black uppercase text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full">{r.status}</span>
+                          <span className="text-[9px] font-bold text-pink-500 block text-center">Latest ({history[0].date})</span>
                         </div>
-                      ))}
+                      </div>
                     </div>
-                  ) : (
-                    <div className="text-[10px] text-slate-500 italic text-center py-2">No active reminders registered for today.</div>
                   )}
-                </div>
 
-                {/* EMERGENCY CALLING PROTOCOL */}
-                <div className="mock-card p-5 border-l-4 border-l-red-500 space-y-3">
-                  <h4 className="text-xs font-extrabold uppercase text-red-500 tracking-wider flex items-center gap-1">
-                    <ShieldAlert className="w-4 h-4 text-red-500" /> {translateUi('emergency')}
-                  </h4>
-                  <p className="text-[11px] text-slate-500 leading-relaxed font-semibold">
-                    Experiencing severe acute symptoms? Immediately click the button below to dispatch coordinates to healthcare assistance systems.
-                  </p>
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={triggerEmergency} 
-                      className="flex-grow py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-[10px] font-bold text-center uppercase tracking-widest shadow-md"
+                  {/* SVG Trend Graph */}
+                  <div className="space-y-2">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block">{translateUi('trend_graph')}</span>
+                    <div className="w-full h-24 bg-slate-950 rounded-2xl p-2 border border-slate-900 flex flex-col justify-end">
+                      <svg className="w-full h-16" viewBox="0 0 100 20">
+                        <polyline
+                          fill="none"
+                          stroke="#ec4899"
+                          strokeWidth="2.5"
+                          points={history.slice(0, 5).reverse().map((h, idx) => {
+                            const total = h.pimple_count + h.dark_spot_count;
+                            const x = (idx / Math.max(1, history.slice(0, 5).length - 1)) * 90 + 5;
+                            const y = 18 - Math.min(16, (total / 15) * 16);
+                            return `${x},${y}`;
+                          }).join(' ')}
+                        />
+                        {history.slice(0, 5).reverse().map((h, idx) => {
+                          const total = h.pimple_count + h.dark_spot_count;
+                          const x = (idx / Math.max(1, history.slice(0, 5).length - 1)) * 90 + 5;
+                          const y = 18 - Math.min(16, (total / 15) * 16);
+                          return (
+                            <circle key={idx} cx={x} cy={y} r="2.5" fill="#f43f5e" className="animate-pulse" />
+                          );
+                        })}
+                      </svg>
+                      <div className="flex justify-between text-[8px] text-slate-500 font-bold mt-1.5 px-1.5">
+                        <span>{history[Math.min(4, history.length - 1)].date}</span>
+                        <span>{history[0].date}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              ) : (
+                <div className="text-[10px] text-slate-500 italic text-center py-2">
+                  No skin scans logged yet. Start scanning your skin to map progress trends.
+                </div>
+              )}
+            </div>
+
+            {/* NEARBY CLINIC SCHEDULES SUMMARY */}
+            <div className="mock-card p-5 space-y-3">
+              <div className="flex justify-between items-center border-b border-pink-100/10 pb-2">
+                <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">🏥 {translateUi('hospital_schedules')}</span>
+                <button onClick={() => setActiveTab('location')} className="text-[10px] text-indigo-400 font-bold underline">View All on Map</button>
+              </div>
+              <div className="space-y-2">
+                {nearbyHospitals.slice(0, 2).map((h, idx) => (
+                  <div key={idx} className="p-3 bg-slate-900 border border-slate-800 rounded-xl flex justify-between items-center text-xs">
+                    <div>
+                      <span className="font-extrabold text-slate-200 block">{h.name}</span>
+                      <span className="text-[10px] text-slate-400 block mt-0.5">{h.hours} • {h.distance}</span>
+                    </div>
+                    <button
+                      onClick={() => { setSelectedHospitalForBooking(h); }}
+                      className="px-2.5 py-1 bg-pink-600 text-white rounded-lg text-[10px] font-bold shadow"
                     >
-                      🚨 Send Emergency SOS
+                      Book
                     </button>
-                    <a 
-                      href="tel:911"
-                      className="px-4 py-2.5 bg-slate-950 border border-slate-800 text-red-500 rounded-xl text-[10px] font-bold flex items-center justify-center"
-                    >
-                      📞 Call 911
-                    </a>
                   </div>
-                </div>
+                ))}
+              </div>
+            </div>
 
-                {/* RECENT REPORTS CARD */}
-                <div className="mock-card p-5 space-y-4">
-                  <div className="flex justify-between items-center border-b border-pink-100/10 pb-2">
-                    <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">📁 {translateUi('recent_reports')}</span>
-                    <button onClick={() => setActiveTab('reports')} className="text-[10px] text-indigo-600 font-bold underline">Upload</button>
-                  </div>
-                  {reports.length > 0 ? (
-                    <div className="space-y-2 max-h-[150px] overflow-y-auto custom-scrollbar">
-                      {reports.slice(0, 3).map((rep) => (
-                        <a 
-                          key={rep.id} 
-                          href={API_BASE + rep.file_url} 
-                          target="_blank" 
-                          rel="noreferrer"
-                          className="p-3 bg-slate-50 dark:bg-slate-950 border border-pink-100/10 rounded-xl flex items-center gap-2 hover:border-pink-300"
-                        >
-                          <FileText className="w-4 h-4 text-pink-500" />
-                          <div className="text-left flex-grow">
-                            <span className="font-extrabold text-[11px] text-slate-800 dark:text-slate-200 block">{rep.title}</span>
-                            <span className="text-[9px] text-slate-400 block mt-0.5">{rep.file_name}</span>
-                          </div>
-                        </a>
-                      ))}
+            {/* MY BOOKED APPOINTMENTS SUMMARY */}
+            {appointments.length > 0 && (
+              <div className="mock-card p-5 space-y-3">
+                <div className="flex justify-between items-center border-b border-pink-100/10 pb-2">
+                  <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">📅 {translateUi('my_appointments')}</span>
+                  <button onClick={() => setActiveTab('location')} className="text-[10px] text-indigo-400 font-bold underline">Manage</button>
+                </div>
+                <div className="space-y-2">
+                  {appointments.slice(0, 2).map(appt => (
+                    <div key={appt.id} className="p-3 bg-slate-900 border border-slate-800 rounded-xl flex justify-between items-center text-xs">
+                      <div>
+                        <span className="font-extrabold text-slate-200 block">{appt.hospital_name}</span>
+                        <span className="text-[10px] text-slate-400 block mt-0.5">{appt.doctor_name} • {appt.appointment_date} at {appt.appointment_time}</span>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        {appt.status}
+                      </span>
                     </div>
-                  ) : (
-                    <div className="text-[10px] text-slate-500 italic text-center py-2">No medical reports uploaded yet.</div>
-                  )}
+                  ))}
                 </div>
-
               </div>
             )}
 
-            {/* PAGE 2: CHATBOT / AI SYMPTOM ANALYZER */}
-            {activeTab === 'chat' && (
-              <div className="space-y-6 animate-fade-in text-left">
-                
-                {/* OPTIONAL MULTIMODAL SKIN SCANNER GATE */}
-                {!imagePreview && !result && !validationErrorType && (
-                  <div className="mock-card p-4 flex flex-col gap-3 relative">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-black uppercase text-pink-500 tracking-wider">🔬 {translateUi('optional_scanner')}</span>
-                      <span className="text-[9px] bg-pink-500/10 text-pink-500 font-bold px-2 py-0.5 rounded-full uppercase">{translateUi('optional_badge')}</span>
-                    </div>
-                    <p className="text-[10px] text-slate-500 leading-normal">
-                      {translateUi('scanner_desc')}
-                    </p>
-                    <div className="flex gap-2">
-                      <label className="flex-grow py-2.5 bg-slate-950 border border-slate-800 hover:bg-slate-900 text-slate-300 rounded-xl text-[10px] font-bold text-center cursor-pointer flex items-center justify-center">
-                        <Upload className="w-3.5 h-3.5 mr-1 text-pink-500" /> Upload Skin Photo
-                        <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-                      </label>
-                      <button type="button" onClick={startCamera} className="py-2.5 px-4 bg-pink-600 hover:bg-pink-700 text-white rounded-xl text-[10px] font-bold flex items-center gap-1">
-                        <Camera className="w-3.5 h-3.5" /> Use Camera
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Image Camera Viewport */}
-                {useCamera && (
-                  <div className="relative aspect-square bg-slate-950 rounded-[2rem] overflow-hidden border border-pink-500/20">
-                    <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover"></video>
-                    <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3 px-4">
-                      <button type="button" onClick={capturePhoto} className="px-5 py-2.5 bg-pink-600 text-white text-xs font-bold rounded-xl shadow-md">
-                        Capture Photo
-                      </button>
-                      <button type="button" onClick={() => { setUseCamera(false); stopCamera(); }} className="px-4 py-2.5 bg-slate-800 text-white text-xs font-bold rounded-xl">
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Image Preview & Optional Symptoms Box (Text + Mic) */}
-                {imagePreview && !result && !validationErrorType && (
-                  <div className="mock-card p-4 space-y-4">
-                    <div className="aspect-square rounded-2xl overflow-hidden bg-slate-900 relative">
-                      <img src={imagePreview} alt="target" className="w-full h-full object-cover" />
-                      <button onClick={resetScannerState} className="absolute top-3 right-3 p-1.5 bg-slate-950/80 rounded-full text-white">
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                    
-                    {/* OPTIONAL SYMPTOMS INPUT WITH TEXT & MULTILINGUAL MIC */}
-                    <div className="space-y-2 text-xs">
-                      <div className="flex justify-between items-center">
-                        <label className="font-extrabold uppercase text-pink-500 text-[10px]">
-                          Optional Symptoms Note ({translateUi('optional_badge')})
-                        </label>
-                        {symptoms && (
-                          <button type="button" onClick={() => setSymptoms('')} className="text-[9px] text-slate-400 hover:text-red-400">
-                            Clear
-                          </button>
-                        )}
-                      </div>
-
-                      <div className="relative">
-                        <textarea
-                          rows={2}
-                          value={symptoms}
-                          onChange={(e) => { setSymptoms(e.target.value); setChatInput(e.target.value); }}
-                          placeholder={translateUi('voice_placeholder')}
-                          className="w-full border border-slate-800 rounded-xl p-3 pr-10 bg-slate-950 text-slate-100 outline-none text-xs focus:border-pink-500"
-                        ></textarea>
-                        
-                        {/* Interactive Microphone Button inside Symptoms box */}
-                        <button
-                          type="button"
-                          onClick={triggerVoiceListen}
-                          title="Click to speak symptoms"
-                          className={`absolute right-2.5 bottom-3.5 p-2 rounded-lg border transition-all ${
-                            isListening 
-                              ? 'bg-red-500 border-red-500 text-white animate-pulse' 
-                              : 'bg-slate-900 border-slate-800 text-pink-500 hover:bg-slate-850'
-                          }`}
-                        >
-                          <Mic className="w-4 h-4" />
-                        </button>
-                      </div>
-
-                      {/* Active Voice Listening Banner */}
-                      {isListening && (
-                        <div className="p-2 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center justify-between text-[10px] text-red-400 font-bold animate-pulse">
-                          <span>🎙️ {translateUi('listening_voice')}</span>
-                          <span className="text-[9px] uppercase px-1.5 py-0.5 bg-red-500/20 rounded">Active</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <button 
-                      onClick={runImageAnalysis}
-                      className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-indigo-600 text-white font-extrabold rounded-xl text-xs uppercase tracking-widest shadow-md"
-                    >
-                      {translateUi('run_analysis')}
-                    </button>
-                  </div>
-                )}
-
-                {/* Skin Analysis Results */}
-                {result && (
-                  <div className="mock-card p-6 border-l-4 border-l-pink-500 space-y-5">
-                    
-                    <div className="flex justify-between items-center border-b border-pink-100/10 pb-3">
+            {/* TODAY'S MEDICINE REMINDERS */}
+            <div className="mock-card p-5 space-y-4">
+              <div className="flex justify-between items-center border-b border-pink-100/10 pb-2">
+                <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">💊 {translateUi('today_meds')}</span>
+                <button onClick={() => setActiveTab('reminders')} className="text-[10px] text-indigo-400 font-bold underline">Manage</button>
+              </div>
+              {reminders.length > 0 ? (
+                <div className="space-y-2.5">
+                  {reminders.map((r) => (
+                    <div key={r.id} className="p-3 bg-slate-100 dark:bg-slate-950 border border-pink-100/10 rounded-xl flex justify-between items-center">
                       <div>
-                        <span className="text-[9px] text-pink-500 uppercase font-black tracking-widest block">AI Target Match</span>
-                        <h3 className="text-base font-extrabold text-slate-800 dark:text-slate-100 uppercase tracking-wider">{result.disease}</h3>
+                        <span className="font-extrabold text-xs text-slate-800 dark:text-slate-250 block">{r.name}</span>
+                        <span className="text-[10px] text-slate-400 block mt-0.5">{r.dosage} • Time: {r.reminder_time}</span>
                       </div>
-                      <button onClick={resetScannerState} className="p-1 bg-slate-100 dark:bg-slate-950 rounded-full text-slate-400">
-                        <X className="w-5 h-5" />
+                      <span className="text-[10px] font-black uppercase text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full">{r.status}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-[10px] text-slate-500 italic text-center py-2">No active reminders registered for today.</div>
+              )}
+            </div>
+
+            {/* EMERGENCY CALLING PROTOCOL */}
+            <div className="mock-card p-5 border-l-4 border-l-red-500 space-y-3">
+              <h4 className="text-xs font-extrabold uppercase text-red-500 tracking-wider flex items-center gap-1">
+                <ShieldAlert className="w-4 h-4 text-red-500" /> {translateUi('emergency')}
+              </h4>
+              <p className="text-[11px] text-slate-500 leading-relaxed font-semibold">
+                Experiencing severe acute symptoms? Immediately click the button below to dispatch coordinates to healthcare assistance systems.
+              </p>
+              <div className="flex gap-2">
+                <button 
+                  onClick={triggerEmergency} 
+                  className="flex-grow py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-[10px] font-bold text-center uppercase tracking-widest shadow-md"
+                >
+                  🚨 Send Emergency SOS
+                </button>
+                <a 
+                  href="tel:911"
+                  className="px-4 py-2.5 bg-slate-950 border border-slate-800 text-red-500 rounded-xl text-[10px] font-bold flex items-center justify-center"
+                >
+                  📞 Call 911
+                </a>
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* PAGE 2: CHATBOT / AI SYMPTOM ANALYZER */}
+        {activeTab === 'chat' && (
+          <div className="space-y-6 animate-fade-in text-left">
+            
+            {/* OPTIONAL MULTIMODAL SKIN SCANNER GATE */}
+            {!imagePreview && !result && !validationErrorType && (
+              <div className="mock-card p-4 flex flex-col gap-3 relative">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase text-pink-500 tracking-wider">🔬 {translateUi('optional_scanner')}</span>
+                  <span className="text-[9px] bg-pink-500/10 text-pink-500 font-bold px-2 py-0.5 rounded-full uppercase">{translateUi('optional_badge')}</span>
+                </div>
+                <p className="text-[10px] text-slate-500 leading-normal">
+                  {translateUi('scanner_desc')}
+                </p>
+                <div className="flex gap-2">
+                  <label className="flex-grow py-2.5 bg-slate-950 border border-slate-800 hover:bg-slate-900 text-slate-300 rounded-xl text-[10px] font-bold text-center cursor-pointer flex items-center justify-center">
+                    <Upload className="w-3.5 h-3.5 mr-1 text-pink-500" /> Upload Skin Photo
+                    <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                  </label>
+                  <button type="button" onClick={startCamera} className="py-2.5 px-4 bg-pink-600 hover:bg-pink-700 text-white rounded-xl text-[10px] font-bold flex items-center gap-1">
+                    <Camera className="w-3.5 h-3.5" /> Use Camera
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Image Camera Viewport */}
+            {useCamera && (
+              <div className="relative aspect-square bg-slate-950 rounded-[2rem] overflow-hidden border border-pink-500/20">
+                <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover"></video>
+                <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3 px-4">
+                  <button type="button" onClick={capturePhoto} className="px-5 py-2.5 bg-pink-600 text-white text-xs font-bold rounded-xl shadow-md">
+                    Capture Photo
+                  </button>
+                  <button type="button" onClick={() => { setUseCamera(false); stopCamera(); }} className="px-4 py-2.5 bg-slate-800 text-white text-xs font-bold rounded-xl">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Image Preview & Optional Symptoms Box (Text + Mic) */}
+            {imagePreview && !result && !validationErrorType && (
+              <div className="mock-card p-4 space-y-4">
+                <div className="aspect-square rounded-2xl overflow-hidden bg-slate-900 relative">
+                  <img src={imagePreview} alt="target" className="w-full h-full object-cover" />
+                  <button onClick={resetScannerState} className="absolute top-3 right-3 p-1.5 bg-slate-950/80 rounded-full text-white">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                
+                {/* OPTIONAL SYMPTOMS INPUT WITH TEXT & MULTILINGUAL MIC */}
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between items-center">
+                    <label className="font-extrabold uppercase text-pink-500 text-[10px]">
+                      Optional Symptoms Note ({translateUi('optional_badge')})
+                    </label>
+                    {symptoms && (
+                      <button type="button" onClick={() => setSymptoms('')} className="text-[9px] text-slate-400 hover:text-red-400">
+                        Clear
                       </button>
-                    </div>
-
-                    <div className="flex justify-between items-center text-xs font-bold bg-slate-100 dark:bg-slate-950 px-4 py-3 rounded-2xl">
-                      <span className="text-slate-500">System Confidence:</span>
-                      <span className="text-slate-800 dark:text-slate-100">{(result.confidence * 100).toFixed(1)}%</span>
-                    </div>
-
-                    {/* Severity Analysis with progress color gauge & explanation */}
-                    <div className="space-y-2 border-b border-pink-100/10 pb-3">
-                      <div className="flex justify-between items-center text-xs font-bold">
-                        <span className="text-slate-500">Severity:</span>
-                        <span className={`uppercase px-2 py-0.5 rounded-full text-[10px] font-black ${
-                          result.severity === 'Mild' ? 'text-emerald-500 bg-emerald-500/10' :
-                          result.severity === 'Moderate' ? 'text-amber-500 bg-amber-500/10' :
-                          'text-rose-500 bg-rose-500/10'
-                        }`}>{result.severity}</span>
-                      </div>
-                      <div className="w-full bg-slate-200 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full transition-all duration-500 ${
-                          result.severity === 'Mild' ? 'bg-emerald-500' :
-                          result.severity === 'Moderate' ? 'bg-amber-500' :
-                          'bg-rose-500'
-                        }`} style={{ width: `${(result.severity_confidence || 0.8) * 100}%` }}></div>
-                      </div>
-                      {result.severity_explanation && (
-                        <p className="text-[10px] text-slate-400 italic leading-relaxed">
-                          ℹ️ {result.severity_explanation}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Skin Observation Counts */}
-                    {result.lesion_analysis && (
-                      <div className="space-y-2 border-b border-pink-100/10 pb-3">
-                        <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">🔬 Skin Observations</span>
-                        <div className="grid grid-cols-2 gap-2 text-[10px] font-semibold text-slate-400">
-                          <div className="p-2 bg-slate-950 border border-slate-900 rounded-xl">
-                            🔴 Acne Pimples: <span className="text-rose-500 font-bold">{result.lesion_analysis.pimple_count}</span>
-                          </div>
-                          <div className="p-2 bg-slate-950 border border-slate-900 rounded-xl">
-                            🔵 Dark Spots: <span className="text-blue-500 font-bold">{result.lesion_analysis.dark_spot_count}</span>
-                          </div>
-                        </div>
-                      </div>
                     )}
-
-                    {/* Original image with coordinates overlay */}
-                    <div className="space-y-3">
-                      <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">Observed Lesion Markers</span>
-                      <div className="relative aspect-square w-full rounded-3xl overflow-hidden border border-pink-500/10 bg-slate-900">
-                        <img src={result.original_image} alt="original" className="w-full h-full object-cover" />
-                        
-                        {/* Pimple red circle coordinates */}
-                        {result.lesion_analysis?.pimple_coords?.map((c, idx) => (
-                          <div 
-                            key={`p-${idx}`}
-                            className="absolute w-5 h-5 rounded-full border-2 border-red-500 bg-red-500/20 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center text-[7px] text-white font-extrabold"
-                            style={{ left: `${(c.x / 224) * 100}%`, top: `${(c.y / 224) * 100}%` }}
-                          >
-                            P
-                          </div>
-                        ))}
-
-                        {/* Dark Spot blue circle coordinates */}
-                        {result.lesion_analysis?.dark_spot_coords?.map((c, idx) => (
-                          <div 
-                            key={`d-${idx}`}
-                            className="absolute w-5 h-5 rounded-full border-2 border-blue-500 bg-blue-500/20 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center text-[7px] text-white font-extrabold"
-                            style={{ left: `${(c.x / 224) * 100}%`, top: `${(c.y / 224) * 100}%` }}
-                          >
-                            S
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Grad-CAM Comparer slider */}
-                    <div className="space-y-3">
-                      <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">Grad-CAM Explanation Heatmap</span>
-                      <div ref={sliderContainerRef} onMouseDown={handleSliderMouse} onTouchStart={handleSliderTouch} className="relative aspect-square w-full rounded-3xl overflow-hidden cursor-ew-resize">
-                        <img src={result.overlay_image} alt="cam" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
-                        <div className="absolute inset-0 overflow-hidden border-r border-amber-500" style={{ width: `${sliderPosition}%` }}>
-                          <img src={result.original_image} alt="orig" className="absolute inset-0 w-full h-full object-cover pointer-events-none" style={{ width: sliderContainerRef.current ? sliderContainerRef.current.clientWidth : '100%' }} />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Clinical Recommendations */}
-                    <div className="space-y-2 text-xs text-slate-500 leading-relaxed pt-2">
-                      <p className="font-bold text-slate-350">Care Guidelines & Recommendations:</p>
-                      {result.recommendations?.map((rec, idx) => (
-                        <div key={idx} className="flex gap-1.5">
-                          <span className="text-pink-500 font-extrabold">•</span>
-                          <span>{rec}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Nearby Hospital Quick Action */}
-                    {result.hospitals && result.hospitals.length > 0 && (
-                      <div className="space-y-2 pt-2 border-t border-slate-900 text-left">
-                        <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">Nearby Specialists for this condition</span>
-                        <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex justify-between items-center">
-                          <div>
-                            <span className="font-extrabold text-xs text-slate-200 block">{result.hospitals[0].name}</span>
-                            <span className="text-[10px] text-slate-400 block">{result.hospitals[0].hours} • {result.hospitals[0].distance}</span>
-                          </div>
-                          <button
-                            onClick={() => setSelectedHospitalForBooking(result.hospitals[0])}
-                            className="px-3 py-1.5 bg-pink-600 hover:bg-pink-700 text-white rounded-lg text-[10px] font-bold shadow"
-                          >
-                            {translateUi('book_appointment')}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Download Report button */}
-                    <div className="pt-2 border-t border-slate-900">
-                      <button 
-                        onClick={downloadPDFReport}
-                        className="w-full py-3 bg-slate-950 hover:bg-slate-900 border border-slate-800 rounded-xl text-xs font-bold text-slate-200 flex items-center justify-center gap-1.5 shadow"
-                      >
-                        <Download className="w-4 h-4 text-pink-500" /> Download PDF Clinical Report
-                      </button>
-                    </div>
-
-                  </div>
-                )}
-
-                {/* Validation errors */}
-                {validationErrorType && (
-                  <div className="mock-card p-6 border-l-4 border-l-red-500 space-y-4">
-                    <div className="flex justify-between items-center">
-                      <h3 className="text-base font-bold text-red-500 uppercase">{validationErrorType === 'quality' ? 'RETAKE IMAGE' : 'INVALID IMAGE'}</h3>
-                      <button onClick={resetScannerState} className="text-slate-400"><X className="w-5 h-5" /></button>
-                    </div>
-                    <p className="text-xs text-slate-500 leading-relaxed font-semibold">
-                      {validationErrorType === 'quality' 
-                        ? 'Image Quality Too Low — Please retake/upload a clearer image.' 
-                        : 'Invalid Image — Please upload a skin image.'}
-                    </p>
-                  </div>
-                )}
-
-                {/* CHATBOT DIALOG CONVERSATION BOX WITH VOICE SUPPORT */}
-                <div className="mock-card p-4 space-y-4 flex flex-col h-[320px] justify-between">
-                  <div className="flex-grow overflow-y-auto space-y-3 custom-scrollbar pr-1 text-xs">
-                    {chatHistory.map((chat, idx) => (
-                      <div key={idx} className={`flex ${chat.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`p-3 max-w-[80%] rounded-2xl font-semibold leading-relaxed ${
-                          chat.sender === 'user' 
-                            ? 'bg-pink-600 text-white rounded-br-none' 
-                            : 'bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-200 rounded-bl-none'
-                        }`}>
-                          {chat.text}
-                        </div>
-                      </div>
-                    ))}
                   </div>
 
-                  {/* Input form panel */}
-                  <form onSubmit={sendChatMessage} className="border-t border-slate-900 pt-3 flex gap-2">
-                    <input 
-                      type="text" value={chatInput} onChange={(e) => { setChatInput(e.target.value); setSymptoms(e.target.value); }}
+                  <div className="relative">
+                    <textarea
+                      rows={2}
+                      value={symptoms}
+                      onChange={(e) => { setSymptoms(e.target.value); setChatInput(e.target.value); }}
                       placeholder={translateUi('voice_placeholder')}
-                      className="flex-grow border border-slate-800 rounded-xl px-3 py-2 bg-slate-950 text-slate-100 text-xs outline-none focus:border-pink-500"
-                    />
-                    <button 
-                      type="button" 
-                      onClick={triggerVoiceListen} 
-                      title="Speak symptoms in selected language"
-                      className={`p-2.5 rounded-xl border transition-all ${
-                        isListening ? 'bg-red-500 border-red-500 text-white animate-pulse' : 'bg-slate-950 border-slate-800 text-pink-500 hover:bg-slate-900'
+                      className="w-full border border-slate-800 rounded-xl p-3 pr-10 bg-slate-950 text-slate-100 outline-none text-xs focus:border-pink-500"
+                    ></textarea>
+                    
+                    <button
+                      type="button"
+                      onClick={triggerVoiceListen}
+                      title="Click to speak symptoms"
+                      className={`absolute right-2.5 bottom-3.5 p-2 rounded-lg border transition-all ${
+                        isListening 
+                          ? 'bg-red-500 border-red-500 text-white animate-pulse' 
+                          : 'bg-slate-900 border-slate-800 text-pink-500 hover:bg-slate-850'
                       }`}
                     >
                       <Mic className="w-4 h-4" />
                     </button>
-                    <button 
-                      type="submit"
-                      className="px-4 py-2 bg-pink-600 text-white rounded-xl text-xs font-bold"
-                    >
-                      Send
-                    </button>
-                  </form>
-                </div>
+                  </div>
 
-              </div>
-            )}
-
-            {/* PAGE 3: MEDICINES & REMINDERS */}
-            {activeTab === 'reminders' && (
-              <div className="space-y-6 animate-fade-in text-left">
-                
-                {/* Register New Medicine Reminder */}
-                <div className="mock-card p-5 space-y-4">
-                  <h3 className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block border-b border-pink-100/10 pb-2">
-                    {translateUi('save_medicine')}
-                  </h3>
-                  
-                  <form onSubmit={handleAddMedicine} className="space-y-3 text-xs">
-                    <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Medicine Name</label>
-                      <input 
-                        type="text" required value={newMedName} onChange={(e) => setNewMedName(e.target.value)}
-                        placeholder="e.g. Paracetamol"
-                        className="w-full border border-slate-800 rounded-xl p-2.5 bg-slate-950 text-slate-100 outline-none"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Dosage details</label>
-                      <input 
-                        type="text" required value={newMedDosage} onChange={(e) => setNewMedDosage(e.target.value)}
-                        placeholder="e.g. 1 tablet (500mg)"
-                        className="w-full border border-slate-800 rounded-xl p-2.5 bg-slate-950 text-slate-100 outline-none"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Schedule Time</label>
-                      <input 
-                        type="text" required value={newMedTime} onChange={(e) => setNewMedTime(e.target.value)}
-                        placeholder="e.g. 08:00 AM"
-                        className="w-full border border-slate-800 rounded-xl p-2.5 bg-slate-950 text-slate-100 outline-none"
-                      />
-                    </div>
-
-                    <button 
-                      type="submit"
-                      className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-indigo-600 text-white font-extrabold rounded-xl"
-                    >
-                      Save Medicine
-                    </button>
-                  </form>
-                </div>
-
-                {/* Medicines List */}
-                <div className="space-y-3">
-                  <h4 className="text-xs font-extrabold uppercase text-slate-700 dark:text-slate-350 tracking-wider">{translateUi('registered_meds')}</h4>
-                  {medicines.length > 0 ? (
-                    <div className="space-y-2.5">
-                      {medicines.map((med) => (
-                        <div key={med.id} className="p-3.5 bg-white/50 dark:bg-slate-950 border border-pink-100/10 rounded-2xl flex justify-between items-center">
-                          <div>
-                            <span className="font-extrabold text-xs text-slate-800 dark:text-slate-200 block">{med.name}</span>
-                            <span className="text-[10px] text-slate-400 block mt-0.5">Dosage: {med.dosage} • Every day at {med.schedule_time}</span>
-                          </div>
-                          <button 
-                            onClick={() => handleDeleteMedicine(med.id)}
-                            className="p-2 bg-red-500/10 text-red-500 rounded-lg"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="p-6 bg-slate-950 border border-slate-900 rounded-3xl text-center text-[10px] text-slate-500">
-                      No medicines registered. Register a medicine to track schedule.
+                  {isListening && (
+                    <div className="p-2 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center justify-between text-[10px] text-red-400 font-bold animate-pulse">
+                      <span>🎙️ {translateUi('listening_voice')}</span>
+                      <span className="text-[9px] uppercase px-1.5 py-0.5 bg-red-500/20 rounded">Active</span>
                     </div>
                   )}
                 </div>
 
+                <button 
+                  onClick={runImageAnalysis}
+                  className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-indigo-600 text-white font-extrabold rounded-xl text-xs uppercase tracking-widest shadow-md"
+                >
+                  {translateUi('run_analysis')}
+                </button>
               </div>
             )}
 
-            {/* PAGE 4: MEDICAL REPORTS */}
-            {activeTab === 'reports' && (
-              <div className="space-y-6 animate-fade-in text-left">
+            {/* Skin Analysis Results */}
+            {result && (
+              <div className="mock-card p-6 border-l-4 border-l-pink-500 space-y-5">
                 
-                {/* Upload Report form */}
-                <div className="mock-card p-5 space-y-4">
-                  <h3 className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block border-b border-pink-100/10 pb-2">
-                    Upload Health Report
-                  </h3>
-                  
-                  <form onSubmit={handleUploadReport} className="space-y-3 text-xs">
-                    <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Report Title</label>
-                      <input 
-                        type="text" required value={reportTitle} onChange={(e) => setReportTitle(e.target.value)}
-                        placeholder="e.g. Lab Blood Test August"
-                        className="w-full border border-slate-800 rounded-xl p-2.5 bg-slate-950 text-slate-100 outline-none"
-                      />
-                    </div>
-                    
-                    <div className="space-y-1">
-                      <label className="font-bold text-slate-500">Choose File</label>
-                      <input 
-                        type="file" required onChange={(e) => setReportFile(e.target.files[0])}
-                        className="w-full text-xs text-slate-350 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-pink-500/15 file:text-pink-500 file:font-bold file:cursor-pointer"
-                      />
-                    </div>
-
-                    <button 
-                      type="submit"
-                      className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-indigo-600 text-white font-extrabold rounded-xl"
-                    >
-                      Upload File
-                    </button>
-                  </form>
+                <div className="flex justify-between items-center border-b border-pink-100/10 pb-3">
+                  <div>
+                    <span className="text-[9px] text-pink-500 uppercase font-black tracking-widest block">AI Target Match</span>
+                    <h3 className="text-base font-extrabold text-slate-800 dark:text-slate-100 uppercase tracking-wider">{result.disease}</h3>
+                  </div>
+                  <button onClick={resetScannerState} className="p-1 bg-slate-100 dark:bg-slate-950 rounded-full text-slate-400">
+                    <X className="w-5 h-5" />
+                  </button>
                 </div>
 
-                {/* Reports History */}
-                <div className="space-y-3">
-                  <h4 className="text-xs font-extrabold uppercase text-slate-700 dark:text-slate-350 tracking-wider">{translateUi('reports_portal')}</h4>
-                  {reports.length > 0 ? (
-                    <div className="space-y-2.5">
-                      {reports.map((rep) => (
-                        <div key={rep.id} className="p-3.5 bg-white/50 dark:bg-slate-950 border border-pink-100/10 rounded-2xl flex items-center justify-between">
-                          <div className="flex items-center gap-3 text-left">
-                            <div className="w-10 h-10 rounded-xl bg-pink-500/10 text-pink-500 flex items-center justify-center">
-                              <FileText className="w-5 h-5" />
-                            </div>
-                            <div>
-                              <span className="font-extrabold text-xs text-slate-800 dark:text-slate-200 block">{rep.title}</span>
-                              <span className="text-[9px] text-slate-450 block mt-0.5">{rep.file_name} • uploaded {rep.uploaded_at?.split('T')[0]}</span>
-                            </div>
-                          </div>
-                          <a 
-                            href={API_BASE + rep.file_url} 
-                            target="_blank" 
-                            rel="noreferrer"
-                            className="p-2 bg-slate-100 dark:bg-slate-900 border border-slate-800 rounded-lg text-pink-500"
-                            title="Download Report"
-                          >
-                            <Download className="w-3.5 h-3.5" />
-                          </a>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="p-6 bg-slate-950 border border-slate-900 rounded-3xl text-center text-[10px] text-slate-500">
-                      No medical reports uploaded yet.
-                    </div>
+                <div className="flex justify-between items-center text-xs font-bold bg-slate-100 dark:bg-slate-950 px-4 py-3 rounded-2xl">
+                  <span className="text-slate-500">System Confidence:</span>
+                  <span className="text-slate-800 dark:text-slate-100">{(result.confidence * 100).toFixed(1)}%</span>
+                </div>
+
+                {/* Severity Analysis with progress color gauge & explanation */}
+                <div className="space-y-2 border-b border-pink-100/10 pb-3">
+                  <div className="flex justify-between items-center text-xs font-bold">
+                    <span className="text-slate-500">Severity:</span>
+                    <span className={`uppercase px-2 py-0.5 rounded-full text-[10px] font-black ${
+                      result.severity === 'Mild' ? 'text-emerald-500 bg-emerald-500/10' :
+                      result.severity === 'Moderate' ? 'text-amber-500 bg-amber-500/10' :
+                      'text-rose-500 bg-rose-500/10'
+                    }`}>{result.severity}</span>
+                  </div>
+                  <div className="w-full bg-slate-200 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full transition-all duration-500 ${
+                      result.severity === 'Mild' ? 'bg-emerald-500' :
+                      result.severity === 'Moderate' ? 'bg-amber-500' :
+                      'bg-rose-500'
+                    }`} style={{ width: `${(result.severity_confidence || 0.8) * 100}%` }}></div>
+                  </div>
+                  {result.severity_explanation && (
+                    <p className="text-[10px] text-slate-400 italic leading-relaxed">
+                      ℹ️ {result.severity_explanation}
+                    </p>
                   )}
                 </div>
 
-              </div>
-            )}
-
-            {/* PAGE 5: LOCATION MAPPING, HOSPITAL TIMINGS & APPOINTMENT BOOKING */}
-            {activeTab === 'location' && (
-              <div className="space-y-6 animate-fade-in text-left">
-                <div className="flex flex-col gap-1 border-b border-pink-100/10 pb-3">
-                  <h2 className="text-xl font-bold font-serif text-slate-900 dark:text-white">Care Connect</h2>
-                  <p className="text-slate-500 text-xs">Locate specialty clinics, verify opening timings, and book dermatologist appointment slots.</p>
-                </div>
-
-                {/* MY BOOKED APPOINTMENTS LIST */}
-                {appointments.length > 0 && (
-                  <div className="mock-card p-5 space-y-3">
-                    <h3 className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block border-b border-pink-100/10 pb-2">
-                      📅 {translateUi('my_appointments')} ({appointments.length})
-                    </h3>
-                    <div className="space-y-2.5">
-                      {appointments.map(appt => (
-                        <div key={appt.id} className="p-3.5 bg-slate-950 border border-slate-850 rounded-2xl flex justify-between items-center">
-                          <div className="space-y-0.5">
-                            <span className="font-bold text-xs text-slate-200 block">{appt.hospital_name}</span>
-                            <span className="text-[10px] text-pink-400 font-semibold block">{appt.doctor_name}</span>
-                            <span className="text-[10px] text-slate-400 block">
-                              <Clock className="w-3 h-3 inline mr-1 text-slate-500" /> {appt.appointment_date} at {appt.appointment_time}
-                            </span>
-                            {appt.patient_symptoms && (
-                              <span className="text-[9px] text-slate-500 italic block">Note: {appt.patient_symptoms}</span>
-                            )}
-                          </div>
-                          <div className="flex flex-col items-end gap-2">
-                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                              {appt.status}
-                            </span>
-                            <button
-                              onClick={() => handleCancelAppointment(appt.id)}
-                              className="text-[9px] text-red-400 hover:text-red-300 font-bold underline"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      ))}
+                {/* Skin Observation Counts */}
+                {result.lesion_analysis && (
+                  <div className="space-y-2 border-b border-pink-100/10 pb-3">
+                    <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">🔬 Skin Observations</span>
+                    <div className="grid grid-cols-2 gap-2 text-[10px] font-semibold text-slate-400">
+                      <div className="p-2 bg-slate-950 border border-slate-900 rounded-xl">
+                        🔴 Acne Pimples: <span className="text-rose-500 font-bold">{result.lesion_analysis.pimple_count}</span>
+                      </div>
+                      <div className="p-2 bg-slate-950 border border-slate-900 rounded-xl">
+                        🔵 Dark Spots: <span className="text-blue-500 font-bold">{result.lesion_analysis.dark_spot_count}</span>
+                      </div>
                     </div>
                   </div>
                 )}
 
-                {/* SEARCH & GPS CONTROLS */}
-                <div className="mock-card p-5 space-y-4">
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={detectLocation}
-                      disabled={locLoading}
-                      className={`flex-grow flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold border transition-all ${
-                        locSuccess 
-                          ? 'bg-pink-500/10 border-pink-500/30 text-pink-500' 
-                          : 'bg-slate-950 border-slate-800 text-slate-350'
-                      }`}
-                    >
-                      <MapPin className="w-4 h-4 text-pink-500" />
-                      {locLoading ? translateUi('gps_locking') : locSuccess ? translateUi('gps_locked') : translateUi('gps')}
-                    </button>
-                    <input
-                      type="text"
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      placeholder="Or enter city"
-                      className="w-1/2 border border-slate-800 rounded-xl px-3 py-2.5 text-xs bg-slate-950 text-slate-100 outline-none"
-                    />
-                  </div>
+                {/* Original image with coordinates overlay */}
+                <div className="space-y-3">
+                  <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">Observed Lesion Markers</span>
+                  <div className="relative aspect-square w-full rounded-3xl overflow-hidden border border-pink-500/10 bg-slate-900">
+                    <img src={result.original_image} alt="original" className="w-full h-full object-cover" />
+                    
+                    {result.lesion_analysis?.pimple_coords?.map((c, idx) => (
+                      <div 
+                        key={`p-${idx}`}
+                        className="absolute w-5 h-5 rounded-full border-2 border-red-500 bg-red-500/20 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center text-[7px] text-white font-extrabold"
+                        style={{ left: `${(c.x / 224) * 100}%`, top: `${(c.y / 224) * 100}%` }}
+                      >
+                        P
+                      </div>
+                    ))}
 
-                  {/* Leaflet Live Map Viewport */}
-                  <div className="h-[200px] rounded-[2rem] overflow-hidden border border-slate-800 shadow-inner">
-                    <div ref={mapContainerRef} className="w-full h-full bg-stone-100"></div>
-                  </div>
-
-                  {/* NEARBY HOSPITALS LIST WITH TIMINGS & BOOKING BUTTONS */}
-                  <div className="space-y-3 pt-2">
-                    <h3 className="text-xs font-extrabold uppercase text-pink-500 tracking-wider">
-                      🏥 {translateUi('hospital_schedules')}
-                    </h3>
-
-                    {(nearbyHospitals.length > 0 ? nearbyHospitals : [
-                      {
-                        name: "Bangalore Medical College & Research Institute (Dermatology)",
-                        address: "Fort Road, near City Market, Bengaluru 560002",
-                        distance: "2.4 km",
-                        rating: "4.6",
-                        phone: "+91 80 2670 1150",
-                        hours: "Mon-Sat: 08:30 AM – 05:30 PM (Emergency 24/7)",
-                        status: "Open Now",
-                        specialist: "Dr. Ananya Rao, MD (Dermatology)",
-                        available_slots: ["09:30 AM", "11:00 AM", "02:00 PM", "04:45 PM"],
-                        lat: 12.9592,
-                        lon: 77.5744
-                      },
-                      {
-                        name: "Victoria Hospital Dermatology Department",
-                        address: "K.R. Road, Kalasipalya, Bengaluru 560002",
-                        distance: "2.5 km",
-                        rating: "4.4",
-                        phone: "+91 80 2670 1150",
-                        hours: "Mon-Sat: 09:00 AM – 06:00 PM",
-                        status: "Open Now",
-                        specialist: "Dr. Ramesh Patil, MBBS, DVD",
-                        available_slots: ["10:00 AM", "11:30 AM", "02:30 PM", "04:00 PM"],
-                        lat: 12.9632,
-                        lon: 77.5739
-                      },
-                      {
-                        name: "Manipal Hospital Old Airport Road (Skin Clinic)",
-                        address: "98, HAL Old Airport Rd, Kodihalli, Bengaluru 560017",
-                        distance: "6.2 km",
-                        rating: "4.8",
-                        phone: "+91 80 2502 4444",
-                        hours: "Mon-Sat: 09:00 AM – 07:00 PM",
-                        status: "Open Now",
-                        specialist: "Dr. Kavitha Sundaram, MD, FRCP",
-                        available_slots: ["09:45 AM", "11:15 AM", "03:15 PM", "05:00 PM"],
-                        lat: 12.9593,
-                        lon: 77.6444
-                      }
-                    ]).map((h, idx) => (
-                      <div key={idx} className="p-4 bg-slate-950 border border-slate-850 rounded-2xl space-y-2.5 shadow-sm">
-                        <div className="flex justify-between items-start gap-2">
-                          <div>
-                            <span className="font-extrabold text-xs text-slate-200 block leading-snug">{h.name}</span>
-                            {h.address && <span className="text-[9px] text-slate-400 block mt-0.5">{h.address}</span>}
-                          </div>
-                          <span className="text-[9px] font-black text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded-full flex-shrink-0 uppercase">{h.distance}</span>
-                        </div>
-
-                        {/* Specialist and Ratings row */}
-                        <div className="flex justify-between items-center text-[10px] text-slate-400 border-t border-slate-900 pt-2">
-                          <span className="font-semibold text-pink-400">🩺 {h.specialist || "Specialist on Duty"}</span>
-                          <span>★ {h.rating} Rating</span>
-                        </div>
-
-                        {/* Timing Schedule details */}
-                        <div className="p-2 bg-slate-900/60 border border-slate-850 rounded-xl space-y-1 text-[10px]">
-                          <div className="flex justify-between items-center">
-                            <span className="text-slate-400"><Clock className="w-3 h-3 inline mr-1 text-slate-500" /> Timing Schedule:</span>
-                            <span className="text-emerald-400 font-bold">{h.status || "Open Now"}</span>
-                          </div>
-                          <span className="text-slate-300 font-semibold block">{h.hours || "Mon-Sat: 09:00 AM – 06:30 PM"}</span>
-                        </div>
-
-                        {/* Available Slots Preview */}
-                        {h.available_slots && (
-                          <div className="space-y-1">
-                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Available Booking Slots:</span>
-                            <div className="flex flex-wrap gap-1.5">
-                              {h.available_slots.slice(0, 4).map((slot, sIdx) => (
-                                <span key={sIdx} className="px-2 py-0.5 bg-slate-900 border border-slate-800 rounded-md text-[9px] font-semibold text-slate-300">
-                                  {slot}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Action Buttons: Book, Call, Directions */}
-                        <div className="grid grid-cols-3 gap-2 pt-1 border-t border-slate-900">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedHospitalForBooking(h)}
-                            className="py-2 bg-gradient-to-r from-pink-500 to-indigo-600 text-white rounded-xl text-[10px] font-bold text-center uppercase tracking-wider shadow"
-                          >
-                            📅 Book
-                          </button>
-                          <a
-                            href={`tel:${h.phone || '+918026701150'}`}
-                            className="py-2 border border-slate-800 hover:bg-slate-900 rounded-xl text-[10px] font-bold text-center text-slate-300 flex items-center justify-center gap-1"
-                          >
-                            <Phone className="w-3 h-3 text-pink-500" /> Call
-                          </a>
-                          <a
-                            href={`https://www.google.com/maps/dir/?api=1&destination=${h.lat},${h.lon}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="py-2 border border-slate-800 hover:bg-slate-900 rounded-xl text-[10px] font-bold text-center text-slate-300 flex items-center justify-center gap-1"
-                          >
-                            <Navigation className="w-3 h-3 text-pink-500" /> Map
-                          </a>
-                        </div>
+                    {result.lesion_analysis?.dark_spot_coords?.map((c, idx) => (
+                      <div 
+                        key={`d-${idx}`}
+                        className="absolute w-5 h-5 rounded-full border-2 border-blue-500 bg-blue-500/20 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center text-[7px] text-white font-extrabold"
+                        style={{ left: `${(c.x / 224) * 100}%`, top: `${(c.y / 224) * 100}%` }}
+                      >
+                        S
                       </div>
                     ))}
                   </div>
                 </div>
+
+                {/* Grad-CAM Comparer slider */}
+                <div className="space-y-3">
+                  <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">Grad-CAM Explanation Heatmap</span>
+                  <div ref={sliderContainerRef} onMouseDown={handleSliderMouse} onTouchStart={handleSliderTouch} className="relative aspect-square w-full rounded-3xl overflow-hidden cursor-ew-resize">
+                    <img src={result.overlay_image} alt="cam" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
+                    <div className="absolute inset-0 overflow-hidden border-r border-amber-500" style={{ width: `${sliderPosition}%` }}>
+                      <img src={result.original_image} alt="orig" className="absolute inset-0 w-full h-full object-cover pointer-events-none" style={{ width: sliderContainerRef.current ? sliderContainerRef.current.clientWidth : '100%' }} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Clinical Recommendations */}
+                <div className="space-y-2 text-xs text-slate-500 leading-relaxed pt-2">
+                  <p className="font-bold text-slate-350">Care Guidelines & Recommendations:</p>
+                  {result.recommendations?.map((rec, idx) => (
+                    <div key={idx} className="flex gap-1.5">
+                      <span className="text-pink-500 font-extrabold">•</span>
+                      <span>{rec}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Nearby Hospital Quick Action */}
+                {result.hospitals && result.hospitals.length > 0 && (
+                  <div className="space-y-2 pt-2 border-t border-slate-900 text-left">
+                    <span className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block">Nearby Specialists for this condition</span>
+                    <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex justify-between items-center">
+                      <div>
+                        <span className="font-extrabold text-xs text-slate-200 block">{result.hospitals[0].name}</span>
+                        <span className="text-[10px] text-slate-400 block">{result.hospitals[0].hours} • {result.hospitals[0].distance}</span>
+                      </div>
+                      <button
+                        onClick={() => setSelectedHospitalForBooking(result.hospitals[0])}
+                        className="px-3 py-1.5 bg-pink-600 hover:bg-pink-700 text-white rounded-lg text-[10px] font-bold shadow"
+                      >
+                        {translateUi('book_appointment')}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Download Report button */}
+                <div className="pt-2 border-t border-slate-900">
+                  <button 
+                    onClick={downloadPDFReport}
+                    className="w-full py-3 bg-slate-950 hover:bg-slate-900 border border-slate-800 rounded-xl text-xs font-bold text-slate-200 flex items-center justify-center gap-1.5 shadow"
+                  >
+                    <Download className="w-4 h-4 text-pink-500" /> Download PDF Clinical Report
+                  </button>
+                </div>
+
               </div>
             )}
 
-            {/* MOCKUP FLOATING NAVIGATION PILL BAR */}
-            <footer className="fixed bottom-6 left-0 right-0 z-45">
-              <div className="nav-pill">
-                {[
-                  { id: 'home', icon: <Home className="w-5.5 h-5.5" />, color: 'text-pink-500' },
-                  { id: 'chat', icon: <MessageSquare className="w-5.5 h-5.5" />, color: 'text-pink-500' },
-                  { id: 'reminders', icon: <Activity className="w-5.5 h-5.5" />, color: 'text-pink-500' },
-                  { id: 'reports', icon: <FileText className="w-5.5 h-5.5" />, color: 'text-pink-500' },
-                  { id: 'location', icon: <MapPin className="w-5.5 h-5.5" />, color: 'text-pink-500' }
-                ].map(tab => {
-                  const isActive = activeTab === tab.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => { setActiveTab(tab.id); resetScannerState(); }}
-                      className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
-                        isActive 
-                          ? `bg-slate-100 dark:bg-slate-900 ${tab.color} scale-110 shadow-sm border border-pink-100/10` 
-                          : 'text-slate-400 hover:text-slate-650'
-                      }`}
-                    >
-                      {tab.icon}
-                    </button>
-                  );
-                })}
+            {/* Validation errors */}
+            {validationErrorType && (
+              <div className="mock-card p-6 border-l-4 border-l-red-500 space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-base font-bold text-red-500 uppercase">{validationErrorType === 'quality' ? 'RETAKE IMAGE' : 'INVALID IMAGE'}</h3>
+                  <button onClick={resetScannerState} className="text-slate-400"><X className="w-5 h-5" /></button>
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed font-semibold">
+                  {validationErrorType === 'quality' 
+                    ? 'Image Quality Too Low — Please retake/upload a clearer image.' 
+                    : 'Invalid Image — Please upload a skin image.'}
+                </p>
               </div>
-            </footer>
+            )}
 
-          </>
+            {/* CHATBOT DIALOG CONVERSATION BOX WITH VOICE SUPPORT */}
+            <div className="mock-card p-4 space-y-4 flex flex-col h-[320px] justify-between">
+              <div className="flex-grow overflow-y-auto space-y-3 custom-scrollbar pr-1 text-xs">
+                {chatHistory.map((chat, idx) => (
+                  <div key={idx} className={`flex ${chat.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`p-3 max-w-[80%] rounded-2xl font-semibold leading-relaxed ${
+                      chat.sender === 'user' 
+                        ? 'bg-pink-600 text-white rounded-br-none' 
+                        : 'bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-200 rounded-bl-none'
+                    }`}>
+                      {chat.text}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Input form panel */}
+              <form onSubmit={sendChatMessage} className="border-t border-slate-900 pt-3 flex gap-2">
+                <input 
+                  type="text" value={chatInput} onChange={(e) => { setChatInput(e.target.value); setSymptoms(e.target.value); }}
+                  placeholder={translateUi('voice_placeholder')}
+                  className="flex-grow border border-slate-800 rounded-xl px-3 py-2 bg-slate-950 text-slate-100 text-xs outline-none focus:border-pink-500"
+                />
+                <button 
+                  type="button" 
+                  onClick={triggerVoiceListen} 
+                  title="Speak symptoms in selected language"
+                  className={`p-2.5 rounded-xl border transition-all ${
+                    isListening ? 'bg-red-500 border-red-500 text-white animate-pulse' : 'bg-slate-950 border-slate-800 text-pink-500 hover:bg-slate-900'
+                  }`}
+                >
+                  <Mic className="w-4 h-4" />
+                </button>
+                <button 
+                  type="submit"
+                  className="px-4 py-2 bg-pink-600 text-white rounded-xl text-xs font-bold"
+                >
+                  Send
+                </button>
+              </form>
+            </div>
+
+          </div>
         )}
+
+        {/* PAGE 3: MEDICINES & REMINDERS */}
+        {activeTab === 'reminders' && (
+          <div className="space-y-6 animate-fade-in text-left">
+            
+            {/* Register New Medicine Reminder */}
+            <div className="mock-card p-5 space-y-4">
+              <h3 className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block border-b border-pink-100/10 pb-2">
+                {translateUi('save_medicine')}
+              </h3>
+              
+              <form onSubmit={handleAddMedicine} className="space-y-3 text-xs">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-500">Medicine Name</label>
+                  <input 
+                    type="text" required value={newMedName} onChange={(e) => setNewMedName(e.target.value)}
+                    placeholder="e.g. Paracetamol"
+                    className="w-full border border-slate-800 rounded-xl p-2.5 bg-slate-950 text-slate-100 outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-500">Dosage details</label>
+                  <input 
+                    type="text" required value={newMedDosage} onChange={(e) => setNewMedDosage(e.target.value)}
+                    placeholder="e.g. 1 tablet (500mg)"
+                    className="w-full border border-slate-800 rounded-xl p-2.5 bg-slate-950 text-slate-100 outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-500">Schedule Time</label>
+                  <input 
+                    type="text" required value={newMedTime} onChange={(e) => setNewMedTime(e.target.value)}
+                    placeholder="e.g. 08:00 AM"
+                    className="w-full border border-slate-800 rounded-xl p-2.5 bg-slate-950 text-slate-100 outline-none"
+                  />
+                </div>
+
+                <button 
+                  type="submit"
+                  className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-indigo-600 text-white font-extrabold rounded-xl"
+                >
+                  Save Medicine
+                </button>
+              </form>
+            </div>
+
+            {/* Medicines List */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-extrabold uppercase text-slate-700 dark:text-slate-350 tracking-wider">{translateUi('registered_meds')}</h4>
+              {medicines.length > 0 ? (
+                <div className="space-y-2.5">
+                  {medicines.map((med) => (
+                    <div key={med.id} className="p-3.5 bg-white/50 dark:bg-slate-950 border border-pink-100/10 rounded-2xl flex justify-between items-center">
+                      <div>
+                        <span className="font-extrabold text-xs text-slate-800 dark:text-slate-200 block">{med.name}</span>
+                        <span className="text-[10px] text-slate-400 block mt-0.5">Dosage: {med.dosage} • Every day at {med.schedule_time}</span>
+                      </div>
+                      <button 
+                        onClick={() => handleDeleteMedicine(med.id)}
+                        className="p-2 bg-red-500/10 text-red-500 rounded-lg"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-6 bg-slate-950 border border-slate-900 rounded-3xl text-center text-[10px] text-slate-500">
+                  No medicines registered. Register a medicine to track schedule.
+                </div>
+              )}
+            </div>
+
+          </div>
+        )}
+
+        {/* PAGE 4: MEDICAL REPORTS */}
+        {activeTab === 'reports' && (
+          <div className="space-y-6 animate-fade-in text-left">
+            
+            {/* Upload Report form */}
+            <div className="mock-card p-5 space-y-4">
+              <h3 className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block border-b border-pink-100/10 pb-2">
+                Upload Health Report
+              </h3>
+              
+              <form onSubmit={handleUploadReport} className="space-y-3 text-xs">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-500">Report Title</label>
+                  <input 
+                    type="text" required value={reportTitle} onChange={(e) => setReportTitle(e.target.value)}
+                    placeholder="e.g. Lab Blood Test August"
+                    className="w-full border border-slate-800 rounded-xl p-2.5 bg-slate-950 text-slate-100 outline-none"
+                  />
+                </div>
+                
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-500">Choose File</label>
+                  <input 
+                    type="file" required onChange={(e) => setReportFile(e.target.files[0])}
+                    className="w-full text-xs text-slate-350 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-pink-500/15 file:text-pink-500 file:font-bold file:cursor-pointer"
+                  />
+                </div>
+
+                <button 
+                  type="submit"
+                  className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-indigo-600 text-white font-extrabold rounded-xl"
+                >
+                  Upload File
+                </button>
+              </form>
+            </div>
+
+            {/* Reports History */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-extrabold uppercase text-slate-700 dark:text-slate-350 tracking-wider">{translateUi('reports_portal')}</h4>
+              {reports.length > 0 ? (
+                <div className="space-y-2.5">
+                  {reports.map((rep) => (
+                    <div key={rep.id} className="p-3.5 bg-white/50 dark:bg-slate-950 border border-pink-100/10 rounded-2xl flex items-center justify-between">
+                      <div className="flex items-center gap-3 text-left">
+                        <div className="w-10 h-10 rounded-xl bg-pink-500/10 text-pink-500 flex items-center justify-center">
+                          <FileText className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <span className="font-extrabold text-xs text-slate-800 dark:text-slate-200 block">{rep.title}</span>
+                          <span className="text-[9px] text-slate-450 block mt-0.5">{rep.file_name} • uploaded {rep.uploaded_at?.split('T')[0]}</span>
+                        </div>
+                      </div>
+                      <a 
+                        href={API_BASE + rep.file_url} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="p-2 bg-slate-100 dark:bg-slate-900 border border-slate-800 rounded-lg text-pink-500"
+                        title="Download Report"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-6 bg-slate-950 border border-slate-900 rounded-3xl text-center text-[10px] text-slate-500">
+                  No medical reports uploaded yet.
+                </div>
+              )}
+            </div>
+
+          </div>
+        )}
+
+        {/* PAGE 5: LOCATION MAPPING, HOSPITAL TIMINGS & APPOINTMENT BOOKING */}
+        {activeTab === 'location' && (
+          <div className="space-y-6 animate-fade-in text-left">
+            <div className="flex flex-col gap-1 border-b border-pink-100/10 pb-3">
+              <h2 className="text-xl font-bold font-serif text-slate-900 dark:text-white">Care Connect</h2>
+              <p className="text-slate-500 text-xs">Locate specialty clinics, verify opening timings, and book dermatologist appointment slots.</p>
+            </div>
+
+            {/* MY BOOKED APPOINTMENTS LIST */}
+            {appointments.length > 0 && (
+              <div className="mock-card p-5 space-y-3">
+                <h3 className="text-xs font-extrabold uppercase text-pink-500 tracking-wider block border-b border-pink-100/10 pb-2">
+                  📅 {translateUi('my_appointments')} ({appointments.length})
+                </h3>
+                <div className="space-y-2.5">
+                  {appointments.map(appt => (
+                    <div key={appt.id} className="p-3.5 bg-slate-950 border border-slate-850 rounded-2xl flex justify-between items-center">
+                      <div className="space-y-0.5">
+                        <span className="font-bold text-xs text-slate-200 block">{appt.hospital_name}</span>
+                        <span className="text-[10px] text-pink-400 font-semibold block">{appt.doctor_name}</span>
+                        <span className="text-[10px] text-slate-400 block">
+                          <Clock className="w-3 h-3 inline mr-1 text-slate-500" /> {appt.appointment_date} at {appt.appointment_time}
+                        </span>
+                        {appt.patient_symptoms && (
+                          <span className="text-[9px] text-slate-500 italic block">Note: {appt.patient_symptoms}</span>
+                        )}
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          {appt.status}
+                        </span>
+                        <button
+                          onClick={() => handleCancelAppointment(appt.id)}
+                          className="text-[9px] text-red-400 hover:text-red-300 font-bold underline"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* SEARCH & GPS CONTROLS */}
+            <div className="mock-card p-5 space-y-4">
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={detectLocation}
+                  disabled={locLoading}
+                  className={`flex-grow flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold border transition-all ${
+                    locSuccess 
+                      ? 'bg-pink-500/10 border-pink-500/30 text-pink-500' 
+                      : 'bg-slate-950 border-slate-800 text-slate-350'
+                  }`}
+                >
+                  <MapPin className="w-4 h-4 text-pink-500" />
+                  {locLoading ? translateUi('gps_locking') : locSuccess ? translateUi('gps_locked') : translateUi('gps')}
+                </button>
+                <input
+                  type="text"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  placeholder="Or enter city"
+                  className="w-1/2 border border-slate-800 rounded-xl px-3 py-2.5 text-xs bg-slate-950 text-slate-100 outline-none"
+                />
+              </div>
+
+              {/* Leaflet Live Map Viewport */}
+              <div className="h-[200px] rounded-[2rem] overflow-hidden border border-slate-800 shadow-inner">
+                <div ref={mapContainerRef} className="w-full h-full bg-stone-100"></div>
+              </div>
+
+              {/* NEARBY HOSPITALS LIST WITH TIMINGS & BOOKING BUTTONS */}
+              <div className="space-y-3 pt-2">
+                <h3 className="text-xs font-extrabold uppercase text-pink-500 tracking-wider">
+                  🏥 {translateUi('hospital_schedules')} ({nearbyHospitals.length})
+                </h3>
+
+                {nearbyHospitals.map((h, idx) => (
+                  <div key={idx} className="p-4 bg-slate-950 border border-slate-850 rounded-2xl space-y-2.5 shadow-sm">
+                    <div className="flex justify-between items-start gap-2">
+                      <div>
+                        <span className="font-extrabold text-xs text-slate-200 block leading-snug">{h.name}</span>
+                        {h.address && <span className="text-[9px] text-slate-400 block mt-0.5">{h.address}</span>}
+                      </div>
+                      <span className="text-[9px] font-black text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded-full flex-shrink-0 uppercase">{h.distance}</span>
+                    </div>
+
+                    {/* Specialist and Ratings row */}
+                    <div className="flex justify-between items-center text-[10px] text-slate-400 border-t border-slate-900 pt-2">
+                      <span className="font-semibold text-pink-400">🩺 {h.specialist || "Specialist on Duty"}</span>
+                      <span>★ {h.rating} Rating</span>
+                    </div>
+
+                    {/* Timing Schedule details */}
+                    <div className="p-2 bg-slate-900/60 border border-slate-850 rounded-xl space-y-1 text-[10px]">
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-400"><Clock className="w-3 h-3 inline mr-1 text-slate-500" /> Timing Schedule:</span>
+                        <span className="text-emerald-400 font-bold">{h.status || "Open Now"}</span>
+                      </div>
+                      <span className="text-slate-300 font-semibold block">{h.hours || "Mon-Sat: 09:00 AM – 06:30 PM"}</span>
+                    </div>
+
+                    {/* Available Slots Preview */}
+                    {h.available_slots && (
+                      <div className="space-y-1">
+                        <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Available Booking Slots:</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {h.available_slots.slice(0, 4).map((slot, sIdx) => (
+                            <span key={sIdx} className="px-2 py-0.5 bg-slate-900 border border-slate-800 rounded-md text-[9px] font-semibold text-slate-300">
+                              {slot}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Action Buttons: Book, Call, Directions */}
+                    <div className="grid grid-cols-3 gap-2 pt-1 border-t border-slate-900">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedHospitalForBooking(h)}
+                        className="py-2 bg-gradient-to-r from-pink-500 to-indigo-600 text-white rounded-xl text-[10px] font-bold text-center uppercase tracking-wider shadow"
+                      >
+                        📅 Book
+                      </button>
+                      <a
+                        href={`tel:${h.phone || '+918026701150'}`}
+                        className="py-2 border border-slate-800 hover:bg-slate-900 rounded-xl text-[10px] font-bold text-center text-slate-300 flex items-center justify-center gap-1"
+                      >
+                        <Phone className="w-3 h-3 text-pink-500" /> Call
+                      </a>
+                      <a
+                        href={`https://www.google.com/maps/dir/?api=1&destination=${h.lat},${h.lon}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="py-2 border border-slate-800 hover:bg-slate-900 rounded-xl text-[10px] font-bold text-center text-slate-300 flex items-center justify-center gap-1"
+                      >
+                        <Navigation className="w-3 h-3 text-pink-500" /> Map
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MOCKUP FLOATING NAVIGATION PILL BAR */}
+        <footer className="fixed bottom-6 left-0 right-0 z-45">
+          <div className="nav-pill">
+            {[
+              { id: 'home', icon: <Home className="w-5.5 h-5.5" />, color: 'text-pink-500' },
+              { id: 'chat', icon: <MessageSquare className="w-5.5 h-5.5" />, color: 'text-pink-500' },
+              { id: 'reminders', icon: <Activity className="w-5.5 h-5.5" />, color: 'text-pink-500' },
+              { id: 'reports', icon: <FileText className="w-5.5 h-5.5" />, color: 'text-pink-500' },
+              { id: 'location', icon: <MapPin className="w-5.5 h-5.5" />, color: 'text-pink-500' }
+            ].map(tab => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => { setActiveTab(tab.id); resetScannerState(); }}
+                  className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
+                    isActive 
+                      ? `bg-slate-100 dark:bg-slate-900 ${tab.color} scale-110 shadow-sm border border-pink-100/10` 
+                      : 'text-slate-400 hover:text-slate-650'
+                  }`}
+                >
+                  {tab.icon}
+                </button>
+              );
+            })}
+          </div>
+        </footer>
 
       </main>
 
